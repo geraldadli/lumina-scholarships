@@ -1,0 +1,59 @@
+[
+  {
+    "id": "australia-awards-2027",
+    "title": "Australia Awards Scholarships",
+    "provider": "Australian Government (DFAT), managed by Australia Awards in Indonesia",
+    "fundingType": "full",
+    "educationLevels": ["masters", "phd"],
+    "eligibleCitizenships": ["ID"],
+    "hostCountries": ["AU"],
+    "fieldsOfStudy": [],
+    "minGpa": 2.9,
+    "languageRequirement": "IELTS 6.5 by the end of pre-departure training (entry minimum not confirmed on official site)",
+    "openDate": "2026-02-01",
+    "deadline": "2026-04-30",
+    "status": "closed",
+    "sourceUrl": "https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true",
+    "description": "Fully funded Masters or PhD study at an Australian university for Indonesian citizens. Covers return air travel, a one-off establishment allowance, full tuition fees and a contribution to living expenses.",
+    "requirements": [
+      "Online application form",
+      "Supporting documents listed in the Australia Awards Scholarships Policy Handbook",
+      "Targeted categories only: SK PNS, KTP from an equity-target province, or letter confirming disability status"
+    ],
+    "lastVerified": "2026-11-18",
+    "verifiedBy": "pending-human-review",
+    "notes": "2027 intake. Must apply for a course in Indonesia's priority fields of study (list for next intake not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75. Next intake (2028) is expected to open around Feb 2027."
+  },
+  {
+    "id": "lpdp-australia-awards-2027",
+    "title": "LPDP-Australia Awards Scholarships",
+    "provider": "LPDP (Government of Indonesia) and Australia Awards in Indonesia (Australian Government)",
+    "fundingType": "full",
+    "educationLevels": ["masters"],
+    "eligibleCitizenships": ["ID"],
+    "hostCountries": ["AU"],
+    "fieldsOfStudy": [
+      "food security",
+      "energy",
+      "digitalisation (AI and semiconductors)",
+      "health",
+      "downstreaming and industrialisation",
+      "maritime",
+      "advanced materials and manufacturing"
+    ],
+    "minGpa": 3.0,
+    "languageRequirement": "IELTS 6.5 (no band below 6.0) or equivalent",
+    "openDate": "2026-04-02",
+    "deadline": "2026-05-04",
+    "status": "closed",
+    "sourceUrl": "https://www.australiaawardsindonesia.org/content/1000276/12/lpdp-australia-awards-scholarships?sub=true",
+    "description": "Masters scholarship at an Australian university, jointly offered by LPDP and Australia Awards for Indonesian citizens. Includes a stipend, Overseas Student Health Cover and English training before departure.",
+    "requirements": [
+      "Online application via LPDP",
+      "Documents listed in the LPDP-Australia Awards Application Guide (not yet itemised here)"
+    ],
+    "lastVerified": "2026-11-18",
+    "verifiedBy": "pending-human-review",
+    "notes": "2027 intake. IELTS figure confirmed in the 2025-intake country profile; re-check for the next intake. People with disability and residents of target areas are encouraged to apply."
+  }
+]
