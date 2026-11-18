@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lumina backend: Firestore importer, source monitor, deadline processor",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "validate:data": "tsx src/seed.ts --validate-only",
+    "seed": "tsx src/seed.ts",
+    "verify:seed": "tsx src/verify-seed.ts",
+    "check:sources": "tsx src/check-sources.ts",
+    "process:deadlines": "tsx src/process-deadlines.ts",
+    "sync:scholarships": "tsx src/run-updates.ts",
+    "sync:dry": "tsx src/run-updates.ts --dry-run",
+    "test:rules": "firebase emulators:exec --config ../firebase.json --only firestore --project demo-lumina \"tsx --test test/firestore.rules.test.ts\""
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@types/node": "^26.6.6",
+    "firebase": "^13.4.0",
+    "firebase-tools": "^15.36.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
