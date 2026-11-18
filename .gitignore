@@ -1,0 +1,19 @@
+# ── Kredensial: JANGAN pernah di-commit (repo ini PUBLIK) ──
+serviceAccountKey.json
+**/serviceAccountKey.json
+*-firebase-adminsdk-*.json
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+.env
+.env.*
+!.env.example
+
+# ── File pribadi / catatan lokal (laporan, draf pesan) ──
+_local/
+
+# ── Build / dependency ──
+node_modules/
+dist/
+.firebase/
+*.log
