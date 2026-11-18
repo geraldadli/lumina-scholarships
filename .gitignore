@@ -9,11 +9,19 @@ GoogleService-Info.plist
 .env.*
 !.env.example
 
+# ── Kunci tanda tangan APK (release) ──
+*.jks
+*.keystore
+key.properties
+
 # ── File pribadi / catatan lokal (laporan, draf pesan) ──
 _local/
 
-# ── Build / dependency ──
+# ── Dependency & log ──
 node_modules/
-dist/
-.firebase/
 *.log
+
+# ── File sistem operasi ──
+Thumbs.db
+desktop.ini
+.DS_Store
