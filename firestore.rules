@@ -1,0 +1,76 @@
+rules_version = '2';
+
+// Lumina — Firestore Security Rules (kontrak v1, lihat docs/firestore-contract.md)
+// Prinsip: klien hanya membaca katalog & menulis data miliknya sendiri.
+// Backend (Admin SDK) melewati rules ini, jadi tidak perlu izin tulis di sini.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Field opsional: lolos jika tidak ada, atau ada dan memenuhi syarat.
+    function optList(d, key, maxSize) {
+      return !(key in d) || (d[key] is list && d[key].size() <= maxSize);
+    }
+
+    function validProfile(d) {
+      return (!('educationLevel' in d) || d.educationLevel in ['undergraduate', 'masters', 'phd'])
+        && (!('currentEducationLevel' in d)
+            || d.currentEducationLevel in ['high_school', 'undergraduate', 'masters', 'phd'])
+        && (!('citizenship' in d) || (d.citizenship is string && d.citizenship.size() == 2))
+        && (!('gpa' in d) || d.gpa == null || (d.gpa is number && d.gpa >= 0 && d.gpa <= 4))
+        && optList(d, 'targetCountries', 30)
+        && optList(d, 'fieldsOfStudy', 20)
+        && (!('languageScores' in d) || d.languageScores is map)
+        && (!('privacy' in d) || d.privacy is map)
+        && (!('fundingPreference' in d) || d.fundingPreference in ['full', 'partial', 'any']);
+    }
+
+    function validSaved(d, scholarshipId) {
+      return d.scholarshipId == scholarshipId
+        && d.status in ['saved', 'preparing', 'applied']
+        && (!('matchScore' in d) || d.matchScore == null
+            || (d.matchScore is number && d.matchScore >= 0 && d.matchScore <= 1))
+        && optList(d, 'checklist', 50)
+        && (!('notes' in d) || (d.notes is string && d.notes.size() <= 5000))
+        && (!('lastSeenUpdatedAt' in d) || d.lastSeenUpdatedAt == null
+            || d.lastSeenUpdatedAt is timestamp);
+    }
+
+    // Set preferences + ringkasan CV
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validProfile(request.resource.data);
+
+      // Save -> Prepare -> Apply -> Track updates
+      match /saved_scholarships/{scholarshipId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && validSaved(request.resource.data, scholarshipId)
+          && exists(/databases/$(database)/documents/scholarships/$(scholarshipId));
+        allow update: if isOwner(uid) && validSaved(request.resource.data, scholarshipId);
+      }
+    }
+
+    // Katalog beasiswa: hanya ditulis oleh backend terotorisasi.
+    match /scholarships/{scholarshipId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Metadata pemantauan sumber & log sinkronisasi: khusus Admin SDK.
+    match /sources/{sourceId} {
+      allow read, write: if false;
+    }
+
+    match /sync_logs/{logId} {
+      allow read, write: if false;
+    }
+  }
+}
