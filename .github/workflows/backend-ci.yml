@@ -1,0 +1,88 @@
+name: Backend CI
+
+# Typecheck, validasi data beasiswa, dan uji Security Rules di emulator
+# setiap ada push/PR yang menyentuh backend atau rules.
+# Tidak memakai secret apa pun, jadi aman juga untuk PR dari fork.
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'backend/**'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'backend/**'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
+      - '.github/workflows/backend-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck & validate data
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Validate scholarships.json
+        run: npm run validate:data
+
+  rules:
+    name: Firestore rules (emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Firebase emulators
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('backend/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test security rules
+        run: npm run test:rules

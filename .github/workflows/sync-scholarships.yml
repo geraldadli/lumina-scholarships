@@ -1,0 +1,64 @@
+name: Sync Scholarships
+
+# Pengganti Cloud Scheduler (Firebase Spark Plan): import data yang sudah direview,
+# cek perubahan halaman resmi, proses deadline, dan tulis log ke `sync_logs`.
+on:
+  schedule:
+    - cron: '0 */6 * * *' # setiap 6 jam (UTC). Jadwal GitHub bisa telat beberapa menit.
+  push:
+    branches: [main]
+    paths:
+      - 'backend/data/scholarships.json' # data baru di-merge → langsung dipublish
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (baca saja, tanpa menulis ke Firestore)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Jangan jalankan dua sync bersamaan.
+concurrency:
+  group: sync-scholarships
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Run updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Secret dibaca dari Repository secrets. Job hanya jalan dari `main`, jadi
+    # "Run workflow" yang dipicu dari branch lain tidak akan menulis ke Firestore.
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate scholarships.json
+        run: npm run validate:data
+
+      # Kredensial dikirim lewat env (tidak pernah ditulis ke file / dicetak).
+      # GitHub otomatis menyamarkan nilai secret di log.
+      - name: Run updates
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DRY_RUN_FLAG: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT belum diset di Settings → Secrets and variables → Actions → Repository secrets."
+            exit 1
+          fi
+          npm run sync:scholarships -- $DRY_RUN_FLAG
