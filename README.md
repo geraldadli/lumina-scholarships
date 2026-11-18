@@ -18,3 +18,25 @@ The assistant is designed to use Gemini Nano on supported Android devices. When 
 Flutter and Dart for the app, Kotlin for the Android AI integration, and Firebase for authentication, scholarship data, and hybrid AI.
 
 Android package name: `com.lumina.app`.
+
+## Repository structure
+
+```
+.
+├── app/                      Flutter app + Kotlin/Pigeon hybrid AI bridge (coming soon)
+├── backend/                  Node.js + TypeScript jobs (Firebase Admin SDK)
+│   ├── data/                 scholarships.json, curated by the research team
+│   ├── src/                  importer, source monitor, deadline processor
+│   └── test/                 Firestore security rules tests (emulator)
+├── docs/                     data contract and technical docs
+├── .github/workflows/        CI and scheduled scholarship sync
+├── firestore.rules           Firestore security rules
+├── firestore.indexes.json    Firestore composite indexes
+└── firebase.json             Firebase CLI / emulator config
+```
+
+## Docs
+
+- [Firestore data contract](docs/firestore-contract.md): collections, fields, and Remote Config shared by app, AI, and backend
+- [Backend guide](backend/README.md): how scholarship data is imported, monitored, and synced
+- [Contributing](CONTRIBUTING.md): branches, commit messages, and pull requests
