@@ -125,6 +125,8 @@ class HybridAiApiImpl(
                 "Pertanyaan wajib diisi dan maksimal ${PromptBuilder.MAX_QUESTION_CHARS} karakter.",
             )
         }
+        // Tanpa data beasiswa yang bisa dijadikan sumber, jangan sentuh model sama sekali.
+        ContextGuard.check(request.scholarship)?.let { throw it }
         val settings = loadSettings()
         val mode = InferencePolicy.resolve(settings.mode, request.allowCloud)
         val model = model(mode, settings.cloudModel)

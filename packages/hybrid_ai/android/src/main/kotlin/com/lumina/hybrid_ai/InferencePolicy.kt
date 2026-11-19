@@ -9,6 +9,7 @@ enum class AiMode { PREFER_ON_DEVICE, ONLY_ON_DEVICE, PREFER_IN_CLOUD, ONLY_IN_C
 /** Kode error yang dikirim ke Flutter (`PlatformException.code`). Didokumentasikan di README paket. */
 object ErrorCodes {
     const val INVALID_REQUEST = "INVALID_REQUEST"
+    const val NO_CONTEXT = "NO_CONTEXT"
     const val PRIVATE_MODE_UNAVAILABLE = "PRIVATE_MODE_UNAVAILABLE"
     const val ON_DEVICE_UNSUPPORTED = "ON_DEVICE_UNSUPPORTED"
     const val MODEL_NOT_DOWNLOADED = "MODEL_NOT_DOWNLOADED"

@@ -61,12 +61,13 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Nano not available or not downloaded, cloud allowed | Automatic fallback to the cloud (`AiSource.cloud`) |
 | `allowCloud: false` (private mode) | Forced `ONLY_ON_DEVICE`; if Nano is not ready → `HybridAiException` |
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
+| Scholarship has no title or no http(s) `sourceUrl` | `ask()` throws `noContext` before any model is called |
 
 Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency.
 
 ### Error codes (`HybridAiException.code`)
 
-`privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
+`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
 
 ### "AI unavailable" state
 

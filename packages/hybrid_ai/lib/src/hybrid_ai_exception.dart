@@ -6,6 +6,9 @@ import 'ai_unavailability.dart';
 enum HybridAiErrorCode {
   invalidRequest,
 
+  /// Data beasiswa (judul / tautan sumber) kosong, sehingga AI tidak punya sumber untuk dijadikan dasar jawaban.
+  noContext,
+
   /// Mode privat aktif (cloud tidak diizinkan) tetapi perangkat tidak mendukung Gemini Nano.
   privateModeUnavailable,
 
@@ -62,6 +65,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.contentBlocked => 'Pertanyaan tidak dapat dijawab. Coba ubah kalimatnya.',
         HybridAiErrorCode.emptyResponse => 'AI tidak memberikan jawaban. Coba lagi.',
         HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid atau terlalu panjang.',
+        HybridAiErrorCode.noContext => 'Data beasiswa belum tersedia atau belum lengkap, jadi AI belum bisa menjawab. Buka dulu detail beasiswanya.',
         HybridAiErrorCode.firebaseNotConfigured => 'Konfigurasi Firebase belum terpasang di aplikasi.',
         HybridAiErrorCode.unknown => 'Asisten AI sedang tidak tersedia. Coba lagi nanti.',
       };
@@ -85,6 +89,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.contentBlocked => 'Pertanyaan tidak bisa dijawab',
         HybridAiErrorCode.emptyResponse => 'AI tidak menjawab',
         HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid',
+        HybridAiErrorCode.noContext => 'Data beasiswa belum tersedia',
         HybridAiErrorCode.firebaseNotConfigured => 'Konfigurasi belum lengkap',
         HybridAiErrorCode.unknown => 'Asisten AI tidak tersedia',
       };
@@ -100,6 +105,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.unknown =>
           AiUnavailableAction.retry,
         HybridAiErrorCode.contentBlocked || HybridAiErrorCode.invalidRequest => AiUnavailableAction.editQuestion,
+        HybridAiErrorCode.noContext ||
         HybridAiErrorCode.onDeviceUnsupported ||
         HybridAiErrorCode.appCheckFailed ||
         HybridAiErrorCode.firebaseNotConfigured =>
@@ -108,6 +114,7 @@ class HybridAiException implements Exception {
 
   static const _codes = <String, HybridAiErrorCode>{
     'INVALID_REQUEST': HybridAiErrorCode.invalidRequest,
+    'NO_CONTEXT': HybridAiErrorCode.noContext,
     'PRIVATE_MODE_UNAVAILABLE': HybridAiErrorCode.privateModeUnavailable,
     'ON_DEVICE_UNSUPPORTED': HybridAiErrorCode.onDeviceUnsupported,
     'MODEL_NOT_DOWNLOADED': HybridAiErrorCode.modelNotDownloaded,

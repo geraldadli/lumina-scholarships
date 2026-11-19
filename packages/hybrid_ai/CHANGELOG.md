@@ -1,5 +1,6 @@
 ## Unreleased
 
+- `ContextGuard`: `ask()` refuses to call any model when the scholarship has no title or no http(s) `sourceUrl`. New error code `NO_CONTEXT` (`HybridAiErrorCode.noContext`) with its own "AI unavailable" card.
 - `HybridAiException.unavailability`: one `AiUnavailability` (title, message, suggested `AiUnavailableAction`) for the "AI unavailable" UI state.
 
 ## 0.1.0

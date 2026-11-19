@@ -73,6 +73,16 @@ void main() {
     );
   });
 
+  test('NO_CONTEXT dari native menjadi noContext', () async {
+    final ai = HybridAi(hostApi: FakeHost(error: PlatformException(code: 'NO_CONTEXT', message: 'x')));
+    await expectLater(
+      ai.ask(askRequest()),
+      throwsA(isA<HybridAiException>()
+          .having((e) => e.code, 'code', HybridAiErrorCode.noContext)
+          .having((e) => e.rawCode, 'rawCode', 'NO_CONTEXT')),
+    );
+  });
+
   test('kode error tak dikenal menjadi unknown, kode asli tetap tersedia', () async {
     final ai = HybridAi(hostApi: FakeHost(error: PlatformException(code: 'channel-error')));
     await expectLater(

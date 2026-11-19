@@ -33,6 +33,12 @@ void main() {
       expect(error(HybridAiErrorCode.invalidRequest).unavailability.action, AiUnavailableAction.editQuestion);
     });
 
+    test('tanpa data beasiswa AI tidak menjawab dan hanya menjelaskan', () {
+      final u = error(HybridAiErrorCode.noContext).unavailability;
+      expect(u.title, 'Data beasiswa belum tersedia');
+      expect(u.action, AiUnavailableAction.none);
+    });
+
     test('masalah yang tidak bisa diatasi user hanya dijelaskan', () {
       for (final code in [
         HybridAiErrorCode.onDeviceUnsupported,
