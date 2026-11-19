@@ -68,6 +68,24 @@ Privacy: prompts, questions, and profile data are never written to the log. The 
 
 `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
 
+### "AI unavailable" state
+
+Instead of switching over every code, show one state from `e.unavailability`:
+
+```dart
+} on HybridAiException catch (e) {
+  final u = e.unavailability;          // title + message + suggested action
+  showUnavailableCard(u.title, u.message);
+  switch (u.action) {
+    case AiUnavailableAction.openPrivacySettings: /* button: open Settings */
+    case AiUnavailableAction.downloadModel:       /* button: ai.downloadModel() */
+    case AiUnavailableAction.retry:               /* button: try again */
+    case AiUnavailableAction.editQuestion:        /* focus the question field */
+    case AiUnavailableAction.none:                /* explanation only */
+  }
+}
+```
+
 ## Requirements for the host app
 
 - Android `minSdk 26`, and `google-services.json` for `com.lumina.app` (never commit it).

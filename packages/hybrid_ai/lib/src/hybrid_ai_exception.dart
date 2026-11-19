@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'ai_unavailability.dart';
+
 /// Kode error dari sisi native. Gunakan untuk memilih tampilan UI yang tepat.
 enum HybridAiErrorCode {
   invalidRequest,
@@ -62,6 +64,46 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid atau terlalu panjang.',
         HybridAiErrorCode.firebaseNotConfigured => 'Konfigurasi Firebase belum terpasang di aplikasi.',
         HybridAiErrorCode.unknown => 'Asisten AI sedang tidak tersedia. Coba lagi nanti.',
+      };
+
+  /// Penjelasan + aksi untuk ditampilkan saat AI tidak tersedia. Satu pintu untuk semua kode error.
+  AiUnavailability get unavailability => AiUnavailability(
+        title: _title,
+        message: userMessage,
+        action: _action,
+      );
+
+  String get _title => switch (code) {
+        HybridAiErrorCode.privateModeUnavailable => 'Mode privat aktif',
+        HybridAiErrorCode.onDeviceUnsupported => 'HP belum mendukung AI di perangkat',
+        HybridAiErrorCode.modelNotDownloaded => 'Model AI belum diunduh',
+        HybridAiErrorCode.modelDownloading => 'Model AI sedang diunduh',
+        HybridAiErrorCode.busy => 'AI sedang sibuk',
+        HybridAiErrorCode.quotaExceeded => 'Batas pemakaian tercapai',
+        HybridAiErrorCode.appCheckFailed => 'Aplikasi belum terverifikasi',
+        HybridAiErrorCode.network => 'Tidak ada koneksi',
+        HybridAiErrorCode.contentBlocked => 'Pertanyaan tidak bisa dijawab',
+        HybridAiErrorCode.emptyResponse => 'AI tidak menjawab',
+        HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid',
+        HybridAiErrorCode.firebaseNotConfigured => 'Konfigurasi belum lengkap',
+        HybridAiErrorCode.unknown => 'Asisten AI tidak tersedia',
+      };
+
+  AiUnavailableAction get _action => switch (code) {
+        HybridAiErrorCode.privateModeUnavailable => AiUnavailableAction.openPrivacySettings,
+        HybridAiErrorCode.modelNotDownloaded => AiUnavailableAction.downloadModel,
+        HybridAiErrorCode.modelDownloading ||
+        HybridAiErrorCode.busy ||
+        HybridAiErrorCode.quotaExceeded ||
+        HybridAiErrorCode.network ||
+        HybridAiErrorCode.emptyResponse ||
+        HybridAiErrorCode.unknown =>
+          AiUnavailableAction.retry,
+        HybridAiErrorCode.contentBlocked || HybridAiErrorCode.invalidRequest => AiUnavailableAction.editQuestion,
+        HybridAiErrorCode.onDeviceUnsupported ||
+        HybridAiErrorCode.appCheckFailed ||
+        HybridAiErrorCode.firebaseNotConfigured =>
+          AiUnavailableAction.none,
       };
 
   static const _codes = <String, HybridAiErrorCode>{

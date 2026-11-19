@@ -36,6 +36,7 @@ export 'src/hybrid_ai.g.dart'
         RequirementItem,
         ScholarshipContext,
         StudentContext;
+export 'src/ai_unavailability.dart';
 export 'src/hybrid_ai_exception.dart';
 export 'src/match_scorer.dart';
 
