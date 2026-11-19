@@ -1,0 +1,72 @@
+name: Hybrid AI CI
+
+# Analyze + unit test paket packages/hybrid_ai (Dart & Kotlin).
+# Tidak memakai secret: app contoh tetap bisa di-build tanpa google-services.json.
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'packages/hybrid_ai/**'
+      - '.github/workflows/hybrid-ai-ci.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'packages/hybrid_ai/**'
+      - '.github/workflows/hybrid-ai-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hybrid-ai-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Analyze & unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: packages/hybrid_ai
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.0'
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: |
+          flutter pub get
+          (cd example && flutter pub get)
+
+      - name: Check Pigeon output is up to date
+        run: |
+          dart run pigeon --input pigeons/hybrid_ai.dart
+          git diff --exit-code -- lib/src/hybrid_ai.g.dart android/src/main/kotlin/com/lumina/hybrid_ai/HybridAi.g.kt
+
+      - name: Analyze
+        run: |
+          flutter analyze
+          (cd example && flutter analyze)
+
+      - name: Dart tests
+        run: flutter test
+
+      # gradlew & gradle-wrapper.jar sengaja di-.gitignore oleh template Flutter;
+      # --config-only membuatnya ulang tanpa build penuh (dan tanpa google-services.json).
+      - name: Generate Gradle wrapper
+        working-directory: packages/hybrid_ai/example
+        run: flutter build apk --debug --config-only
+
+      - name: Kotlin tests
+        working-directory: packages/hybrid_ai/example/android
+        run: ./gradlew :hybrid_ai:testDebugUnitTest
