@@ -48,19 +48,19 @@ object InferencePolicy {
         return when (onDevice) {
             ModelAvailability.DOWNLOADABLE -> HybridAiError(
                 ErrorCodes.MODEL_NOT_DOWNLOADED,
-                "Gemini Nano belum diunduh. Panggil downloadModel() terlebih dahulu.",
+                "Gemini Nano has not been downloaded yet. Call downloadModel() first.",
             )
             ModelAvailability.DOWNLOADING -> HybridAiError(
                 ErrorCodes.MODEL_DOWNLOADING,
-                "Gemini Nano sedang diunduh. Coba lagi setelah unduhan selesai.",
+                "Gemini Nano is still downloading. Try again when the download finishes.",
             )
             else -> if (!allowCloud) {
                 HybridAiError(
                     ErrorCodes.PRIVATE_MODE_UNAVAILABLE,
-                    "Mode privat aktif, tetapi perangkat ini tidak mendukung Gemini Nano.",
+                    "Private mode is on, but this device does not support Gemini Nano.",
                 )
             } else {
-                HybridAiError(ErrorCodes.ON_DEVICE_UNSUPPORTED, "Perangkat ini tidak mendukung Gemini Nano.")
+                HybridAiError(ErrorCodes.ON_DEVICE_UNSUPPORTED, "This device does not support Gemini Nano.")
             }
         }
     }

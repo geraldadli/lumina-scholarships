@@ -37,11 +37,11 @@ final isMatch = match.meetsThreshold(status.minMatchScore);
 // 3. Ask AI (grounded in the scholarship data)
 try {
   final answer = await ai.ask(AskRequest(
-    question: 'Apa syarat bahasanya?',
+    question: 'What is the language requirement?',
     scholarship: scholarship,           // from scholarships/{id}
     student: student,                   // from users/{uid}, optional
     allowCloud: user.cloudAiAllowed,    // privacy.cloudAiAllowed
-    languageCode: 'id',
+    languageCode: 'en',             // 'en' (default for the app) or 'id'
   ));
   print('${answer.text} (${answer.source}, ${answer.latencyMs} ms)');
 } on HybridAiException catch (e) {
@@ -50,7 +50,7 @@ try {
 
 // 4. Prepare checklist: never fails because of AI (falls back to source = rules)
 final checklist = await ai.generateChecklist(ChecklistRequest(
-  scholarship: scholarship, allowCloud: user.cloudAiAllowed, languageCode: 'id'));
+  scholarship: scholarship, allowCloud: user.cloudAiAllowed, languageCode: 'en'));
 ```
 
 ## Behaviour
@@ -67,7 +67,7 @@ Privacy: prompts, questions, and profile data are never written to the log. The 
 
 ### Error codes (`HybridAiException.code`)
 
-`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
+`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in English.
 
 ### "AI unavailable" state
 

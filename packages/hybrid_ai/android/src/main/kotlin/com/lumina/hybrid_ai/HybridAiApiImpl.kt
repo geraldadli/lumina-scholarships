@@ -94,13 +94,13 @@ class HybridAiApiImpl(
             }
             ModelAvailability.UNAVAILABLE -> throw HybridAiError(
                 ErrorCodes.ON_DEVICE_UNSUPPORTED,
-                "Perangkat ini tidak mendukung Gemini Nano.",
+                "This device does not support Gemini Nano.",
             )
             else -> Unit
         }
         val extension = model.onDeviceExtension ?: throw HybridAiError(
             ErrorCodes.ON_DEVICE_UNSUPPORTED,
-            "Ekstensi on-device tidak tersedia.",
+            "The on-device extension is not available.",
         )
         downloadJob = scope.launch {
             var total: Long? = null
@@ -122,7 +122,7 @@ class HybridAiApiImpl(
         if (question.isEmpty() || question.length > PromptBuilder.MAX_QUESTION_CHARS) {
             throw HybridAiError(
                 ErrorCodes.INVALID_REQUEST,
-                "Pertanyaan wajib diisi dan maksimal ${PromptBuilder.MAX_QUESTION_CHARS} karakter.",
+                "The question is required and must be at most ${PromptBuilder.MAX_QUESTION_CHARS} characters.",
             )
         }
         // Tanpa data beasiswa yang bisa dijadikan sumber, jangan sentuh model sama sekali.
@@ -137,7 +137,7 @@ class HybridAiApiImpl(
         val latency = SystemClock.elapsedRealtime() - started
 
         val text = response.text?.trim().orEmpty()
-        if (text.isEmpty()) throw HybridAiError(ErrorCodes.EMPTY_RESPONSE, "Model tidak memberikan jawaban.")
+        if (text.isEmpty()) throw HybridAiError(ErrorCodes.EMPTY_RESPONSE, "The model returned no answer.")
 
         val source = response.aiSource()
         Log.d(TAG, "ask selesai: mode=${mode.name} source=${source.name} latencyMs=$latency")
@@ -154,7 +154,7 @@ class HybridAiApiImpl(
         val base = ChecklistBuilder.base(request.scholarship, request.languageCode)
         val knownIds = request.scholarship.requirements.map { it.id }.toSet()
         if (knownIds.isEmpty()) {
-            return@guard ChecklistResult(base, AiSource.RULES, note = "Syarat beasiswa belum tersedia di data Lumina.")
+            return@guard ChecklistResult(base, AiSource.RULES, note = "Requirements for this scholarship are not available in Lumina yet.")
         }
         try {
             val settings = loadSettings()
@@ -167,7 +167,7 @@ class HybridAiApiImpl(
             val source = response.aiSource()
             Log.d(TAG, "checklist selesai: mode=${mode.name} source=${source.name} tips=${tips.size}")
             if (tips.isEmpty()) {
-                ChecklistResult(base, AiSource.RULES, note = "AI tidak memberi tips yang valid; checklist dari syarat resmi.")
+                ChecklistResult(base, AiSource.RULES, note = "The AI returned no valid tips; checklist built from the official requirements.")
             } else {
                 ChecklistResult(ChecklistBuilder.withTips(base, tips), source)
             }
@@ -176,7 +176,7 @@ class HybridAiApiImpl(
         } catch (e: Throwable) {
             val error = e.toHybridAiError()
             Log.d(TAG, "checklist memakai aturan: code=${error.code}")
-            ChecklistResult(base, AiSource.RULES, note = "AI tidak tersedia (${error.code}); checklist dari syarat resmi.")
+            ChecklistResult(base, AiSource.RULES, note = "AI unavailable (${error.code}); checklist built from the official requirements.")
         }
     }
 
@@ -328,7 +328,7 @@ private fun DownloadStatus.toProgress(total: Long?): DownloadProgress = when (th
     is DownloadStatus.DownloadCompleted -> DownloadProgress(state = DownloadState.COMPLETED, totalBytes = total)
     is DownloadStatus.DownloadFailed -> DownloadProgress(
         state = DownloadState.FAILED,
-        errorMessage = exception.message ?: "Unduhan gagal.",
+        errorMessage = exception.message ?: "Download failed.",
     )
     else -> DownloadProgress(state = DownloadState.IN_PROGRESS, totalBytes = total)
 }
@@ -358,7 +358,7 @@ private suspend fun <T> Task<T>.awaitResult(): T = suspendCancellableCoroutine {
             @Suppress("UNCHECKED_CAST")
             cont.resume(task.result as T)
         } else {
-            cont.resumeWithException(task.exception ?: RuntimeException("Task Firebase gagal."))
+            cont.resumeWithException(task.exception ?: RuntimeException("Firebase task failed."))
         }
     }
 }

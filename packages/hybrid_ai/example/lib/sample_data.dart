@@ -1,14 +1,14 @@
 import 'package:hybrid_ai/hybrid_ai.dart';
 
-/// Data CONTOH untuk menguji paket di perangkat. App produksi mengambil data ini
-/// dari Firestore (`scholarships/{id}` dan `users/{uid}`), lihat docs/firestore-contract.md.
+/// SAMPLE data for testing the package on a device. The production app reads this data
+/// from Firestore (`scholarships/{id}` and `users/{uid}`), see docs/firestore-contract.md.
 final sampleScholarships = <ScholarshipContext>[
   ScholarshipContext(
     id: 'mext-scholarship-2027',
     title: 'MEXT Scholarship (Monbukagakusho) 2027',
     provider: 'Government of Japan',
     description:
-        'Beasiswa penuh pemerintah Jepang mencakup biaya kuliah, tunjangan hidup bulanan, dan tiket pesawat PP.',
+        'Full scholarship from the Japanese government covering tuition, a monthly living allowance, and round-trip airfare.',
     fundingType: 'full',
     educationLevels: ['undergraduate', 'masters', 'phd'],
     eligibleCitizenships: ['ID', 'GLOBAL'],
@@ -19,13 +19,13 @@ final sampleScholarships = <ScholarshipContext>[
     deadline: '2027-05-10',
     status: 'active',
     requirements: [
-      RequirementItem(id: 'application-form', label: 'Formulir pendaftaran MEXT'),
-      RequirementItem(id: 'transcript', label: 'Transkrip nilai akademik'),
-      RequirementItem(id: 'research-plan', label: 'Rencana riset / field of study plan'),
-      RequirementItem(id: 'recommendation', label: 'Surat rekomendasi dari universitas'),
-      RequirementItem(id: 'language-cert', label: 'Sertifikat bahasa (JLPT atau bahasa Inggris)'),
+      RequirementItem(id: 'application-form', label: 'MEXT application form'),
+      RequirementItem(id: 'transcript', label: 'Academic transcript'),
+      RequirementItem(id: 'research-plan', label: 'Research plan / field of study plan'),
+      RequirementItem(id: 'recommendation', label: 'Recommendation letter from the university'),
+      RequirementItem(id: 'language-cert', label: 'Language certificate (JLPT or English)'),
     ],
-    benefits: ['Biaya kuliah penuh', 'Tunjangan bulanan', 'Tiket pesawat pulang-pergi'],
+    benefits: ['Full tuition', 'Monthly allowance', 'Round-trip airfare'],
     sourceUrl: 'https://www.id.emb-japan.go.jp/sch.html',
   ),
   ScholarshipContext(
@@ -33,7 +33,7 @@ final sampleScholarships = <ScholarshipContext>[
     title: 'Australia Awards Scholarships',
     provider: 'Australian Government (DFAT)',
     description:
-        'Beasiswa penuh S2/S3 di Australia untuk WNI: tiket pesawat, tunjangan awal, biaya kuliah penuh, dan biaya hidup.',
+        "Full Master's/PhD scholarship in Australia for Indonesian citizens: airfare, establishment allowance, full tuition, and living costs.",
     fundingType: 'full',
     educationLevels: ['masters', 'phd'],
     eligibleCitizenships: ['ID'],
@@ -53,11 +53,11 @@ final sampleScholarships = <ScholarshipContext>[
     ],
     benefits: [],
     sourceUrl: 'https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true',
-    notes: 'Min GPA: Masters 2.9, PhD 3.0. Intake berikutnya diperkirakan dibuka sekitar Feb 2027.',
+    notes: 'Min GPA: Masters 2.9, PhD 3.0. The next intake is expected to open around Feb 2027.',
   ),
 ];
 
-/// Profil contoh hasil "Set preferences".
+/// A sample profile, as produced by "Set preferences".
 final sampleStudent = StudentContext(
   educationLevel: 'masters',
   citizenship: 'ID',
@@ -70,8 +70,8 @@ final sampleStudent = StudentContext(
 );
 
 const sampleQuestions = <String>[
-  'Apa syarat bahasa untuk beasiswa ini?',
-  'Kapan batas pendaftarannya?',
-  'Apakah profil saya cocok? Jelaskan singkat.',
-  'Apa saja yang ditanggung beasiswa ini?',
+  'What is the language requirement for this scholarship?',
+  'What is the application deadline?',
+  'Is my profile a good match? Explain briefly.',
+  'What does this scholarship cover?',
 ];

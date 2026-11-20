@@ -7,7 +7,7 @@ import 'sample_data.dart';
 
 void main() => runApp(const LuminaAiLabApp());
 
-/// Alat uji paket hybrid_ai di perangkat (BUKAN UI produk Lumina).
+/// Test tool for the hybrid_ai package on a device (NOT the Lumina product UI).
 class LuminaAiLabApp extends StatelessWidget {
   const LuminaAiLabApp({super.key});
 
@@ -37,7 +37,7 @@ class _LabPageState extends State<LabPage> {
   StreamSubscription<DownloadProgress>? _downloadSub;
 
   bool _allowCloud = true;
-  bool _english = false;
+  bool _indonesian = false;
   ScholarshipContext _scholarship = sampleScholarships.first;
 
   bool _asking = false;
@@ -60,7 +60,7 @@ class _LabPageState extends State<LabPage> {
     super.dispose();
   }
 
-  String get _lang => _english ? 'en' : 'id';
+  String get _lang => _indonesian ? 'id' : 'en';
 
   Future<void> _refreshStatus() async {
     setState(() => _statusError = null);
@@ -97,7 +97,7 @@ class _LabPageState extends State<LabPage> {
       ));
       if (mounted) setState(() => _answer = answer);
     } on HybridAiException catch (e) {
-      if (mounted) setState(() => _askError = '${e.userMessage}\nKode: ${e.rawCode}');
+      if (mounted) setState(() => _askError = '${e.userMessage}\nCode: ${e.rawCode}');
     } finally {
       if (mounted) setState(() => _asking = false);
     }
@@ -117,7 +117,7 @@ class _LabPageState extends State<LabPage> {
       ));
       if (mounted) setState(() => _checklist = result);
     } on HybridAiException catch (e) {
-      if (mounted) setState(() => _askError = '${e.userMessage}\nKode: ${e.rawCode}');
+      if (mounted) setState(() => _askError = '${e.userMessage}\nCode: ${e.rawCode}');
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -140,73 +140,73 @@ class _LabPageState extends State<LabPage> {
     );
   }
 
-  // ───────────── Status Gemini Nano & Remote Config ─────────────
+  // ───────────── Gemini Nano status & Remote Config ─────────────
   Widget _statusCard() {
     final s = _status;
     final downloading = _download != null &&
         _download!.state != DownloadState.completed &&
         _download!.state != DownloadState.failed;
     return _section(
-      title: '1. Status AI',
+      title: '1. AI status',
       trailing: IconButton(onPressed: _refreshStatus, icon: const Icon(Icons.refresh)),
       children: [
         if (_statusError != null) Text(_statusError!, style: const TextStyle(color: Colors.red)),
         if (s == null && _statusError == null) const LinearProgressIndicator(),
         if (s != null) ...[
           _kv('Gemini Nano', _availabilityLabel(s.onDeviceModel)),
-          if (s.onDeviceModelName != null) _kv('Model perangkat', s.onDeviceModelName!),
+          if (s.onDeviceModelName != null) _kv('On-device model', s.onDeviceModelName!),
           _kv('Mode (Remote Config)', s.inferenceMode),
-          _kv('Model cloud', s.cloudModel),
-          _kv('Ambang skor cocok', s.minMatchScore.toStringAsFixed(2)),
-          _kv('Remote Config', s.remoteConfigFetched ? 'terambil' : 'pakai default'),
+          _kv('Cloud model', s.cloudModel),
+          _kv('Match score threshold', s.minMatchScore.toStringAsFixed(2)),
+          _kv('Remote Config', s.remoteConfigFetched ? 'fetched' : 'using defaults'),
           if (s.onDeviceModel == ModelAvailability.downloadable && !downloading)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: FilledButton.icon(
                 onPressed: _startDownload,
                 icon: const Icon(Icons.download),
-                label: const Text('Unduh Gemini Nano'),
+                label: const Text('Download Gemini Nano'),
               ),
             ),
         ],
         if (_download != null) ...[
           const SizedBox(height: 8),
-          Text('Unduhan: ${_download!.state.name}${_download!.errorMessage == null ? '' : ' - ${_download!.errorMessage}'}'),
+          Text('Download: ${_download!.state.name}${_download!.errorMessage == null ? '' : ' - ${_download!.errorMessage}'}'),
           if (downloading) LinearProgressIndicator(value: _downloadFraction(_download!)),
         ],
       ],
     );
   }
 
-  // ───────────── Privasi & bahasa ─────────────
+  // ───────────── Privacy & language ─────────────
   Widget _settingsCard() => _section(
-        title: '2. Pengaturan',
+        title: '2. Settings',
         children: [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Izinkan AI cloud'),
+            title: const Text('Allow cloud AI'),
             subtitle: Text(_allowCloud
-                ? 'Gemini Nano dulu, cloud bila perlu'
-                : 'Mode privat: hanya Gemini Nano, data tidak keluar dari HP'),
+                ? 'Gemini Nano first, cloud if needed'
+                : 'Private mode: Gemini Nano only, data never leaves the phone'),
             value: _allowCloud,
             onChanged: (v) => setState(() => _allowCloud = v),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Jawab dalam bahasa Inggris'),
-            subtitle: const Text('Nano paling stabil untuk bahasa Inggris'),
-            value: _english,
-            onChanged: (v) => setState(() => _english = v),
+            title: const Text('Answer in Indonesian'),
+            subtitle: const Text('Gemini Nano is most reliable in English'),
+            value: _indonesian,
+            onChanged: (v) => setState(() => _indonesian = v),
           ),
         ],
       );
 
-  // ───────────── Beasiswa & skor kecocokan ─────────────
+  // ───────────── Scholarship & match score ─────────────
   Widget _matchCard() {
     final result = _scorer.score(sampleStudent, _scholarship);
     final threshold = _status?.minMatchScore ?? 0.65;
     return _section(
-      title: '3. Beasiswa & skor kecocokan',
+      title: '3. Scholarship & match score',
       children: [
         DropdownButton<ScholarshipContext>(
           isExpanded: true,
@@ -223,8 +223,8 @@ class _LabPageState extends State<LabPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Skor ${(result.score * 100).round()}% · ${result.meetsThreshold(threshold) ? 'COCOK' : 'belum cocok'}'
-          '${result.eligible ? '' : ' · ada syarat wajib tidak terpenuhi'}',
+          'Score ${(result.score * 100).round()}% · ${result.meetsThreshold(threshold) ? 'MATCH' : 'not a match yet'}'
+          '${result.eligible ? '' : ' · a mandatory requirement is not met'}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         for (final r in result.reasons)
@@ -235,7 +235,7 @@ class _LabPageState extends State<LabPage> {
 
   // ───────────── Ask AI ─────────────
   Widget _askCard() => _section(
-        title: '4. Tanya AI',
+        title: '4. Ask AI',
         children: [
           Wrap(
             spacing: 6,
@@ -249,14 +249,14 @@ class _LabPageState extends State<LabPage> {
             controller: _question,
             maxLines: 3,
             maxLength: 1000,
-            decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Pertanyaan'),
+            decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Question'),
           ),
           FilledButton.icon(
             onPressed: _asking ? null : _ask,
             icon: _asking
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.auto_awesome),
-            label: Text(_asking ? 'Menunggu jawaban…' : 'Tanya AI'),
+            label: Text(_asking ? 'Waiting for the answer…' : 'Ask AI'),
           ),
           if (_askError != null) ...[
             const SizedBox(height: 8),
@@ -271,19 +271,19 @@ class _LabPageState extends State<LabPage> {
             const SizedBox(height: 6),
             SelectableText(_answer!.text),
             for (final url in _answer!.citations)
-              Text('Sumber: $url', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text('Source: $url', style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ],
       );
 
-  // ───────────── Checklist Prepare ─────────────
+  // ───────────── Prepare checklist ─────────────
   Widget _checklistCard() => _section(
-        title: '5. Checklist Prepare',
+        title: '5. Prepare checklist',
         children: [
           OutlinedButton.icon(
             onPressed: _checking ? null : _generateChecklist,
             icon: const Icon(Icons.checklist),
-            label: Text(_checking ? 'Menyusun…' : 'Buat checklist'),
+            label: Text(_checking ? 'Building…' : 'Create checklist'),
           ),
           if (_checklist != null) ...[
             const SizedBox(height: 8),
@@ -328,16 +328,16 @@ class _LabPageState extends State<LabPage> {
       );
 
   static String _availabilityLabel(ModelAvailability a) => switch (a) {
-        ModelAvailability.available => 'Tersedia ✓',
-        ModelAvailability.downloadable => 'Bisa diunduh',
-        ModelAvailability.downloading => 'Sedang diunduh…',
-        ModelAvailability.unavailable => 'Tidak didukung perangkat',
+        ModelAvailability.available => 'Available ✓',
+        ModelAvailability.downloadable => 'Can be downloaded',
+        ModelAvailability.downloading => 'Downloading…',
+        ModelAvailability.unavailable => 'Not supported on this device',
       };
 
   static String _sourceLabel(AiSource s, String? model) => switch (s) {
-        AiSource.onDevice => 'Di perangkat${model == null ? '' : ' · $model'}',
+        AiSource.onDevice => 'On-device${model == null ? '' : ' · $model'}',
         AiSource.cloud => 'Cloud${model == null ? '' : ' · $model'}',
-        AiSource.rules => 'Tanpa AI (syarat resmi)',
+        AiSource.rules => 'No AI (official requirements)',
       };
 
   static double? _downloadFraction(DownloadProgress p) {

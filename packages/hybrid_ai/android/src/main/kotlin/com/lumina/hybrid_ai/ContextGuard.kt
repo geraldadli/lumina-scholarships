@@ -19,7 +19,7 @@ object ContextGuard {
         if (missing.isEmpty()) return null
         return HybridAiError(
             ErrorCodes.NO_CONTEXT,
-            "Data beasiswa belum lengkap untuk dijadikan sumber jawaban (kosong: ${missing.joinToString()}).",
+            "Scholarship data is incomplete and cannot be used as an answer source (missing: ${missing.joinToString()}).",
         )
     }
 

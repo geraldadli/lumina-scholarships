@@ -69,7 +69,7 @@ void main() {
       ai.ask(askRequest()),
       throwsA(isA<HybridAiException>()
           .having((e) => e.code, 'code', HybridAiErrorCode.privateModeUnavailable)
-          .having((e) => e.userMessage, 'userMessage', contains('Mode privat'))),
+          .having((e) => e.userMessage, 'userMessage', contains('Private mode'))),
     );
   });
 

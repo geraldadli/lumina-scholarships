@@ -1,40 +1,39 @@
-/// Tombol/aksi yang sebaiknya ditampilkan UI saat AI tidak tersedia.
+/// The button/action the UI should offer when the AI is unavailable.
 enum AiUnavailableAction {
-  /// Arahkan ke Pengaturan privasi agar user bisa mengizinkan AI cloud.
+  /// Send the user to the privacy settings so they can allow cloud AI.
   openPrivacySettings,
 
-  /// Tampilkan tombol "Unduh model AI" (panggil `HybridAi.downloadModel()`).
+  /// Show a "Download AI model" button (call `HybridAi.downloadModel()`).
   downloadModel,
 
-  /// Gemini Nano sedang diunduh: tampilkan progres (dari `HybridAi.downloadModel()`) dan
-  /// teks "tunggu unduhan selesai". Tawarkan "Coba lagi" begitu state-nya `completed`.
+  /// Gemini Nano is downloading: show progress (from `HybridAi.downloadModel()`) and the text
+  /// "wait for the download to finish". Offer "Try again" once the state is `completed`.
   waitForDownload,
 
-  /// Tampilkan tombol "Coba lagi".
+  /// Show a "Try again" button.
   retry,
 
-  /// Minta user mengubah pertanyaan.
+  /// Ask the user to change the question.
   editQuestion,
 
-  /// Tidak ada yang bisa dilakukan user; tampilkan penjelasan saja.
+  /// Nothing the user can do; just show the explanation.
   none,
 }
 
-/// Penjelasan tunggal untuk kondisi "AI tidak tersedia" (kotak kuning di diagram alur AI).
+/// A single explanation for the "AI unavailable" state (the yellow box in the AI flow diagram).
 ///
-/// UI cukup menampilkan [title], [message], dan tombol sesuai [action], tanpa
-/// perlu mengenal 13 kode error satu per satu. Dapatkan lewat
-/// `HybridAiException.unavailability`.
+/// The UI only needs to show [title], [message], and a button matching [action],
+/// without knowing every error code. Get it from `HybridAiException.unavailability`.
 class AiUnavailability {
   const AiUnavailability({required this.title, required this.message, required this.action});
 
-  /// Judul pendek, cocok untuk judul kartu/dialog.
+  /// Short title, suitable for a card or dialog title.
   final String title;
 
-  /// Penjelasan ramah dalam Bahasa Indonesia.
+  /// A friendly explanation in English.
   final String message;
 
-  /// Aksi yang disarankan untuk user.
+  /// The suggested action for the user.
   final AiUnavailableAction action;
 
   @override
