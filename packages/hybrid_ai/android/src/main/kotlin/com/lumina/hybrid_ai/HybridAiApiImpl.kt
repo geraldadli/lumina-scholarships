@@ -341,9 +341,11 @@ internal fun Throwable.toHybridAiError(): HybridAiError {
         is PromptBlockedException, is ContentBlockedException, is ResponseStoppedException -> ErrorCodes.CONTENT_BLOCKED
         is FirebaseAIOnDeviceNotAvailableException -> ErrorCodes.ON_DEVICE_UNSUPPORTED
         is FirebaseAIOnDeviceInvalidRequestException -> ErrorCodes.INVALID_REQUEST
-        is RequestTimeoutException, is java.io.IOException -> ErrorCodes.NETWORK
+        is RequestTimeoutException -> ErrorCodes.TIMEOUT
         is IllegalStateException if "FirebaseApp" in text -> ErrorCodes.FIREBASE_NOT_CONFIGURED
-        else -> ErrorClassifier.fromMessage(text)
+        else -> ErrorClassifier.fromThrowable(this)
+            ?: ErrorClassifier.fromThrowable(cause)
+            ?: ErrorClassifier.fromMessage(text)
             ?: ErrorClassifier.fromMessage(cause?.message)
             ?: ErrorCodes.UNKNOWN
     }

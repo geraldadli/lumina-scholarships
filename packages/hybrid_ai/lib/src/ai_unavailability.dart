@@ -6,6 +6,10 @@ enum AiUnavailableAction {
   /// Tampilkan tombol "Unduh model AI" (panggil `HybridAi.downloadModel()`).
   downloadModel,
 
+  /// Gemini Nano sedang diunduh: tampilkan progres (dari `HybridAi.downloadModel()`) dan
+  /// teks "tunggu unduhan selesai". Tawarkan "Coba lagi" begitu state-nya `completed`.
+  waitForDownload,
+
   /// Tampilkan tombol "Coba lagi".
   retry,
 

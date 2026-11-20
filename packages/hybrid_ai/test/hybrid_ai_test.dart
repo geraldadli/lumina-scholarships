@@ -73,6 +73,16 @@ void main() {
     );
   });
 
+  test('TIMEOUT dari native menjadi timeout, terpisah dari network', () async {
+    final ai = HybridAi(hostApi: FakeHost(error: PlatformException(code: 'TIMEOUT', message: 'DEADLINE_EXCEEDED')));
+    await expectLater(
+      ai.ask(askRequest()),
+      throwsA(isA<HybridAiException>()
+          .having((e) => e.code, 'code', HybridAiErrorCode.timeout)
+          .having((e) => e.rawCode, 'rawCode', 'TIMEOUT')),
+    );
+  });
+
   test('NO_CONTEXT dari native menjadi noContext', () async {
     final ai = HybridAi(hostApi: FakeHost(error: PlatformException(code: 'NO_CONTEXT', message: 'x')));
     await expectLater(

@@ -28,6 +28,9 @@ enum HybridAiErrorCode {
   /// Token App Check belum terdaftar / tidak valid (jalur cloud).
   appCheckFailed,
   network,
+
+  /// AI cloud terlalu lama menjawab (timeout / `DEADLINE_EXCEEDED`). Bukan masalah koneksi: tawarkan "Coba lagi".
+  timeout,
   contentBlocked,
   emptyResponse,
 
@@ -57,11 +60,13 @@ class HybridAiException implements Exception {
           'Mode privat aktif, tetapi HP ini belum mendukung AI di perangkat. Izinkan AI cloud di Pengaturan untuk memakai asisten.',
         HybridAiErrorCode.onDeviceUnsupported => 'HP ini belum mendukung AI di perangkat.',
         HybridAiErrorCode.modelNotDownloaded => 'Model AI di perangkat belum diunduh. Unduh dulu untuk memakai asisten tanpa internet.',
-        HybridAiErrorCode.modelDownloading => 'Model AI sedang diunduh. Coba lagi setelah selesai.',
+        HybridAiErrorCode.modelDownloading => 'Model AI sedang diunduh. Tunggu sampai unduhan selesai, lalu coba lagi.',
         HybridAiErrorCode.busy => 'AI sedang sibuk. Coba lagi beberapa detik lagi.',
         HybridAiErrorCode.quotaExceeded => 'Batas pemakaian AI tercapai. Coba lagi nanti.',
         HybridAiErrorCode.appCheckFailed => 'Aplikasi belum terverifikasi untuk memakai AI cloud.',
-        HybridAiErrorCode.network => 'Tidak ada koneksi internet untuk AI cloud.',
+        HybridAiErrorCode.network =>
+          'Tidak ada koneksi internet. AI cloud butuh internet; AI di perangkat hanya bisa dipakai bila model Nano sudah siap di HP ini.',
+        HybridAiErrorCode.timeout => 'Permintaan ke AI terlalu lama dan melewati batas waktu. Coba lagi.',
         HybridAiErrorCode.contentBlocked => 'Pertanyaan tidak dapat dijawab. Coba ubah kalimatnya.',
         HybridAiErrorCode.emptyResponse => 'AI tidak memberikan jawaban. Coba lagi.',
         HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid atau terlalu panjang.',
@@ -86,6 +91,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.quotaExceeded => 'Batas pemakaian tercapai',
         HybridAiErrorCode.appCheckFailed => 'Aplikasi belum terverifikasi',
         HybridAiErrorCode.network => 'Tidak ada koneksi',
+        HybridAiErrorCode.timeout => 'Permintaan AI habis waktu',
         HybridAiErrorCode.contentBlocked => 'Pertanyaan tidak bisa dijawab',
         HybridAiErrorCode.emptyResponse => 'AI tidak menjawab',
         HybridAiErrorCode.invalidRequest => 'Pertanyaan tidak valid',
@@ -97,10 +103,11 @@ class HybridAiException implements Exception {
   AiUnavailableAction get _action => switch (code) {
         HybridAiErrorCode.privateModeUnavailable => AiUnavailableAction.openPrivacySettings,
         HybridAiErrorCode.modelNotDownloaded => AiUnavailableAction.downloadModel,
-        HybridAiErrorCode.modelDownloading ||
+        HybridAiErrorCode.modelDownloading => AiUnavailableAction.waitForDownload,
         HybridAiErrorCode.busy ||
         HybridAiErrorCode.quotaExceeded ||
         HybridAiErrorCode.network ||
+        HybridAiErrorCode.timeout ||
         HybridAiErrorCode.emptyResponse ||
         HybridAiErrorCode.unknown =>
           AiUnavailableAction.retry,
@@ -123,6 +130,7 @@ class HybridAiException implements Exception {
     'QUOTA_EXCEEDED': HybridAiErrorCode.quotaExceeded,
     'APP_CHECK_FAILED': HybridAiErrorCode.appCheckFailed,
     'NETWORK': HybridAiErrorCode.network,
+    'TIMEOUT': HybridAiErrorCode.timeout,
     'CONTENT_BLOCKED': HybridAiErrorCode.contentBlocked,
     'EMPTY_RESPONSE': HybridAiErrorCode.emptyResponse,
     'FIREBASE_NOT_CONFIGURED': HybridAiErrorCode.firebaseNotConfigured,

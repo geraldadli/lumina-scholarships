@@ -67,7 +67,7 @@ Privacy: prompts, questions, and profile data are never written to the log. The 
 
 ### Error codes (`HybridAiException.code`)
 
-`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
+`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
 
 ### "AI unavailable" state
 
@@ -80,6 +80,8 @@ Instead of switching over every code, show one state from `e.unavailability`:
   switch (u.action) {
     case AiUnavailableAction.openPrivacySettings: /* button: open Settings */
     case AiUnavailableAction.downloadModel:       /* button: ai.downloadModel() */
+    case AiUnavailableAction.waitForDownload:     /* progress bar from ai.downloadModel();
+                                                     show "Retry" once state == completed */
     case AiUnavailableAction.retry:               /* button: try again */
     case AiUnavailableAction.editQuestion:        /* focus the question field */
     case AiUnavailableAction.none:                /* explanation only */

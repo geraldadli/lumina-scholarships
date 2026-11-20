@@ -18,14 +18,32 @@ void main() {
     test('masalah sementara menawarkan coba lagi', () {
       for (final code in [
         HybridAiErrorCode.network,
+        HybridAiErrorCode.timeout,
         HybridAiErrorCode.busy,
         HybridAiErrorCode.quotaExceeded,
-        HybridAiErrorCode.modelDownloading,
         HybridAiErrorCode.emptyResponse,
         HybridAiErrorCode.unknown,
       ]) {
         expect(error(code).unavailability.action, AiUnavailableAction.retry, reason: code.name);
       }
+    });
+
+    test('timeout dijelaskan terpisah dari putus koneksi', () {
+      final timeout = error(HybridAiErrorCode.timeout).unavailability;
+      final network = error(HybridAiErrorCode.network).unavailability;
+      expect(timeout.title, 'Permintaan AI habis waktu');
+      expect(timeout.message, contains('melewati batas waktu'));
+      expect(network.title, 'Tidak ada koneksi');
+      expect(network.message, contains('Tidak ada koneksi internet'));
+      expect(timeout.message, isNot(network.message));
+      expect(timeout.action, AiUnavailableAction.retry);
+      expect(network.action, AiUnavailableAction.retry);
+    });
+
+    test('Nano masih diunduh: minta user menunggu, bukan langsung coba lagi', () {
+      final u = error(HybridAiErrorCode.modelDownloading).unavailability;
+      expect(u.action, AiUnavailableAction.waitForDownload);
+      expect(u.message, contains('Tunggu sampai unduhan selesai'));
     });
 
     test('pertanyaan bermasalah meminta user mengubah pertanyaan', () {

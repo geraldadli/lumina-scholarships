@@ -1,5 +1,7 @@
 ## Unreleased
 
+- New error code `TIMEOUT` (`HybridAiErrorCode.timeout`): a cloud request that takes too long (`RequestTimeoutException`, `SocketTimeoutException`, `DEADLINE_EXCEEDED`) is no longer reported as `NETWORK`. "No connection" and "timed out" now have separate messages.
+- New action `AiUnavailableAction.waitForDownload` for `modelDownloading`: show download progress and offer "Coba lagi" once the download has completed.
 - `ContextGuard`: `ask()` refuses to call any model when the scholarship has no title or no http(s) `sourceUrl`. New error code `NO_CONTEXT` (`HybridAiErrorCode.noContext`) with its own "AI unavailable" card.
 - `HybridAiException.unavailability`: one `AiUnavailability` (title, message, suggested `AiUnavailableAction`) for the "AI unavailable" UI state.
 

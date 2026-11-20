@@ -18,6 +18,7 @@ object ErrorCodes {
     const val QUOTA_EXCEEDED = "QUOTA_EXCEEDED"
     const val APP_CHECK_FAILED = "APP_CHECK_FAILED"
     const val NETWORK = "NETWORK"
+    const val TIMEOUT = "TIMEOUT"
     const val CONTENT_BLOCKED = "CONTENT_BLOCKED"
     const val EMPTY_RESPONSE = "EMPTY_RESPONSE"
     const val FIREBASE_NOT_CONFIGURED = "FIREBASE_NOT_CONFIGURED"
@@ -73,8 +74,19 @@ object ErrorClassifier {
             "battery" in m && "quota" in m -> ErrorCodes.QUOTA_EXCEEDED
             "busy" in m -> ErrorCodes.BUSY
             "app check" in m || "appcheck" in m || "app_check" in m -> ErrorCodes.APP_CHECK_FAILED
-            "unable to resolve host" in m || "network" in m || "timeout" in m || "timed out" in m -> ErrorCodes.NETWORK
+            // Putus koneksi dan "terlalu lama menjawab" adalah dua masalah berbeda untuk user.
+            "unable to resolve host" in m -> ErrorCodes.NETWORK
+            "deadline_exceeded" in m || "deadline exceeded" in m || "timed out" in m || "timeout" in m -> ErrorCodes.TIMEOUT
+            "network" in m -> ErrorCodes.NETWORK
             else -> null
         }
+    }
+
+    /** Exception Java standar: timeout dipisah dari putus koneksi (DNS, tidak ada sinyal, dll). */
+    fun fromThrowable(error: Throwable?): String? = when (error) {
+        null -> null
+        is java.net.SocketTimeoutException -> ErrorCodes.TIMEOUT
+        is java.io.IOException -> ErrorCodes.NETWORK
+        else -> null
     }
 }
