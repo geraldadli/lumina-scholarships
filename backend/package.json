@@ -17,6 +17,7 @@
     "process:deadlines": "tsx src/process-deadlines.ts",
     "sync:scholarships": "tsx src/run-updates.ts",
     "sync:dry": "tsx src/run-updates.ts --dry-run",
+    "test:unit": "tsx --test test/url.test.ts",
     "test:rules": "firebase emulators:exec --config ../firebase.json --only firestore --project demo-lumina \"tsx --test test/firestore.rules.test.ts\""
   },
   "dependencies": {

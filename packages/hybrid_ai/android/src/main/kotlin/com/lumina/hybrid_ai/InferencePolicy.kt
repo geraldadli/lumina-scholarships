@@ -9,6 +9,7 @@ enum class AiMode { PREFER_ON_DEVICE, ONLY_ON_DEVICE, PREFER_IN_CLOUD, ONLY_IN_C
 /** Kode error yang dikirim ke Flutter (`PlatformException.code`). Didokumentasikan di README paket. */
 object ErrorCodes {
     const val INVALID_REQUEST = "INVALID_REQUEST"
+    const val NO_CONTEXT = "NO_CONTEXT"
     const val PRIVATE_MODE_UNAVAILABLE = "PRIVATE_MODE_UNAVAILABLE"
     const val ON_DEVICE_UNSUPPORTED = "ON_DEVICE_UNSUPPORTED"
     const val MODEL_NOT_DOWNLOADED = "MODEL_NOT_DOWNLOADED"
@@ -17,6 +18,7 @@ object ErrorCodes {
     const val QUOTA_EXCEEDED = "QUOTA_EXCEEDED"
     const val APP_CHECK_FAILED = "APP_CHECK_FAILED"
     const val NETWORK = "NETWORK"
+    const val TIMEOUT = "TIMEOUT"
     const val CONTENT_BLOCKED = "CONTENT_BLOCKED"
     const val EMPTY_RESPONSE = "EMPTY_RESPONSE"
     const val FIREBASE_NOT_CONFIGURED = "FIREBASE_NOT_CONFIGURED"
@@ -46,19 +48,19 @@ object InferencePolicy {
         return when (onDevice) {
             ModelAvailability.DOWNLOADABLE -> HybridAiError(
                 ErrorCodes.MODEL_NOT_DOWNLOADED,
-                "Gemini Nano belum diunduh. Panggil downloadModel() terlebih dahulu.",
+                "Gemini Nano has not been downloaded yet. Call downloadModel() first.",
             )
             ModelAvailability.DOWNLOADING -> HybridAiError(
                 ErrorCodes.MODEL_DOWNLOADING,
-                "Gemini Nano sedang diunduh. Coba lagi setelah unduhan selesai.",
+                "Gemini Nano is still downloading. Try again when the download finishes.",
             )
             else -> if (!allowCloud) {
                 HybridAiError(
                     ErrorCodes.PRIVATE_MODE_UNAVAILABLE,
-                    "Mode privat aktif, tetapi perangkat ini tidak mendukung Gemini Nano.",
+                    "Private mode is on, but this device does not support Gemini Nano.",
                 )
             } else {
-                HybridAiError(ErrorCodes.ON_DEVICE_UNSUPPORTED, "Perangkat ini tidak mendukung Gemini Nano.")
+                HybridAiError(ErrorCodes.ON_DEVICE_UNSUPPORTED, "This device does not support Gemini Nano.")
             }
         }
     }
@@ -66,14 +68,57 @@ object InferencePolicy {
 
 /** Klasifikasi error dari pesan teks (dipakai untuk exception on-device yang tidak bertipe spesifik). */
 object ErrorClassifier {
+    private const val MAX_CAUSE_DEPTH = 8
+
     fun fromMessage(message: String?): String? {
         val m = message?.lowercase() ?: return null
         return when {
             "battery" in m && "quota" in m -> ErrorCodes.QUOTA_EXCEEDED
             "busy" in m -> ErrorCodes.BUSY
             "app check" in m || "appcheck" in m || "app_check" in m -> ErrorCodes.APP_CHECK_FAILED
-            "unable to resolve host" in m || "network" in m || "timeout" in m || "timed out" in m -> ErrorCodes.NETWORK
+            // A timeout wins over a network error: "AI took too long" is what the user must see
+            // even when the same failure also mentions the network.
+            isTimeoutMessage(m) -> ErrorCodes.TIMEOUT
+            "unable to resolve host" in m || "network" in m -> ErrorCodes.NETWORK
             else -> null
         }
+    }
+
+    /**
+     * Standard Java exceptions, looking through the whole cause chain. A timeout anywhere in the chain
+     * wins over a network error: an `IOException` that wraps a `SocketTimeoutException` is a TIMEOUT.
+     * Only when no timeout is present is an `IOException` (DNS failure, no signal, ...) reported as NETWORK.
+     */
+    fun fromThrowable(error: Throwable?): String? {
+        val chain = causeChain(error)
+        return when {
+            chain.isEmpty() -> null
+            isTimeout(error) -> ErrorCodes.TIMEOUT
+            chain.any { it is java.io.IOException } -> ErrorCodes.NETWORK
+            else -> null
+        }
+    }
+
+    /** True when the exception, any of its causes, or any of their messages describes a timeout. */
+    fun isTimeout(error: Throwable?): Boolean = causeChain(error).any {
+        it is java.net.SocketTimeoutException ||
+            it is java.util.concurrent.TimeoutException ||
+            isTimeoutMessage(it.message?.lowercase())
+    }
+
+    /** The exception followed by its causes, outermost first. Bounded and safe against cause cycles. */
+    fun causeChain(error: Throwable?): List<Throwable> {
+        val chain = ArrayList<Throwable>()
+        var current = error
+        while (current != null && chain.size < MAX_CAUSE_DEPTH && chain.none { it === current }) {
+            chain += current
+            current = current.cause
+        }
+        return chain
+    }
+
+    private fun isTimeoutMessage(lowercased: String?): Boolean {
+        val m = lowercased ?: return false
+        return "deadline_exceeded" in m || "deadline exceeded" in m || "timed out" in m || "timeout" in m
     }
 }

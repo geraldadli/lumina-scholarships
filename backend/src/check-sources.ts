@@ -55,7 +55,7 @@ async function checkOne(doc: QueryDocumentSnapshot): Promise<CheckResult> {
     const text = normalizeHtml(await res.text(), source.ignorePatterns);
     if (text.length < 50) {
       // Halaman kosong / dirender JS: jangan simpan hash yang tidak bermakna.
-      return { sourceId: doc.id, status: 'error', httpStatus: res.status, error: 'Konten halaman terlalu pendek' };
+      return { sourceId: doc.id, status: 'error', httpStatus: res.status, error: 'Page content is too short' };
     }
     const hash = sha256(text);
     const status = !source.lastContentHash ? 'baseline' : source.lastContentHash === hash ? 'unchanged' : 'updated';

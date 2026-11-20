@@ -94,13 +94,13 @@ class HybridAiApiImpl(
             }
             ModelAvailability.UNAVAILABLE -> throw HybridAiError(
                 ErrorCodes.ON_DEVICE_UNSUPPORTED,
-                "Perangkat ini tidak mendukung Gemini Nano.",
+                "This device does not support Gemini Nano.",
             )
             else -> Unit
         }
         val extension = model.onDeviceExtension ?: throw HybridAiError(
             ErrorCodes.ON_DEVICE_UNSUPPORTED,
-            "Ekstensi on-device tidak tersedia.",
+            "The on-device extension is not available.",
         )
         downloadJob = scope.launch {
             var total: Long? = null
@@ -122,9 +122,11 @@ class HybridAiApiImpl(
         if (question.isEmpty() || question.length > PromptBuilder.MAX_QUESTION_CHARS) {
             throw HybridAiError(
                 ErrorCodes.INVALID_REQUEST,
-                "Pertanyaan wajib diisi dan maksimal ${PromptBuilder.MAX_QUESTION_CHARS} karakter.",
+                "The question is required and must be at most ${PromptBuilder.MAX_QUESTION_CHARS} characters.",
             )
         }
+        // Tanpa data beasiswa yang bisa dijadikan sumber, jangan sentuh model sama sekali.
+        ContextGuard.check(request.scholarship)?.let { throw it }
         val settings = loadSettings()
         val mode = InferencePolicy.resolve(settings.mode, request.allowCloud)
         val model = model(mode, settings.cloudModel)
@@ -135,7 +137,7 @@ class HybridAiApiImpl(
         val latency = SystemClock.elapsedRealtime() - started
 
         val text = response.text?.trim().orEmpty()
-        if (text.isEmpty()) throw HybridAiError(ErrorCodes.EMPTY_RESPONSE, "Model tidak memberikan jawaban.")
+        if (text.isEmpty()) throw HybridAiError(ErrorCodes.EMPTY_RESPONSE, "The model returned no answer.")
 
         val source = response.aiSource()
         Log.d(TAG, "ask selesai: mode=${mode.name} source=${source.name} latencyMs=$latency")
@@ -152,7 +154,7 @@ class HybridAiApiImpl(
         val base = ChecklistBuilder.base(request.scholarship, request.languageCode)
         val knownIds = request.scholarship.requirements.map { it.id }.toSet()
         if (knownIds.isEmpty()) {
-            return@guard ChecklistResult(base, AiSource.RULES, note = "Syarat beasiswa belum tersedia di data Lumina.")
+            return@guard ChecklistResult(base, AiSource.RULES, note = "Requirements for this scholarship are not available in Lumina yet.")
         }
         try {
             val settings = loadSettings()
@@ -165,7 +167,7 @@ class HybridAiApiImpl(
             val source = response.aiSource()
             Log.d(TAG, "checklist selesai: mode=${mode.name} source=${source.name} tips=${tips.size}")
             if (tips.isEmpty()) {
-                ChecklistResult(base, AiSource.RULES, note = "AI tidak memberi tips yang valid; checklist dari syarat resmi.")
+                ChecklistResult(base, AiSource.RULES, note = "The AI returned no valid tips; checklist built from the official requirements.")
             } else {
                 ChecklistResult(ChecklistBuilder.withTips(base, tips), source)
             }
@@ -174,7 +176,7 @@ class HybridAiApiImpl(
         } catch (e: Throwable) {
             val error = e.toHybridAiError()
             Log.d(TAG, "checklist memakai aturan: code=${error.code}")
-            ChecklistResult(base, AiSource.RULES, note = "AI tidak tersedia (${error.code}); checklist dari syarat resmi.")
+            ChecklistResult(base, AiSource.RULES, note = "AI unavailable (${error.code}); checklist built from the official requirements.")
         }
     }
 
@@ -296,7 +298,7 @@ class HybridAiApiImpl(
         const val KEY_MODE = "ai_inference_mode"
         const val KEY_CLOUD_MODEL = "cloud_fallback_model"
         const val KEY_MIN_MATCH = "min_match_score_threshold"
-        const val DEFAULT_CLOUD_MODEL = "gemini-2.5-flash"
+        const val DEFAULT_CLOUD_MODEL = "gemini-3.5-flash-lite"
         const val DEFAULT_MIN_MATCH = 0.65
         private const val FETCH_TIMEOUT_MS = 5_000L
         private const val ON_DEVICE_MAX_OUTPUT_TOKENS = 256
@@ -326,7 +328,7 @@ private fun DownloadStatus.toProgress(total: Long?): DownloadProgress = when (th
     is DownloadStatus.DownloadCompleted -> DownloadProgress(state = DownloadState.COMPLETED, totalBytes = total)
     is DownloadStatus.DownloadFailed -> DownloadProgress(
         state = DownloadState.FAILED,
-        errorMessage = exception.message ?: "Unduhan gagal.",
+        errorMessage = exception.message ?: "Download failed.",
     )
     else -> DownloadProgress(state = DownloadState.IN_PROGRESS, totalBytes = total)
 }
@@ -339,11 +341,18 @@ internal fun Throwable.toHybridAiError(): HybridAiError {
         is PromptBlockedException, is ContentBlockedException, is ResponseStoppedException -> ErrorCodes.CONTENT_BLOCKED
         is FirebaseAIOnDeviceNotAvailableException -> ErrorCodes.ON_DEVICE_UNSUPPORTED
         is FirebaseAIOnDeviceInvalidRequestException -> ErrorCodes.INVALID_REQUEST
-        is RequestTimeoutException, is java.io.IOException -> ErrorCodes.NETWORK
+        is RequestTimeoutException -> ErrorCodes.TIMEOUT
         is IllegalStateException if "FirebaseApp" in text -> ErrorCodes.FIREBASE_NOT_CONFIGURED
-        else -> ErrorClassifier.fromMessage(text)
-            ?: ErrorClassifier.fromMessage(cause?.message)
-            ?: ErrorCodes.UNKNOWN
+        // A timeout always wins over a network error, even when it arrives wrapped in one:
+        // the user must see "AI took too long. Try again." and not "No connection".
+        else -> if (ErrorClassifier.causeChain(this).any { it is RequestTimeoutException } || ErrorClassifier.isTimeout(this)) {
+            ErrorCodes.TIMEOUT
+        } else {
+            ErrorClassifier.fromThrowable(this)
+                ?: ErrorClassifier.fromMessage(text)
+                ?: ErrorClassifier.fromMessage(cause?.message)
+                ?: ErrorCodes.UNKNOWN
+        }
     }
     return HybridAiError(code, text)
 }
@@ -354,7 +363,7 @@ private suspend fun <T> Task<T>.awaitResult(): T = suspendCancellableCoroutine {
             @Suppress("UNCHECKED_CAST")
             cont.resume(task.result as T)
         } else {
-            cont.resumeWithException(task.exception ?: RuntimeException("Task Firebase gagal."))
+            cont.resumeWithException(task.exception ?: RuntimeException("Firebase task failed."))
         }
     }
 }

@@ -15,6 +15,8 @@ async function verify() {
       `  - ${doc.id}  [${s.status}${s.isUrgent ? ', urgent' : ''}] deadline=${deadline} ` +
         `verifikasi=${s.verificationStatus ?? '-'} requirements=${s.requirements?.length ?? 0} asal=${source}`,
     );
+    // Teks ini tampil di app (badge "Track updates"): pastikan berbahasa Inggris.
+    if (s.lastChangeSummary) console.log(`      lastChangeSummary: ${s.lastChangeSummary}`);
   }
 
   const sources = await db.collection(COLLECTIONS.sources).get();

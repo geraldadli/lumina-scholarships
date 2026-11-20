@@ -7,7 +7,7 @@ Flutter (Dart)  ──Pigeon──▶  Kotlin: HybridAiApiImpl
   HybridAi                     ├─ InferencePolicy   Remote Config + privacy → inference mode
   MatchScorer (rule-based)     ├─ PromptBuilder     grounded prompt (scholarship data only)
                                ├─ ChecklistBuilder  official requirements + AI tips
-                               └─ Firebase AI Logic (Gemini Nano ↔ gemini-2.5-flash)
+                               └─ Firebase AI Logic (Gemini Nano ↔ gemini-3.5-flash-lite)
 ```
 
 ## Usage
@@ -37,11 +37,11 @@ final isMatch = match.meetsThreshold(status.minMatchScore);
 // 3. Ask AI (grounded in the scholarship data)
 try {
   final answer = await ai.ask(AskRequest(
-    question: 'Apa syarat bahasanya?',
+    question: 'What is the language requirement?',
     scholarship: scholarship,           // from scholarships/{id}
     student: student,                   // from users/{uid}, optional
     allowCloud: user.cloudAiAllowed,    // privacy.cloudAiAllowed
-    languageCode: 'id',
+    languageCode: 'en',             // 'en' (default for the app) or 'id'
   ));
   print('${answer.text} (${answer.source}, ${answer.latencyMs} ms)');
 } on HybridAiException catch (e) {
@@ -50,7 +50,7 @@ try {
 
 // 4. Prepare checklist: never fails because of AI (falls back to source = rules)
 final checklist = await ai.generateChecklist(ChecklistRequest(
-  scholarship: scholarship, allowCloud: user.cloudAiAllowed, languageCode: 'id'));
+  scholarship: scholarship, allowCloud: user.cloudAiAllowed, languageCode: 'en'));
 ```
 
 ## Behaviour
@@ -61,12 +61,13 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Nano not available or not downloaded, cloud allowed | Automatic fallback to the cloud (`AiSource.cloud`) |
 | `allowCloud: false` (private mode) | Forced `ONLY_ON_DEVICE`; if Nano is not ready → `HybridAiException` |
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
+| Scholarship has no title, or its `sourceUrl` is not an `https://` link with a real hostname (plain `http://`, a bare `https://`, or an empty host are rejected) | `ask()` throws `noContext` before any model is called |
 
 Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency.
 
 ### Error codes (`HybridAiException.code`)
 
-`privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in Indonesian.
+`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in English.
 
 ### "AI unavailable" state
 
@@ -79,6 +80,8 @@ Instead of switching over every code, show one state from `e.unavailability`:
   switch (u.action) {
     case AiUnavailableAction.openPrivacySettings: /* button: open Settings */
     case AiUnavailableAction.downloadModel:       /* button: ai.downloadModel() */
+    case AiUnavailableAction.waitForDownload:     /* progress bar from ai.downloadModel();
+                                                     show "Retry" once state == completed */
     case AiUnavailableAction.retry:               /* button: try again */
     case AiUnavailableAction.editQuestion:        /* focus the question field */
     case AiUnavailableAction.none:                /* explanation only */
