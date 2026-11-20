@@ -67,8 +67,8 @@ internal class ContextGuardTest {
             "https://example.org",
             "https://www.id.emb-japan.go.jp/sch.html",
             "https://example.org:8443/path?x=1#y",
-            "http://localhost:8080",
-            "http://[::1]/",
+            "https://localhost:8080",
+            "https://[::1]/",
             "https://münchen.de/",
         )
         for (ok in good) {
@@ -77,15 +77,27 @@ internal class ContextGuardTest {
     }
 
     @Test
+    fun check_rejectsPlainHttp() {
+        // Firestore only holds https links, so a plain http:// link is never a valid source.
+        for (bad in listOf("http://example.org", "HTTP://example.org", " http://example.org/a ", "http://localhost:8080", "http://[::1]/")) {
+            val error = ContextGuard.check(Fixtures.scholarship().copy(sourceUrl = bad))
+            assertNotNull(error, "should be rejected: $bad")
+            assertEquals(ErrorCodes.NO_CONTEXT, error.code)
+            assertTrue(error.message.orEmpty().contains("sourceUrl"))
+        }
+    }
+
+    @Test
     fun hostOf_returnsTheHostname() {
         assertEquals("example.org", ContextGuard.hostOf("https://example.org/a/b"))
         assertEquals("example.org", ContextGuard.hostOf("  HTTPS://example.org:8443  "))
         assertNull(ContextGuard.hostOf("https://"))
+        assertNull(ContextGuard.hostOf("http://example.org"))
     }
 
     @Test
-    fun check_acceptsHttpAndHttpsCaseInsensitively() {
-        for (ok in listOf("https://example.org", " HTTPS://example.org ", "http://example.org")) {
+    fun check_acceptsHttpsCaseInsensitively() {
+        for (ok in listOf("https://example.org", " HTTPS://example.org ")) {
             assertNull(ContextGuard.check(Fixtures.scholarship().copy(sourceUrl = ok)), "seharusnya lolos: $ok")
         }
     }

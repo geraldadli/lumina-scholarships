@@ -29,25 +29,29 @@ object ContextGuard {
     internal fun isUsableSourceUrl(url: String): Boolean = hostOf(url) != null
 
     /**
-     * The hostname of an http(s) link, or `null` when the link cannot serve as a source.
+     * The hostname of an https link, or `null` when the link cannot serve as a source.
+     *
+     * Only `https://` is accepted: scholarship links come from Firestore, which only holds https links
+     * (the backend importer enforces it), so plain `http://` is rejected.
      *
      * A bare scheme is not enough: "https://", "https:///path", an empty host, or an empty label
      * (".com", "a..b", "example.") are all rejected, so a link without a real host never counts as a source.
      */
     internal fun hostOf(url: String): String? {
         val value = url.trim()
-        // The first character after "://" must belong to the host, not be "/", "?", "#", or whitespace.
+        // The first character after "https://" must belong to the host, not be "/", "?", "#", or whitespace.
         if (!SCHEME_THEN_HOST.containsMatchIn(value)) return null
         val parsed = try {
             URL(value)
         } catch (e: MalformedURLException) {
             return null
         }
+        if (!parsed.protocol.equals("https", ignoreCase = true)) return null // defense in depth
         val host = parsed.host.orEmpty()
         if (host.isBlank() || host.any { it.isWhitespace() }) return null
         if (host.startsWith("[") && host.endsWith("]")) return host // IPv6 literal
         return if (host.split('.').all { it.isNotEmpty() }) host else null
     }
 
-    private val SCHEME_THEN_HOST = Regex("""^https?://[^/?#\s]""", RegexOption.IGNORE_CASE)
+    private val SCHEME_THEN_HOST = Regex("""^https://[^/?#\s]""", RegexOption.IGNORE_CASE)
 }

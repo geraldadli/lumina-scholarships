@@ -61,7 +61,7 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Nano not available or not downloaded, cloud allowed | Automatic fallback to the cloud (`AiSource.cloud`) |
 | `allowCloud: false` (private mode) | Forced `ONLY_ON_DEVICE`; if Nano is not ready → `HybridAiException` |
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
-| Scholarship has no title or no http(s) `sourceUrl` | `ask()` throws `noContext` before any model is called |
+| Scholarship has no title, or its `sourceUrl` is not an `https://` link with a real hostname (plain `http://`, a bare `https://`, or an empty host are rejected) | `ask()` throws `noContext` before any model is called |
 
 Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency.
 
