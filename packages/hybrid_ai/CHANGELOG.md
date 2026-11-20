@@ -1,3 +1,7 @@
+## Unreleased
+
+- `HybridAiException.unavailability`: one `AiUnavailability` (title, message, suggested `AiUnavailableAction`) for the "AI unavailable" UI state.
+
 ## 0.1.0
 
 - Pigeon contract `HybridAiHostApi` / `HybridAiFlutterApi`.
