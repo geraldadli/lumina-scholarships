@@ -68,25 +68,57 @@ object InferencePolicy {
 
 /** Klasifikasi error dari pesan teks (dipakai untuk exception on-device yang tidak bertipe spesifik). */
 object ErrorClassifier {
+    private const val MAX_CAUSE_DEPTH = 8
+
     fun fromMessage(message: String?): String? {
         val m = message?.lowercase() ?: return null
         return when {
             "battery" in m && "quota" in m -> ErrorCodes.QUOTA_EXCEEDED
             "busy" in m -> ErrorCodes.BUSY
             "app check" in m || "appcheck" in m || "app_check" in m -> ErrorCodes.APP_CHECK_FAILED
-            // Putus koneksi dan "terlalu lama menjawab" adalah dua masalah berbeda untuk user.
-            "unable to resolve host" in m -> ErrorCodes.NETWORK
-            "deadline_exceeded" in m || "deadline exceeded" in m || "timed out" in m || "timeout" in m -> ErrorCodes.TIMEOUT
-            "network" in m -> ErrorCodes.NETWORK
+            // A timeout wins over a network error: "AI took too long" is what the user must see
+            // even when the same failure also mentions the network.
+            isTimeoutMessage(m) -> ErrorCodes.TIMEOUT
+            "unable to resolve host" in m || "network" in m -> ErrorCodes.NETWORK
             else -> null
         }
     }
 
-    /** Exception Java standar: timeout dipisah dari putus koneksi (DNS, tidak ada sinyal, dll). */
-    fun fromThrowable(error: Throwable?): String? = when (error) {
-        null -> null
-        is java.net.SocketTimeoutException -> ErrorCodes.TIMEOUT
-        is java.io.IOException -> ErrorCodes.NETWORK
-        else -> null
+    /**
+     * Standard Java exceptions, looking through the whole cause chain. A timeout anywhere in the chain
+     * wins over a network error: an `IOException` that wraps a `SocketTimeoutException` is a TIMEOUT.
+     * Only when no timeout is present is an `IOException` (DNS failure, no signal, ...) reported as NETWORK.
+     */
+    fun fromThrowable(error: Throwable?): String? {
+        val chain = causeChain(error)
+        return when {
+            chain.isEmpty() -> null
+            isTimeout(error) -> ErrorCodes.TIMEOUT
+            chain.any { it is java.io.IOException } -> ErrorCodes.NETWORK
+            else -> null
+        }
+    }
+
+    /** True when the exception, any of its causes, or any of their messages describes a timeout. */
+    fun isTimeout(error: Throwable?): Boolean = causeChain(error).any {
+        it is java.net.SocketTimeoutException ||
+            it is java.util.concurrent.TimeoutException ||
+            isTimeoutMessage(it.message?.lowercase())
+    }
+
+    /** The exception followed by its causes, outermost first. Bounded and safe against cause cycles. */
+    fun causeChain(error: Throwable?): List<Throwable> {
+        val chain = ArrayList<Throwable>()
+        var current = error
+        while (current != null && chain.size < MAX_CAUSE_DEPTH && chain.none { it === current }) {
+            chain += current
+            current = current.cause
+        }
+        return chain
+    }
+
+    private fun isTimeoutMessage(lowercased: String?): Boolean {
+        val m = lowercased ?: return false
+        return "deadline_exceeded" in m || "deadline exceeded" in m || "timed out" in m || "timeout" in m
     }
 }

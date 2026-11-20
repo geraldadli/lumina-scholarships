@@ -298,7 +298,7 @@ class HybridAiApiImpl(
         const val KEY_MODE = "ai_inference_mode"
         const val KEY_CLOUD_MODEL = "cloud_fallback_model"
         const val KEY_MIN_MATCH = "min_match_score_threshold"
-        const val DEFAULT_CLOUD_MODEL = "gemini-2.5-flash"
+        const val DEFAULT_CLOUD_MODEL = "gemini-3.5-flash-lite"
         const val DEFAULT_MIN_MATCH = 0.65
         private const val FETCH_TIMEOUT_MS = 5_000L
         private const val ON_DEVICE_MAX_OUTPUT_TOKENS = 256
@@ -343,11 +343,16 @@ internal fun Throwable.toHybridAiError(): HybridAiError {
         is FirebaseAIOnDeviceInvalidRequestException -> ErrorCodes.INVALID_REQUEST
         is RequestTimeoutException -> ErrorCodes.TIMEOUT
         is IllegalStateException if "FirebaseApp" in text -> ErrorCodes.FIREBASE_NOT_CONFIGURED
-        else -> ErrorClassifier.fromThrowable(this)
-            ?: ErrorClassifier.fromThrowable(cause)
-            ?: ErrorClassifier.fromMessage(text)
-            ?: ErrorClassifier.fromMessage(cause?.message)
-            ?: ErrorCodes.UNKNOWN
+        // A timeout always wins over a network error, even when it arrives wrapped in one:
+        // the user must see "AI took too long. Try again." and not "No connection".
+        else -> if (ErrorClassifier.causeChain(this).any { it is RequestTimeoutException } || ErrorClassifier.isTimeout(this)) {
+            ErrorCodes.TIMEOUT
+        } else {
+            ErrorClassifier.fromThrowable(this)
+                ?: ErrorClassifier.fromMessage(text)
+                ?: ErrorClassifier.fromMessage(cause?.message)
+                ?: ErrorCodes.UNKNOWN
+        }
     }
     return HybridAiError(code, text)
 }

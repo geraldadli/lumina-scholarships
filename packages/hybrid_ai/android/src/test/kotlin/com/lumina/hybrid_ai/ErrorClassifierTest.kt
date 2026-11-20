@@ -40,6 +40,59 @@ internal class ErrorClassifierTest {
     }
 
     @Test
+    fun fromThrowable_timeoutWinsOverNetworkErrorWhenWrapped() {
+        // A network error that wraps a timeout is still a timeout.
+        assertEquals(
+            ErrorCodes.TIMEOUT,
+            ErrorClassifier.fromThrowable(IOException("Network error", SocketTimeoutException("read timed out"))),
+        )
+        assertEquals(
+            ErrorCodes.TIMEOUT,
+            ErrorClassifier.fromThrowable(RuntimeException("request failed", SocketTimeoutException("timeout"))),
+        )
+        // The same failure described as both a network error and a timeout.
+        assertEquals(ErrorCodes.TIMEOUT, ErrorClassifier.fromThrowable(IOException("Network timeout")))
+        assertEquals(
+            ErrorCodes.TIMEOUT,
+            ErrorClassifier.fromThrowable(IOException("Network error", RuntimeException("DEADLINE_EXCEEDED"))),
+        )
+        assertEquals(ErrorCodes.TIMEOUT, ErrorClassifier.fromThrowable(java.util.concurrent.TimeoutException("slow")))
+    }
+
+    @Test
+    fun fromThrowable_networkErrorWithoutTimeoutStaysNetwork() {
+        assertEquals(
+            ErrorCodes.NETWORK,
+            ErrorClassifier.fromThrowable(IOException("broken pipe", UnknownHostException("host"))),
+        )
+        assertEquals(ErrorCodes.NETWORK, ErrorClassifier.fromThrowable(RuntimeException("x", ConnectException("refused"))))
+    }
+
+    @Test
+    fun fromMessage_timeoutWinsOverNetworkWording() {
+        assertEquals(ErrorCodes.TIMEOUT, ErrorClassifier.fromMessage("Unable to resolve host x: connection timed out"))
+        assertEquals(ErrorCodes.TIMEOUT, ErrorClassifier.fromMessage("Network error: DEADLINE_EXCEEDED"))
+        assertEquals(ErrorCodes.NETWORK, ErrorClassifier.fromMessage("Unable to resolve host x"))
+    }
+
+    @Test
+    fun isTimeout_looksThroughTheCauseChainAndIgnoresUnrelatedErrors() {
+        assertEquals(true, ErrorClassifier.isTimeout(RuntimeException("outer", RuntimeException("deadline exceeded"))))
+        assertEquals(false, ErrorClassifier.isTimeout(IOException("Network is unreachable")))
+        assertEquals(false, ErrorClassifier.isTimeout(null))
+    }
+
+    @Test
+    fun causeChain_isBoundedAndSafeAgainstCycles() {
+        val a = RuntimeException("a")
+        val b = RuntimeException("b")
+        a.initCause(b)
+        b.initCause(a)
+        assertEquals(2, ErrorClassifier.causeChain(a).size)
+        assertNull(ErrorClassifier.fromThrowable(a))
+    }
+
+    @Test
     fun fromThrowable_ignoresNonIoErrors() {
         assertNull(ErrorClassifier.fromThrowable(IllegalStateException("x")))
         assertNull(ErrorClassifier.fromThrowable(null))

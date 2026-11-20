@@ -20,7 +20,7 @@ class FakeHost implements HybridAiHostApi {
     return AiStatus(
       onDeviceModel: ModelAvailability.downloadable,
       inferenceMode: 'PREFER_ON_DEVICE',
-      cloudModel: 'gemini-2.5-flash',
+      cloudModel: 'gemini-3.5-flash-lite',
       minMatchScore: 0.65,
       remoteConfigFetched: true,
     );

@@ -7,7 +7,7 @@ Flutter (Dart)  ──Pigeon──▶  Kotlin: HybridAiApiImpl
   HybridAi                     ├─ InferencePolicy   Remote Config + privacy → inference mode
   MatchScorer (rule-based)     ├─ PromptBuilder     grounded prompt (scholarship data only)
                                ├─ ChecklistBuilder  official requirements + AI tips
-                               └─ Firebase AI Logic (Gemini Nano ↔ gemini-2.5-flash)
+                               └─ Firebase AI Logic (Gemini Nano ↔ gemini-3.5-flash-lite)
 ```
 
 ## Usage

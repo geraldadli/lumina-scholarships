@@ -31,8 +31,8 @@ void main() {
     test('timeout is explained separately from no connection', () {
       final timeout = error(HybridAiErrorCode.timeout).unavailability;
       final network = error(HybridAiErrorCode.network).unavailability;
-      expect(timeout.title, 'AI request timed out');
-      expect(timeout.message, 'AI request timed out. Try again.');
+      expect(timeout.title, 'AI took too long');
+      expect(timeout.message, 'AI took too long. Try again.');
       expect(network.title, 'No connection');
       expect(network.message, startsWith('No connection.'));
       expect(timeout.message, isNot(network.message));

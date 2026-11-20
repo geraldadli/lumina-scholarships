@@ -31,7 +31,8 @@ enum HybridAiErrorCode {
   /// No internet connection (DNS failure, offline) on the cloud path.
   network,
 
-  /// The cloud AI took too long to answer (timeout / `DEADLINE_EXCEEDED`). Not a connection problem: offer "Try again".
+  /// The cloud AI took too long to answer (timeout / `DEADLINE_EXCEEDED`). A timeout always wins over a
+  /// network error, even when both are reported. Show "AI took too long. Try again."
   timeout,
   contentBlocked,
   emptyResponse,
@@ -70,7 +71,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.appCheckFailed => 'This app has not been verified to use cloud AI.',
         HybridAiErrorCode.network =>
           'No connection. Cloud AI needs internet; on-device AI only works once the Gemini Nano model is ready on this phone.',
-        HybridAiErrorCode.timeout => 'AI request timed out. Try again.',
+        HybridAiErrorCode.timeout => 'AI took too long. Try again.',
         HybridAiErrorCode.contentBlocked => "This question can't be answered. Try rephrasing it.",
         HybridAiErrorCode.emptyResponse => 'The AI did not return an answer. Try again.',
         HybridAiErrorCode.invalidRequest => 'The question is invalid or too long.',
@@ -96,7 +97,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.quotaExceeded => 'Usage limit reached',
         HybridAiErrorCode.appCheckFailed => 'App not verified',
         HybridAiErrorCode.network => 'No connection',
-        HybridAiErrorCode.timeout => 'AI request timed out',
+        HybridAiErrorCode.timeout => 'AI took too long',
         HybridAiErrorCode.contentBlocked => "Question can't be answered",
         HybridAiErrorCode.emptyResponse => 'No answer from the AI',
         HybridAiErrorCode.invalidRequest => 'Invalid question',
