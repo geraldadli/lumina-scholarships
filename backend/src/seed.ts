@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore';
 import { getDb, isDryRun } from './firebase';
+import { isHttpsUrlWithHost } from './url';
 import {
   COLLECTIONS,
   VERIFICATION_PENDING,
@@ -67,7 +68,9 @@ export function validateRecords(raw: unknown, now = new Date()): { errors: strin
     for (const key of ['title', 'provider', 'description', 'sourceUrl'] as const) {
       if (!isNonEmptyString(r[key])) err(`\`${key}\` wajib diisi`);
     }
-    if (isNonEmptyString(r.sourceUrl) && !/^https:\/\//.test(r.sourceUrl)) err('`sourceUrl` harus https://');
+    if (isNonEmptyString(r.sourceUrl) && !isHttpsUrlWithHost(r.sourceUrl)) {
+      err('`sourceUrl` harus https:// dengan hostname yang valid (bukan hanya "https://")');
+    }
     if (!['full', 'partial'].includes(r.fundingType as string)) err('`fundingType` harus "full" atau "partial"');
     if (!['active', 'closed'].includes(r.status as string)) err('`status` harus "active" atau "closed"');
 
