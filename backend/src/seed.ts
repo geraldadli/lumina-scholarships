@@ -260,7 +260,7 @@ export async function importScholarships(db: Firestore, opts: { dryRun?: boolean
         ref,
         {
           ...doc,
-          lastChangeSummary: r.changeSummary?.trim() || 'Informasi beasiswa diperbarui oleh tim Lumina.',
+          lastChangeSummary: r.changeSummary?.trim() || 'Scholarship information was updated by the Lumina team.',
           updatedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },

@@ -5,8 +5,9 @@ import { COLLECTIONS, URGENT_WINDOW_DAYS, type DeadlineSummary, type Scholarship
 const DAY_MS = 24 * 60 * 60 * 1000;
 const BATCH_LIMIT = 400; // di bawah batas 500 operasi per batch Firestore
 
-function formatDateId(ts: Timestamp): string {
-  return ts.toDate().toLocaleDateString('id-ID', {
+/** Teks ini tampil di app (badge "Track updates"), jadi memakai bahasa Inggris: "20 February 2027". */
+function formatDate(ts: Timestamp): string {
+  return ts.toDate().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -48,7 +49,7 @@ export async function processDeadlines(
         data: {
           status: 'closed',
           isUrgent: false,
-          lastChangeSummary: `Pendaftaran ditutup: tenggat ${formatDateId(s.deadline)} telah lewat.`,
+          lastChangeSummary: `Applications closed: the deadline of ${formatDate(s.deadline)} has passed.`,
           updatedAt: FieldValue.serverTimestamp(),
         },
       });
