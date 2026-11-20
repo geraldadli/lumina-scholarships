@@ -1,157 +1,158 @@
-# Lumina — Kontrak Data Firestore & Remote Config (v1)
+# Lumina — Firestore Data Contract & Remote Config (v1)
 
-> Pemilik: Backend & Data Engineer. Sumber kebenaran untuk tim Flutter, Hybrid AI (Kotlin/Pigeon), dan Research/QA.
-> Perubahan nama field / tipe **wajib** lewat backend dulu, karena Security Rules ikut memvalidasi.
-> Tipe TypeScript yang setara ada di `backend/src/schema.ts`; aturan aksesnya di `firestore.rules`.
+> Owner: Backend & Data Engineer. Source of truth for the Flutter team, Hybrid AI (Kotlin/Pigeon), and Research/QA.
+> Changes to field names / types **must** go through the backend first, because the Security Rules also validate them.
+> The equivalent TypeScript types are in `backend/src/schema.ts`; the access rules are in `firestore.rules`.
 
-## Konvensi umum
+## General conventions
 
-| Hal | Aturan |
+| Topic | Rule |
 |---|---|
-| Kode negara | ISO 3166-1 alpha-2, huruf besar: `ID`, `JP`, `KR`, `DE`, `GB`, `US`, `AU`, `SG`, `NL`. Sentinel `GLOBAL` = semua negara. |
-| Jenjang (`EducationLevel`) | `undergraduate` \| `masters` \| `phd` |
-| Bidang studi | String bebas (judul kapital, mis. `Computer Science`). Sentinel `ALL` = semua bidang. |
-| Waktu | Selalu Firestore `Timestamp` (UTC). Jangan simpan tanggal sebagai string. |
-| IPK | `number` skala 4.0 |
-| Skor kecocokan | `number` 0.0–1.0 (dibandingkan dengan Remote Config `min_match_score_threshold`) |
-| ID dokumen beasiswa | slug `<program>-<tahun>`, mis. `mext-scholarship-2027`. ID yang sama dipakai di `sources/` dan `saved_scholarships/`. |
+| Country codes | ISO 3166-1 alpha-2, uppercase: `ID`, `JP`, `KR`, `DE`, `GB`, `US`, `AU`, `SG`, `NL`. The sentinel `GLOBAL` = all countries. |
+| Education level (`EducationLevel`) | `undergraduate` \| `masters` \| `phd` |
+| Field of study | Free string (title case, e.g. `Computer Science`). The sentinel `ALL` = all fields. |
+| Time | Always a Firestore `Timestamp` (UTC). Never store dates as strings. |
+| GPA | `number` on a 4.0 scale |
+| Match score | `number` 0.0–1.0 (compared with Remote Config `min_match_score_threshold`) |
+| Scholarship document ID | slug `<program>-<year>`, e.g. `mext-scholarship-2027`. The same ID is used in `sources/` and `saved_scholarships/`. |
+| Language | All text shown to students (`title`, `description`, `requirements`, `benefits`, `lastChangeSummary` / `changeSummary`) is written in English. |
 
-> ⚠️ Data seed lama memakai `UK` untuk Chevening. Kontrak memakai `GB`; seed akan dikoreksi di S1. Sampai saat itu, perlakukan `UK` = `GB` di sisi klien.
+> ℹ️ Legacy sample data used `UK` for Chevening. That data was removed from Firestore on 20 Nov 2026, and all current data uses `GB`, as this contract requires. Clients may still treat `UK` as `GB` defensively.
 
 ---
 
-## 1. `scholarships/{scholarshipId}` — katalog (Find → View details → Ask AI)
+## 1. `scholarships/{scholarshipId}` — catalog (Find → View details → Ask AI)
 
-Akses: **baca** = user yang sudah login. **Tulis** = hanya backend (Admin SDK).
+Access: **read** = any signed-in user. **Write** = backend only (Admin SDK).
 
-| Field | Tipe | Keterangan |
+| Field | Type | Notes |
 |---|---|---|
 | `title` | string | |
 | `provider` | string | |
-| `description` | string | Ringkasan 1–2 kalimat |
+| `description` | string | A 1–2 sentence summary |
 | `fundingType` | `"full"` \| `"partial"` | |
-| `educationLevels` | array\<EducationLevel\> | Jenjang yang **dibiayai** |
-| `eligibleCitizenships` | array\<string\> | ISO alpha-2 atau `GLOBAL` |
-| `hostCountries` | array\<string\> | Negara tujuan studi |
-| `fieldsOfStudy` | array\<string\> | `["ALL"]` = semua bidang. **`[]` = bidang belum diumumkan → jangan dipakai untuk menyaring** (tetap tampilkan beasiswanya). |
+| `educationLevels` | array\<EducationLevel\> | The levels that are **funded** |
+| `eligibleCitizenships` | array\<string\> | ISO alpha-2 or `GLOBAL` |
+| `hostCountries` | array\<string\> | Countries where the study takes place |
+| `fieldsOfStudy` | array\<string\> | `["ALL"]` = all fields. **`[]` = fields not announced yet → do not use it for filtering** (still show the scholarship). |
 | `minGpa` | number \| null | |
-| `languageRequirement` | string \| null | Teks bebas, mis. `IELTS 6.5 / TOEFL iBT 80` |
-| `openDate` | Timestamp \| null | Pendaftaran dibuka (untuk label "Segera dibuka") |
+| `languageRequirement` | string \| null | Free text, e.g. `IELTS 6.5 / TOEFL iBT 80` |
+| `openDate` | Timestamp \| null | When applications open (for the "Opening soon" label) |
 | `deadline` | Timestamp | |
-| `status` | `"active"` \| `"closed"` | Diubah otomatis ke `closed` oleh `process-deadlines` saat deadline lewat |
-| `isUrgent` | boolean | `true` jika sisa waktu ≤ 14 hari (diatur backend) |
-| `requirements` | array\<{ `id`: string, `label`: string }\> | Sumber checklist "Prepare". `id` stabil (mis. `ielts`, `cv`, `motivation-letter`). *(diisi mulai S1)* |
-| `benefits` | array\<string\> | *(diisi mulai S1)* |
-| `sourceUrl` | string | Halaman resmi untuk tombol "Apply on the official website" & sitasi jawaban AI |
-| `notes` | string \| null | Catatan riset (konteks tambahan untuk grounding AI, bukan untuk ditampilkan mentah) |
-| `verificationStatus` | `"verified"` \| `"pending"` | `pending` = belum dicek manusia → tampilkan label "Belum diverifikasi" |
+| `status` | `"active"` \| `"closed"` | Changed automatically to `closed` by `process-deadlines` once the deadline has passed |
+| `isUrgent` | boolean | `true` when 14 days or less remain (set by the backend) |
+| `requirements` | array\<{ `id`: string, `label`: string }\> | Source of the "Prepare" checklist. `id` is stable (e.g. `ielts`, `cv`, `motivation-letter`). *(populated from S1 onward)* |
+| `benefits` | array\<string\> | *(populated from S1 onward)* |
+| `sourceUrl` | string | The official page, for the "Apply on the official website" button and for AI answer citations |
+| `notes` | string \| null | Research notes (extra context for grounding the AI, not meant to be shown raw) |
+| `verificationStatus` | `"verified"` \| `"pending"` | `pending` = not yet checked by a human → show the "Not yet verified" label |
 | `verifiedBy` | string \| null | |
 | `lastVerifiedAt` | Timestamp \| null | |
-| `lastChangeSummary` | string \| null | Ringkasan perubahan terakhir untuk "Track updates" |
-| `updatedAt` | Timestamp | Naik **hanya** saat ada perubahan yang perlu diketahui user (konten terverifikasi berubah / status jadi `closed`). |
-| `lastCheckedAt` | Timestamp | Kapan backend terakhir mengecek sumber resmi (sinyal "terakhir dicek X jam lalu") |
+| `lastChangeSummary` | string \| null | Summary of the latest change, for "Track updates" |
+| `updatedAt` | Timestamp | Goes up **only** when there is a change the user should know about (verified content changed / status became `closed`). |
+| `lastCheckedAt` | Timestamp | When the backend last checked the official source (the "last checked X hours ago" signal) |
 | `createdAt` | Timestamp | |
-| `contentHash`, `recordHash` | string | Internal backend, abaikan di klien |
+| `contentHash`, `recordHash` | string | Backend internals, ignore them on the client |
 
-**Sumber data:** `backend/data/scholarships.json` (format tim Research, lihat bagian 5). Katalog di Firestore hanya diubah oleh importer.
+**Data source:** `backend/data/scholarships.json` (the Research team's format, see section 5). The catalog in Firestore is only changed by the importer.
 
-**Catatan query Flutter:** Firestore hanya mengizinkan satu `array-contains`/`array-contains-any` per query. Katalog kecil (< 100 dokumen), jadi query utamanya:
+**Flutter query note:** Firestore allows only one `array-contains` / `array-contains-any` per query. The catalog is small (< 100 documents), so the main query is:
 
 ```dart
 FirebaseFirestore.instance.collection('scholarships')
   .where('status', isEqualTo: 'active')
-  .orderBy('deadline')          // composite index (status, deadline) sudah disiapkan di firestore.indexes.json
+  .orderBy('deadline')          // composite index (status, deadline): defined in firestore.indexes.json and enabled in the live project
 ```
 
-lalu filter negara/jenjang/bidang/IPK di sisi klien. Butuh kombinasi query lain? Kabari backend untuk dibuatkan index baru.
+then filter by country / education level / field / GPA on the client. Need another query combination? Tell the backend so a new index can be created.
 
 ---
 
-## 2. `users/{uid}` — profil & preferensi (Set preferences)
+## 2. `users/{uid}` — profile & preferences (Set preferences)
 
-Akses: baca/tulis/hapus **hanya pemilik** (`request.auth.uid == uid`).
+Access: read/write/delete by the **owner only** (`request.auth.uid == uid`).
 
-| Field | Tipe | Keterangan |
+| Field | Type | Notes |
 |---|---|---|
 | `displayName` | string | |
-| `educationLevel` | EducationLevel | Jenjang yang **ingin ditempuh** (dicocokkan dengan `scholarships.educationLevels`) |
-| `currentEducationLevel` | `"high_school"` \| EducationLevel | opsional |
-| `citizenship` | string | ISO alpha-2 (dicocokkan dengan `eligibleCitizenships`) |
-| `targetCountries` | array\<string\> | ISO alpha-2 (dicocokkan dengan `hostCountries`), maks 30 |
-| `fieldsOfStudy` | array\<string\> | maks 20 |
+| `educationLevel` | EducationLevel | The level the student **wants to study** (matched against `scholarships.educationLevels`) |
+| `currentEducationLevel` | `"high_school"` \| EducationLevel | optional |
+| `citizenship` | string | ISO alpha-2 (matched against `eligibleCitizenships`) |
+| `targetCountries` | array\<string\> | ISO alpha-2 (matched against `hostCountries`), max 30 |
+| `fieldsOfStudy` | array\<string\> | max 20 |
 | `gpa` | number | 0–4 |
-| `languageScores` | map | Kunci tetap: `ielts` (number), `toeflIbt` (number), `duolingo` (number), `jlpt` (`"N1"`–`"N5"`), `topik` (number 1–6). Semua opsional. |
-| `fundingPreference` | `"full"` \| `"partial"` \| `"any"` | opsional |
-| `cvSummary` | map \| null | Hasil ekstraksi CV: `{ skills: string[], experienceYears: number, extractedBy: "on_device" \| "cloud", extractedAt: Timestamp }`. **Teks CV mentah TIDAK disimpan di Firestore.** |
-| `privacy` | map | `{ cloudAiAllowed: boolean }`. `false` = mode privat (hanya Gemini Nano, tanpa cloud fallback). |
+| `languageScores` | map | Fixed keys: `ielts` (number), `toeflIbt` (number), `duolingo` (number), `jlpt` (`"N1"`–`"N5"`), `topik` (number 1–6). All optional. |
+| `fundingPreference` | `"full"` \| `"partial"` \| `"any"` | optional |
+| `cvSummary` | map \| null | CV extraction result: `{ skills: string[], experienceYears: number, extractedBy: "on_device" \| "cloud", extractedAt: Timestamp }`. **The raw CV text is NOT stored in Firestore.** |
+| `privacy` | map | `{ cloudAiAllowed: boolean }`. `false` = private mode (Gemini Nano only, no cloud fallback). |
 | `onboardingCompleted` | boolean | |
-| `createdAt`, `updatedAt` | Timestamp | Isi dengan `FieldValue.serverTimestamp()` |
+| `createdAt`, `updatedAt` | Timestamp | Set with `FieldValue.serverTimestamp()` |
 
 ---
 
 ## 3. `users/{uid}/saved_scholarships/{scholarshipId}` — Save → Prepare → Apply → Track updates
 
-Akses: **hanya pemilik**. ID dokumen = ID beasiswa. Saat create, rules memastikan `scholarships/{scholarshipId}` memang ada.
+Access: **owner only**. The document ID = the scholarship ID. On create, the rules make sure `scholarships/{scholarshipId}` actually exists.
 
-| Field | Tipe | Keterangan |
+| Field | Type | Notes |
 |---|---|---|
-| `scholarshipId` | string | **Wajib** sama dengan ID dokumen |
-| `status` | `"saved"` \| `"preparing"` \| `"applied"` | **Wajib** |
-| `matchScore` | number \| null | 0–1, dari Hybrid AI |
-| `checklist` | array\<{ `id`: string, `label`: string, `done`: boolean }\> | Disalin dari `scholarships.requirements` saat user mulai "Prepare". Maks 50 item. |
-| `notes` | string | Maks 5000 karakter |
-| `lastSeenUpdatedAt` | Timestamp \| null | Set = `scholarships.updatedAt` saat user membuka detail |
+| `scholarshipId` | string | **Required**, must equal the document ID |
+| `status` | `"saved"` \| `"preparing"` \| `"applied"` | **Required** |
+| `matchScore` | number \| null | 0–1, from Hybrid AI |
+| `checklist` | array\<{ `id`: string, `label`: string, `done`: boolean }\> | Copied from `scholarships.requirements` when the user starts "Prepare". Max 50 items. |
+| `notes` | string | Max 5000 characters |
+| `lastSeenUpdatedAt` | Timestamp \| null | Set to `scholarships.updatedAt` when the user opens the details |
 | `savedAt`, `updatedAt` | Timestamp | |
 
-**Logika badge "Ada pembaruan":** tampilkan jika `scholarship.updatedAt > saved.lastSeenUpdatedAt`, lalu tampilkan `scholarship.lastChangeSummary`. Setelah user membuka detail, tulis ulang `lastSeenUpdatedAt`.
+**"Updated" badge logic:** show it when `scholarship.updatedAt > saved.lastSeenUpdatedAt`, then show `scholarship.lastChangeSummary`. After the user opens the details, rewrite `lastSeenUpdatedAt`.
 
-> Koleksi `matches/{id}` yang ada di rules lama **diganti** dengan `saved_scholarships/{id}`. Skor untuk beasiswa yang belum disimpan dihitung on-device dan tidak perlu disimpan.
-
----
-
-## 4. Koleksi khusus backend (klien tidak bisa akses)
-
-**`sources/{sourceId}`** (ID = ID beasiswa): `scholarshipId`, `name`, `url`, `ignorePatterns?` (array regex untuk teks dinamis), `lastContentHash` (SHA-256), `previousContentHash`, `lastRunStatus` (`seeded` \| `baseline` \| `unchanged` \| `updated` \| `error`), `needsReview` (boolean), `lastChangedAt`, `lastRunAt`, `lastHttpStatus`, `lastError`, `consecutiveErrors`.
-
-**`sync_logs/{logId}`**: satu dokumen per run sinkronisasi: `startedAt`, `finishedAt`, `trigger`, `runId`, `status` (`success` \| `partial` \| `failed`), ringkasan `sources` & `deadlines`, `changedSourceIds`, `errors`.
-
-**Alur perubahan sumber** (sesuai diagram "Scheduled source checks → Validate and review → Authorized backend publisher"): `check-sources` hanya **menandai** `sources.needsReview = true` ketika hash halaman berubah. Isi `scholarships` baru diubah setelah Research & Quality Lead memverifikasi perubahan; saat itulah `lastChangeSummary` dan `updatedAt` diperbarui. Dengan begitu user tidak melihat "pembaruan" palsu akibat banner/iklan di halaman sumber.
+> The `matches/{id}` collection from the old rules is **replaced** by `saved_scholarships/{id}`. Scores for scholarships that are not saved are computed on-device and do not need to be stored.
 
 ---
 
-## 5. Format `backend/data/scholarships.json` (diisi tim Research via Pull Request)
+## 4. Backend-only collections (clients cannot access them)
 
-Satu array of object. Divalidasi otomatis di CI (`npm run validate:data`) sebelum PR boleh di-merge, lalu dipublish ke Firestore saat merge ke `main`.
+**`sources/{sourceId}`** (ID = scholarship ID): `scholarshipId`, `name`, `url`, `ignorePatterns?` (an array of regexes for dynamic text), `lastContentHash` (SHA-256), `previousContentHash`, `lastRunStatus` (`seeded` \| `baseline` \| `unchanged` \| `updated` \| `error`), `needsReview` (boolean), `lastChangedAt`, `lastRunAt`, `lastHttpStatus`, `lastError`, `consecutiveErrors`.
 
-| Field JSON | Wajib | Format | Jadi di Firestore |
+**`sync_logs/{logId}`**: one document per sync run: `startedAt`, `finishedAt`, `trigger`, `runId`, `status` (`success` \| `partial` \| `failed`), summaries for `sources` & `deadlines`, `changedSourceIds`, `errors`.
+
+**Source change flow** (following the "Scheduled source checks → Validate and review → Authorized backend publisher" diagram): `check-sources` only **flags** `sources.needsReview = true` when a page's hash changes. The `scholarships` content is only changed after Research & the Quality Lead have verified the change; that is when `lastChangeSummary` and `updatedAt` are updated. This way users never see a false "update" caused by a banner or ad on the source page.
+
+---
+
+## 5. `backend/data/scholarships.json` format (filled in by the Research team via Pull Request)
+
+A single array of objects. It is validated automatically in CI (`npm run validate:data`) before the PR can be merged, then published to Firestore when it is merged into `main`.
+
+| JSON field | Required | Format | Becomes in Firestore |
 |---|---|---|---|
-| `id` | ✔ | slug huruf kecil `program-tahun` | ID dokumen |
-| `title`, `provider`, `description`, `sourceUrl` (https) | ✔ | string | sama |
-| `fundingType` | ✔ | `full` \| `partial` | sama |
-| `educationLevels` | ✔ | array, min. 1 | sama |
-| `eligibleCitizenships`, `hostCountries` | ✔ | ISO alpha-2 (`GB`, bukan `UK`) atau `GLOBAL` | sama |
-| `fieldsOfStudy` | ✔ | array (boleh `[]`) | sama |
-| `deadline` | ✔ | `YYYY-MM-DD` → 23:59:59 WIB, atau ISO 8601 dengan zona waktu | Timestamp |
+| `id` | ✔ | lowercase slug `program-year` | document ID |
+| `title`, `provider`, `description`, `sourceUrl` (https) | ✔ | string | same |
+| `fundingType` | ✔ | `full` \| `partial` | same |
+| `educationLevels` | ✔ | array, at least 1 | same |
+| `eligibleCitizenships`, `hostCountries` | ✔ | ISO alpha-2 (`GB`, not `UK`) or `GLOBAL` | same |
+| `fieldsOfStudy` | ✔ | array (may be `[]`) | same |
+| `deadline` | ✔ | `YYYY-MM-DD` → 23:59:59 WIB, or ISO 8601 with a time zone | Timestamp |
 | `openDate` | | `YYYY-MM-DD` → 00:00 WIB | Timestamp |
-| `status` | ✔ | `active` \| `closed` | sama (lalu dikelola `process-deadlines`) |
-| `minGpa` | | number 0–4 atau `null` | sama |
-| `requirements` | | array string | array `{id, label}` (`id` dibuat otomatis dari label) |
-| `benefits` | | array string | sama |
+| `status` | ✔ | `active` \| `closed` | same (then managed by `process-deadlines`) |
+| `minGpa` | | number 0–4 or `null` | same |
+| `requirements` | | array of strings | array of `{id, label}` (`id` is generated from the label) |
+| `benefits` | | array of strings | same |
 | `lastVerified` | | `YYYY-MM-DD` | `lastVerifiedAt` |
-| `verifiedBy` | | nama, atau `pending-human-review` | `verifiedBy` + `verificationStatus` |
-| `notes` | | string | sama |
-| `changeSummary` | | 1 kalimat, isi **saat mengubah** record yang sudah ada | `lastChangeSummary` |
+| `verifiedBy` | | a name, or `pending-human-review` | `verifiedBy` + `verificationStatus` |
+| `notes` | | string | same |
+| `changeSummary` | | 1 sentence, filled **when changing** an existing record. Shown to students, so write it in English. | `lastChangeSummary` |
 
-`updatedAt` hanya naik jika field yang dilihat user berubah. Mengubah `notes`, `lastVerified`, atau `verifiedBy` saja **tidak** memicu badge "Ada pembaruan".
+`updatedAt` only goes up when a field the user sees has changed. Changing only `notes`, `lastVerified`, or `verifiedBy` does **not** trigger the "Updated" badge.
 
 ---
 
 ## 6. Remote Config
 
-| Key | Tipe | Default (samakan di `setDefaults` app) | Fungsi |
+| Key | Type | Default (match it in the app's `setDefaults`) | Purpose |
 |---|---|---|---|
-| `ai_inference_mode` | String | `PREFER_ON_DEVICE` | Mode inferensi hybrid Firebase AI Logic |
-| `cloud_fallback_model` | String | `gemini-2.5-flash` | Model cloud saat on-device tidak siap |
-| `min_match_score_threshold` | Number | `0.65` | Batas minimum `matchScore` untuk ditampilkan sebagai "cocok" |
+| `ai_inference_mode` | String | `PREFER_ON_DEVICE` | Hybrid inference mode for Firebase AI Logic |
+| `cloud_fallback_model` | String | `gemini-2.5-flash` | Cloud model used when the on-device model is not ready |
+| `min_match_score_threshold` | Number | `0.65` | Minimum `matchScore` to be shown as a "match" |
 
-Selalu panggil `setDefaults` dengan nilai di atas supaya app tetap jalan saat offline / fetch gagal.
+Always call `setDefaults` with the values above so the app keeps working when offline / when the fetch fails.
