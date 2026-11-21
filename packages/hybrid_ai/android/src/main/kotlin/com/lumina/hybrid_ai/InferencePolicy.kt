@@ -12,6 +12,9 @@ object ErrorCodes {
     const val NO_CONTEXT = "NO_CONTEXT"
     const val PRIVATE_MODE_UNAVAILABLE = "PRIVATE_MODE_UNAVAILABLE"
     const val ON_DEVICE_UNSUPPORTED = "ON_DEVICE_UNSUPPORTED"
+
+    /** Nano's state could not be determined (missing extension or a failed status check). */
+    const val ON_DEVICE_UNAVAILABLE = "ON_DEVICE_UNAVAILABLE"
     const val MODEL_NOT_DOWNLOADED = "MODEL_NOT_DOWNLOADED"
     const val MODEL_DOWNLOADING = "MODEL_DOWNLOADING"
     const val BUSY = "BUSY"
@@ -54,6 +57,11 @@ object InferencePolicy {
                 ErrorCodes.MODEL_DOWNLOADING,
                 "Gemini Nano is still downloading. Try again when the download finishes.",
             )
+            // The cause is unknown, so never claim the device is unsupported.
+            ModelAvailability.UNKNOWN -> HybridAiError(
+                ErrorCodes.ON_DEVICE_UNAVAILABLE,
+                "On-device AI is unavailable.",
+            )
             else -> if (!allowCloud) {
                 HybridAiError(
                     ErrorCodes.PRIVATE_MODE_UNAVAILABLE,
@@ -65,6 +73,41 @@ object InferencePolicy {
         }
     }
 }
+
+/**
+ * Outcome of asking AICore for the Gemini Nano status, BEFORE it is mapped to [ModelAvailability].
+ * Keeps "no extension", "the check threw" and "AICore said UNAVAILABLE" apart. Has no Firebase SDK
+ * dependency, so it can be unit tested.
+ */
+sealed interface NanoStatusProbe {
+    /** `onDeviceExtension` is null: the on-device module is not wired up or not reachable. */
+    data object ExtensionMissing : NanoStatusProbe
+
+    /** `checkStatus()` threw, e.g. AICore could not be reached. */
+    data class CheckFailed(val error: Throwable) : NanoStatusProbe
+
+    /** AICore answered. [raw] is the SDK's own status text, used only for the log. */
+    data class Reported(val availability: ModelAvailability, val raw: String) : NanoStatusProbe
+
+    /** Only a real answer from AICore may become UNAVAILABLE; anything else is UNKNOWN. */
+    fun toAvailability(): ModelAvailability = when (this) {
+        ExtensionMissing, is CheckFailed -> ModelAvailability.UNKNOWN
+        is Reported -> availability
+    }
+
+    /**
+     * One log line saying which outcome happened. Contains no prompt, question or profile data:
+     * `checkStatus()` takes no input, so only the outcome and the error type/message are logged.
+     */
+    fun describe(): String = when (this) {
+        ExtensionMissing -> "Gemini Nano status: outcome=EXTENSION_MISSING (onDeviceExtension is null)"
+        is CheckFailed ->
+            "Gemini Nano status: outcome=CHECK_FAILED error=${error.javaClass.simpleName}: ${error.message.orEmpty().take(MAX_LOG_MESSAGE)}"
+        is Reported -> "Gemini Nano status: outcome=REPORTED status=$raw -> ${availability.name}"
+    }
+}
+
+private const val MAX_LOG_MESSAGE = 200
 
 /** Klasifikasi error dari pesan teks (dipakai untuk exception on-device yang tidak bertipe spesifik). */
 object ErrorClassifier {

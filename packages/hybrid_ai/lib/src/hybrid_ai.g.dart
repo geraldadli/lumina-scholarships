@@ -115,8 +115,12 @@ enum ModelAvailability {
   downloadable,
   /// Model sedang diunduh.
   downloading,
-  /// Perangkat tidak mendukung Gemini Nano. Hanya jalur cloud yang bisa dipakai.
-  unavailable;
+  /// AICore/SDK melaporkan bahwa perangkat tidak mendukung Gemini Nano. Hanya jalur cloud yang bisa dipakai.
+  unavailable,
+  /// Penyebabnya tidak diketahui: ekstensi on-device tidak ada, atau pengecekan status gagal
+  /// (mis. tidak bisa terhubung ke AICore). Jangan diklaim sebagai "tidak didukung".
+  /// Harus tetap TERAKHIR agar urutan nilai lama tidak bergeser.
+  unknown;
 }
 
 /// Dari mana sebuah hasil berasal.

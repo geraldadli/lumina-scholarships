@@ -15,6 +15,10 @@ enum HybridAiErrorCode {
   /// The device does not support Gemini Nano.
   onDeviceUnsupported,
 
+  /// On-device AI cannot be used and the cause is unknown (the extension is missing, or the status
+  /// check failed, e.g. no connection to AICore). Do not tell the user the phone is unsupported.
+  onDeviceUnavailable,
+
   /// Gemini Nano has not been downloaded: offer a "Download model" button.
   modelNotDownloaded,
 
@@ -62,6 +66,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.privateModeUnavailable =>
           'Private mode is on, but this phone does not support on-device AI. Allow cloud AI in Settings to use the assistant.',
         HybridAiErrorCode.onDeviceUnsupported => 'This phone does not support on-device AI.',
+        HybridAiErrorCode.onDeviceUnavailable => 'On-device AI is unavailable.',
         HybridAiErrorCode.modelNotDownloaded =>
           'The on-device AI model has not been downloaded yet. Download it to use the assistant without internet.',
         HybridAiErrorCode.modelDownloading =>
@@ -91,6 +96,7 @@ class HybridAiException implements Exception {
   String get _title => switch (code) {
         HybridAiErrorCode.privateModeUnavailable => 'Private mode is on',
         HybridAiErrorCode.onDeviceUnsupported => 'On-device AI not supported',
+        HybridAiErrorCode.onDeviceUnavailable => 'On-device AI unavailable',
         HybridAiErrorCode.modelNotDownloaded => 'AI model not downloaded',
         HybridAiErrorCode.modelDownloading => 'AI model is downloading',
         HybridAiErrorCode.busy => 'AI is busy',
@@ -114,6 +120,7 @@ class HybridAiException implements Exception {
         HybridAiErrorCode.quotaExceeded ||
         HybridAiErrorCode.network ||
         HybridAiErrorCode.timeout ||
+        HybridAiErrorCode.onDeviceUnavailable ||
         HybridAiErrorCode.emptyResponse ||
         HybridAiErrorCode.unknown =>
           AiUnavailableAction.retry,
@@ -130,6 +137,7 @@ class HybridAiException implements Exception {
     'NO_CONTEXT': HybridAiErrorCode.noContext,
     'PRIVATE_MODE_UNAVAILABLE': HybridAiErrorCode.privateModeUnavailable,
     'ON_DEVICE_UNSUPPORTED': HybridAiErrorCode.onDeviceUnsupported,
+    'ON_DEVICE_UNAVAILABLE': HybridAiErrorCode.onDeviceUnavailable,
     'MODEL_NOT_DOWNLOADED': HybridAiErrorCode.modelNotDownloaded,
     'MODEL_DOWNLOADING': HybridAiErrorCode.modelDownloading,
     'BUSY': HybridAiErrorCode.busy,

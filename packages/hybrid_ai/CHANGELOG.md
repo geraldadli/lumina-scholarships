@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Gemini Nano status no longer collapses three different situations into "not supported". `ModelAvailability` has a new last value `unknown` (pigeon contract change): it is returned when the on-device extension is missing or the status check fails (e.g. AICore cannot be reached). `unavailable` now means only that AICore itself reported UNAVAILABLE. Apps that `switch` over `ModelAvailability` must handle `unknown` (show "On-device AI is unavailable").
+- The native log (tag `LuminaHybridAi`) now records which outcome happened: `outcome=EXTENSION_MISSING`, `outcome=CHECK_FAILED error=<type>: <message>`, or `outcome=REPORTED status=<status>`. No prompt, question or profile data is logged.
+- New error code `ON_DEVICE_UNAVAILABLE` (`HybridAiErrorCode.onDeviceUnavailable`): private mode or `downloadModel()` with an unknown Nano state. Message "On-device AI is unavailable." with a "try again" action.
+
 - `ContextGuard` accepts only `https://` source links. Firestore only holds https links (the backend importer enforces it), so a plain `http://` link is rejected with `NO_CONTEXT`.
 - `ContextGuard` now parses the source link: a bare `https://`, an empty host, or an empty label (`.com`, `a..b`, `example.`) no longer counts as a source and is rejected with `NO_CONTEXT`.
 - A timeout always wins over a network error, also when the timeout is wrapped in (or reported next to) a network error: the whole cause chain is checked. The message is now "AI took too long. Try again."

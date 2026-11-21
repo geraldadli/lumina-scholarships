@@ -63,11 +63,13 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
 | Scholarship has no title, or its `sourceUrl` is not an `https://` link with a real hostname (plain `http://`, a bare `https://`, or an empty host are rejected) | `ask()` throws `noContext` before any model is called |
 
-Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency.
+Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency, plus the Gemini Nano status outcome.
+
+`ModelAvailability.unavailable` means AICore itself reported that Nano is not supported. `ModelAvailability.unknown` means the cause is not known (extension missing, or the status check failed): show "On-device AI is unavailable". Filter the log with `adb logcat -s LuminaHybridAi` to see which one happened (`EXTENSION_MISSING`, `CHECK_FAILED`, or `REPORTED`).
 
 ### Error codes (`HybridAiException.code`)
 
-`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in English.
+`noContext`, `privateModeUnavailable`, `onDeviceUnsupported`, `onDeviceUnavailable` (cause unknown: show "On-device AI is unavailable"), `modelNotDownloaded`, `modelDownloading`, `busy`, `quotaExceeded`, `appCheckFailed`, `network`, `timeout`, `contentBlocked`, `emptyResponse`, `invalidRequest`, `firebaseNotConfigured`, `unknown`. Each one has a ready-to-show `userMessage` in English.
 
 ### "AI unavailable" state
 

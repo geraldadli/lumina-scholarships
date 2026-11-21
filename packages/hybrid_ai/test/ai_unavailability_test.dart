@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 
@@ -22,10 +23,24 @@ void main() {
         HybridAiErrorCode.busy,
         HybridAiErrorCode.quotaExceeded,
         HybridAiErrorCode.emptyResponse,
+        HybridAiErrorCode.onDeviceUnavailable,
         HybridAiErrorCode.unknown,
       ]) {
         expect(error(code).unavailability.action, AiUnavailableAction.retry, reason: code.name);
       }
+    });
+
+    test('unknown on-device cause says "unavailable", not "not supported"', () {
+      final unknownCause = HybridAiException.fromPlatform(
+        PlatformException(code: 'ON_DEVICE_UNAVAILABLE', message: 'On-device AI is unavailable.'),
+      );
+      expect(unknownCause.code, HybridAiErrorCode.onDeviceUnavailable);
+      expect(unknownCause.userMessage, 'On-device AI is unavailable.');
+      expect(unknownCause.unavailability.title, 'On-device AI unavailable');
+      expect(
+        unknownCause.userMessage,
+        isNot(error(HybridAiErrorCode.onDeviceUnsupported).userMessage),
+      );
     });
 
     test('timeout is explained separately from no connection', () {

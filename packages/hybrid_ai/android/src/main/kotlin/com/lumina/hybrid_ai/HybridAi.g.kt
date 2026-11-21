@@ -209,8 +209,14 @@ enum class ModelAvailability(val raw: Int) {
   DOWNLOADABLE(1),
   /** Model sedang diunduh. */
   DOWNLOADING(2),
-  /** Perangkat tidak mendukung Gemini Nano. Hanya jalur cloud yang bisa dipakai. */
-  UNAVAILABLE(3);
+  /** AICore/SDK melaporkan bahwa perangkat tidak mendukung Gemini Nano. Hanya jalur cloud yang bisa dipakai. */
+  UNAVAILABLE(3),
+  /**
+   * Penyebabnya tidak diketahui: ekstensi on-device tidak ada, atau pengecekan status gagal
+   * (mis. tidak bisa terhubung ke AICore). Jangan diklaim sebagai "tidak didukung".
+   * Harus tetap TERAKHIR agar urutan nilai lama tidak bergeser.
+   */
+  UNKNOWN(4);
 
   companion object {
     private val pigeonValues = values()
