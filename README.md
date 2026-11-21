@@ -23,7 +23,7 @@ Android package name: `com.lumina.app`.
 
 ```
 .
-├── app/                      Flutter app (coming soon)
+├── frontend/                 Flutter app (Android): browse, details, save, Ask AI
 ├── packages/hybrid_ai/       Hybrid AI bridge: Pigeon + Kotlin (Gemini Nano + cloud fallback)
 ├── backend/                  Node.js + TypeScript jobs (Firebase Admin SDK)
 │   ├── data/                 scholarships.json, curated by the research team
@@ -39,6 +39,7 @@ Android package name: `com.lumina.app`.
 ## Docs
 
 - [Firestore data contract](docs/firestore-contract.md): collections, fields, and Remote Config shared by app, AI, and backend
+- [Flutter app](frontend/README.md): how to run it, demo mode, and which Firestore paths each screen uses
 - [Hybrid AI package](packages/hybrid_ai/README.md): Dart API for Ask AI, checklist, and match score
 - [Backend guide](backend/README.md): how scholarship data is imported, monitored, and synced
 - [Contributing](CONTRIBUTING.md): branches, commit messages, and pull requests
