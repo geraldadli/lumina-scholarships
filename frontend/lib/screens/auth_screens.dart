@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../data/backend.dart';
@@ -81,7 +83,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     try {
       await AppScope.read(context).backend.signInWithGoogle();
     } on AuthFailure catch (e) {
-      if (mounted) showToast(context, e.message, icon: Icons.error_outline_rounded);
+      if (mounted && !e.cancelled) showToast(context, e.message, icon: Icons.error_outline_rounded);
+    } on Object catch (e) {
+      debugPrint('Lumina: Google sign-in failed: $e');
+      if (mounted) showToast(context, 'Google sign-in failed. Try again.', icon: Icons.error_outline_rounded);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

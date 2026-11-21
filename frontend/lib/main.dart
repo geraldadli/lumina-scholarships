@@ -10,6 +10,13 @@ import 'data/demo_backend.dart';
 import 'data/firebase_backend.dart';
 import 'state/app_controller.dart';
 
+/// Optional App Check debug token that is already registered in the Firebase Console, given at
+/// build time so it never lands in the (public) repo:
+///   flutter build apk --debug --dart-define-from-file=../_local/app_check.json
+/// with `{"APP_CHECK_DEBUG_TOKEN": "<token>"}`. Empty: the device makes its own token and prints
+/// it to logcat ("Enter this debug secret into the allow list").
+const _appCheckDebugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final backend = await _createBackend();
@@ -28,7 +35,9 @@ Future<LuminaBackend> _createBackend() async {
     // AI Logic enforces App Check. Debug builds print a debug token to logcat
     // ("Enter this debug secret into the allow list") to register in the Firebase Console.
     await FirebaseAppCheck.instance.activate(
-      providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider(debugToken: _appCheckDebugToken == '' ? null : _appCheckDebugToken)
+          : const AndroidPlayIntegrityProvider(),
     );
   } on Object catch (e) {
     debugPrint('Lumina: App Check activation failed: $e');

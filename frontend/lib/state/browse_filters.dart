@@ -30,6 +30,7 @@ class BrowseFilters {
     meetsGpa = false;
     showClosed = false;
     verifiedOnly = false;
+    sort = SortBy.deadline;
   }
 
   /// "Clear all": removes every chip and the search text, keeps the toggles off.

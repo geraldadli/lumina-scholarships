@@ -6,6 +6,9 @@ import '../util/format.dart';
 class LanguageScores {
   const LanguageScores({this.ielts, this.toeflIbt, this.duolingo, this.jlpt, this.topik});
 
+  /// Every key [toMap] can write, so a cleared score can be deleted from Firestore.
+  static const keys = ['ielts', 'toeflIbt', 'duolingo', 'jlpt', 'topik'];
+
   final double? ielts;
   final double? toeflIbt;
   final double? duolingo;
@@ -170,7 +173,7 @@ class UserProfile {
       educationLevel: m['educationLevel'] as String?,
       currentEducationLevel: m['currentEducationLevel'] as String?,
       citizenship: normCountry(m['citizenship'] as String?),
-      targetCountries: strings(m['targetCountries']).map((c) => normCountry(c)!).toList(),
+      targetCountries: strings(m['targetCountries']).map(normCountry).whereType<String>().toList(),
       fieldsOfStudy: strings(m['fieldsOfStudy']),
       gpa: (m['gpa'] as num?)?.toDouble(),
       languageScores: LanguageScores.fromMap((m['languageScores'] as Map?)?.cast<String, dynamic>()),

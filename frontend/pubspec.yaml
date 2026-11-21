@@ -39,6 +39,7 @@ dependencies:
   google_fonts: ^9.0.0
   hybrid_ai:
     path: ../packages/hybrid_ai
+  google_sign_in: 7.2.0
 
 dev_dependencies:
   flutter_test:

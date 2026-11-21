@@ -25,8 +25,13 @@ class DemoBackend implements LuminaBackend {
 
   final _Live<List<Scholarship>> _catalog;
   final _auth = _Live<AuthUser?>(null);
-  final _profile = _Live<UserProfile?>(null);
-  final _saved = _Live<Map<String, SavedScholarship>>(const {});
+  // Per account, like users/{uid} and users/{uid}/saved_scholarships.
+  final _profiles = <String, _Live<UserProfile?>>{};
+  final _savedByUid = <String, _Live<Map<String, SavedScholarship>>>{};
+
+  _Live<UserProfile?> _profile(String uid) => _profiles.putIfAbsent(uid, () => _Live<UserProfile?>(null));
+  _Live<Map<String, SavedScholarship>> _saved(String uid) =>
+      _savedByUid.putIfAbsent(uid, () => _Live<Map<String, SavedScholarship>>(const {}));
 
   static const _demoUser = AuthUser(uid: 'demo-student', email: 'demo@lumina.app');
 
@@ -48,9 +53,11 @@ class DemoBackend implements LuminaBackend {
   @override
   Future<void> signInWithEmail(String email, String password) async {
     _password = password;
+    final e = email.trim().toLowerCase();
     _auth.set(AuthUser(
-      uid: _demoUser.uid,
-      email: email.trim().isEmpty ? _demoUser.email : email.trim(),
+      // One uid per email, like Firebase, so switching accounts is a real switch in demo mode too.
+      uid: e.isEmpty ? _demoUser.uid : 'demo-$e',
+      email: e.isEmpty ? _demoUser.email : e,
       // Welcome's one-tap demo sign-in has no password, so it has none to confirm with either.
       usesPassword: password.isNotEmpty,
     ));
@@ -74,16 +81,16 @@ class DemoBackend implements LuminaBackend {
       if (password == null || password.isEmpty) throw const AuthFailure('Enter your password to confirm.');
       if (password != _password) throw const AuthFailure('Email or password is incorrect.');
     }
-    _saved.set(const {});
-    _profile.set(null);
+    _saved(uid).set(const {});
+    _profile(uid).set(null);
     _auth.set(null);
   }
 
   @override
-  Stream<UserProfile?> profile(String uid) => _profile.stream;
+  Stream<UserProfile?> profile(String uid) => _profile(uid).stream;
 
   @override
-  Future<void> saveProfile(String uid, UserProfile profile, {required bool isNew}) async => _profile.set(profile);
+  Future<void> saveProfile(String uid, UserProfile profile, {required bool isNew}) async => _profile(uid).set(profile);
 
   @override
   Stream<List<Scholarship>> scholarships() => _catalog.stream;
@@ -92,7 +99,7 @@ class DemoBackend implements LuminaBackend {
   void setCatalog(List<Scholarship> catalog) => _catalog.set(catalog);
 
   @override
-  Stream<Map<String, SavedScholarship>> saved(String uid) => _saved.stream;
+  Stream<Map<String, SavedScholarship>> saved(String uid) => _saved(uid).stream;
 
   @override
   Future<void> save(
@@ -102,8 +109,9 @@ class DemoBackend implements LuminaBackend {
     String status = 'saved',
     List<ChecklistEntry> checklist = const [],
   }) async {
-    _saved.set({
-      ..._saved.value,
+    final store = _saved(uid);
+    store.set({
+      ...store.value,
       s.id: SavedScholarship(
         scholarshipId: s.id,
         status: status,
@@ -117,10 +125,11 @@ class DemoBackend implements LuminaBackend {
 
   @override
   Future<void> updateSaved(String uid, String scholarshipId, SavedPatch patch) async {
-    final cur = _saved.value[scholarshipId];
+    final store = _saved(uid);
+    final cur = store.value[scholarshipId];
     if (cur == null) return;
-    _saved.set({
-      ..._saved.value,
+    store.set({
+      ...store.value,
       scholarshipId: cur.copyWith(
         status: patch.status,
         checklist: patch.checklist,
@@ -132,7 +141,8 @@ class DemoBackend implements LuminaBackend {
 
   @override
   Future<void> unsave(String uid, String scholarshipId) async {
-    _saved.set({..._saved.value}..remove(scholarshipId));
+    final store = _saved(uid);
+    store.set({...store.value}..remove(scholarshipId));
   }
 }
 
@@ -191,8 +201,8 @@ Scholarship _fromResearch(Map<String, dynamic> d) {
     description: d['description'] as String?,
     fundingType: d['fundingType'] as String? ?? 'full',
     educationLevels: strings(d['educationLevels']),
-    eligibleCitizenships: strings(d['eligibleCitizenships']).map((c) => normCountry(c)!).toList(),
-    hostCountries: strings(d['hostCountries']).map((c) => normCountry(c)!).toList(),
+    eligibleCitizenships: strings(d['eligibleCitizenships']).map(normCountry).whereType<String>().toList(),
+    hostCountries: strings(d['hostCountries']).map(normCountry).whereType<String>().toList(),
     fieldsOfStudy: strings(d['fieldsOfStudy']),
     minGpa: (d['minGpa'] as num?)?.toDouble(),
     languageRequirement: d['languageRequirement'] as String?,

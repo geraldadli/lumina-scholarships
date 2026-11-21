@@ -301,7 +301,13 @@ class _UnavailableCard extends StatelessWidget {
     final u = error.unavailability;
     void privacy() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()));
     Future<void> allowCloudAndRetry() async {
-      await c.setCloudAllowed(true);
+      try {
+        await c.setCloudAllowed(true);
+      } on Object catch (e) {
+        debugPrint('Lumina: allow cloud AI failed: $e');
+        if (context.mounted) showToast(context, 'Could not turn on cloud AI. Try again.', icon: Icons.error_outline_rounded);
+        return;
+      }
       await c.retryLast(scholarship);
     }
 

@@ -16,10 +16,13 @@ class AuthUser {
 
 /// A sign-in / account error with a message that is safe to show.
 class AuthFailure implements Exception {
-  const AuthFailure(this.message, {this.requiresRecentLogin = false});
+  const AuthFailure(this.message, {this.requiresRecentLogin = false, this.cancelled = false});
 
   final String message;
   final bool requiresRecentLogin;
+
+  /// The student closed the sign-in sheet themselves: nothing to show.
+  final bool cancelled;
 
   @override
   String toString() => message;

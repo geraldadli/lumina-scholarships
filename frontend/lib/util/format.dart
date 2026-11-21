@@ -38,6 +38,16 @@ const targetCountryOptions = ['JP', 'KR', 'DE', 'GB', 'AU', 'US', 'NL', 'SE', 'C
 const fieldOptions = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Social Science'];
 
 /// Normalises a country code: uppercase, legacy `UK` → `GB` (contract, general conventions).
+/// The contract's notes limit, in UTF-16 code units (what Dart's `String.length` counts).
+const maxNotesLength = 5000;
+
+/// First [max] UTF-16 code units of [s], never splitting an emoji's surrogate pair.
+String clipUtf16(String s, int max) {
+  if (s.length <= max) return s;
+  final end = s.codeUnitAt(max - 1) >= 0xD800 && s.codeUnitAt(max - 1) <= 0xDBFF ? max - 1 : max;
+  return s.substring(0, end);
+}
+
 String? normCountry(String? raw) {
   final c = raw?.trim().toUpperCase();
   if (c == null || c.isEmpty) return null;

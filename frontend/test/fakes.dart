@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -18,6 +19,9 @@ class FakeHost implements HybridAiHostApi {
 
   PlatformException? askError;
   final ModelAvailability availability;
+
+  /// When set, `generateChecklist` waits for it, like a slow AI call.
+  Completer<void>? checklistGate;
   final asked = <AskRequest>[];
 
   @override
@@ -45,10 +49,13 @@ class FakeHost implements HybridAiHostApi {
   }
 
   @override
-  Future<ChecklistResult> generateChecklist(ChecklistRequest request) async => ChecklistResult(
-        items: [for (final r in request.scholarship.requirements) ChecklistItem(id: r.id, label: r.label, tip: 'Start early.')],
-        source: AiSource.cloud,
-      );
+  Future<ChecklistResult> generateChecklist(ChecklistRequest request) async {
+    await checklistGate?.future;
+    return ChecklistResult(
+      items: [for (final r in request.scholarship.requirements) ChecklistItem(id: r.id, label: r.label, tip: 'Start early.')],
+      source: AiSource.cloud,
+    );
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

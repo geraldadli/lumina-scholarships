@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/saved_scholarship.dart';
 import '../models/scholarship.dart';
@@ -36,8 +37,44 @@ class FirebaseBackend implements LuminaBackend {
               ),
       );
 
+  bool _googleReady = false;
+
+  /// Native Google account picker (Android Credential Manager), turned into a Firebase credential.
+  ///
+  /// Not `signInWithProvider`: that opens Google's page in a browser tab, and on some phones
+  /// (seen on a Realme) closing it without picking an account never answers. The pending
+  /// sign-in then blocks every retry with "A headful operation is already in progress".
+  /// The native picker always answers, including "canceled".
+  /// Setup: the web OAuth client (`client_type: 3`) in google-services.json, plus this build's
+  /// SHA-1 registered for com.lumina.app.
+  Future<AuthCredential> _googleCredential() async {
+    final google = GoogleSignIn.instance;
+    if (!_googleReady) {
+      await google.initialize();
+      _googleReady = true;
+    }
+    final GoogleSignInAccount account;
+    try {
+      account = await google.authenticate();
+    } on GoogleSignInException catch (e) {
+      throw switch (e.code) {
+        GoogleSignInExceptionCode.canceled => const AuthFailure('Sign-in was cancelled.', cancelled: true),
+        GoogleSignInExceptionCode.clientConfigurationError || GoogleSignInExceptionCode.providerConfigurationError =>
+          const AuthFailure('Google sign-in is not set up for this app yet. Use email for now.'),
+        GoogleSignInExceptionCode.uiUnavailable => const AuthFailure('Google sign-in is not available on this phone.'),
+        _ => const AuthFailure('Google sign-in failed. Try again.'),
+      };
+    }
+    final idToken = account.authentication.idToken;
+    if (idToken == null) throw const AuthFailure('Google sign-in failed. Try again.');
+    return GoogleAuthProvider.credential(idToken: idToken);
+  }
+
   @override
-  Future<void> signInWithGoogle() => _wrap(() => _auth.signInWithProvider(GoogleAuthProvider()));
+  Future<void> signInWithGoogle() async {
+    final credential = await _googleCredential();
+    await _wrap(() => _auth.signInWithCredential(credential));
+  }
 
   @override
   Future<void> signInWithEmail(String email, String password) =>
@@ -59,7 +96,15 @@ class FirebaseBackend implements LuminaBackend {
   }
 
   @override
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    await _auth.signOut();
+    // Forget the chosen Google account too, so the next sign-in offers the account picker.
+    if (_googleReady) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } on Object catch (_) {}
+    }
+  }
 
   @override
   Future<void> deleteAccount(String uid, {String? password}) async {
@@ -77,7 +122,8 @@ class FirebaseBackend implements LuminaBackend {
             EmailAuthProvider.credential(email: user.email!, password: password),
           ));
     } else {
-      await _wrap(() => user.reauthenticateWithProvider(GoogleAuthProvider()));
+      final credential = await _googleCredential();
+      await _wrap(() => user.reauthenticateWithCredential(credential));
     }
 
     final saved = await _saved(uid).get();
@@ -135,7 +181,10 @@ class FirebaseBackend implements LuminaBackend {
       'targetCountries': p.targetCountries.take(30).toList(),
       'fieldsOfStudy': p.fieldsOfStudy.take(20).toList(),
       'gpa': opt(p.gpa),
-      'languageScores': p.languageScores.toMap(),
+      // merge: true merges nested maps key by key, so a cleared score must be deleted explicitly.
+      'languageScores': {
+        for (final k in LanguageScores.keys) k: p.languageScores.toMap()[k] ?? FieldValue.delete(),
+      },
       'fundingPreference': opt(p.fundingPreference),
       'privacy': {'cloudAiAllowed': p.cloudAiAllowed},
       'onboardingCompleted': p.onboardingCompleted,
@@ -184,7 +233,7 @@ class FirebaseBackend implements LuminaBackend {
   Future<void> updateSaved(String uid, String scholarshipId, SavedPatch patch) => _saved(uid).doc(scholarshipId).update({
         if (patch.status != null) 'status': patch.status!,
         if (patch.checklist != null) 'checklist': [for (final c in patch.checklist!.take(50)) c.toMap()],
-        if (patch.notes != null) 'notes': patch.notes!.length > 5000 ? patch.notes!.substring(0, 5000) : patch.notes!,
+        if (patch.notes != null) 'notes': clipUtf16(patch.notes!, maxNotesLength),
         if (patch.lastSeenUpdatedAt != null) 'lastSeenUpdatedAt': Timestamp.fromDate(patch.lastSeenUpdatedAt!),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -210,8 +259,8 @@ Scholarship scholarshipFromFirestore(String id, Map<String, dynamic> d) => Schol
       description: d['description'] as String?,
       fundingType: d['fundingType'] as String? ?? 'full',
       educationLevels: _strings(d['educationLevels']),
-      eligibleCitizenships: _strings(d['eligibleCitizenships']).map((c) => normCountry(c)!).toList(),
-      hostCountries: _strings(d['hostCountries']).map((c) => normCountry(c)!).toList(),
+      eligibleCitizenships: _strings(d['eligibleCitizenships']).map(normCountry).whereType<String>().toList(),
+      hostCountries: _strings(d['hostCountries']).map(normCountry).whereType<String>().toList(),
       fieldsOfStudy: _strings(d['fieldsOfStudy']),
       minGpa: (d['minGpa'] as num?)?.toDouble(),
       languageRequirement: d['languageRequirement'] as String?,

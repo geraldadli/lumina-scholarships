@@ -97,7 +97,10 @@ class AppController extends ChangeNotifier {
     catalogError = null;
     chats.clear();
     _matchCache.clear();
+    checklistTips.clear();
+    checklistSource.clear();
     tab = 0;
+    savedSegment = 'saved';
     _filtersSeeded = false;
     filters.reset();
     if (u != null) {
@@ -330,8 +333,16 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<bool> setChecklist(Scholarship s, List<ChecklistEntry> items) async {
+  /// The signed-in user, or null if nobody is, or if [uid] is given and someone else is now.
+  /// Work started in one session (a slow AI call, a notes flush) passes its [uid] so it is
+  /// dropped instead of being written into the account signed in after it.
+  AuthUser? _session([String? uid]) {
     final u = user;
+    return u == null || (uid != null && u.uid != uid) ? null : u;
+  }
+
+  Future<bool> setChecklist(Scholarship s, List<ChecklistEntry> items, {String? uid}) async {
+    final u = _session(uid);
     if (u == null || !isSaved(s.id)) return false;
     return _write(
       () => backend.updateSaved(u.uid, s.id, SavedPatch(checklist: items.take(50).toList())),
@@ -339,8 +350,9 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<bool> setNotes(Scholarship s, String notes) async {
-    final u = user;
+  /// [uid]: the account the notes were typed in (see [_session]).
+  Future<bool> setNotes(Scholarship s, String notes, {String? uid}) async {
+    final u = _session(uid);
     if (u == null || !isSaved(s.id)) return false;
     return _write(() => backend.updateSaved(u.uid, s.id, SavedPatch(notes: notes)), 'Could not save your notes.');
   }
@@ -353,8 +365,8 @@ class AppController extends ChangeNotifier {
   /// "Regenerate with AI". Never fails because of AI: the plugin falls back to the official
   /// requirements (`AiSource.rules`). Keeps `done` for items that survive and the user's own items.
   Future<String> regenerateChecklist(Scholarship s) async {
-    final cur = saved[s.id];
-    if (cur == null) return 'Save the scholarship first';
+    final uid = user?.uid;
+    if (uid == null || !isSaved(s.id)) return 'Save the scholarship first';
     final ChecklistResult result;
     try {
       result = await ai.generateChecklist(ChecklistRequest(
@@ -369,6 +381,12 @@ class AppController extends ChangeNotifier {
       debugPrint('Lumina: checklist failed: $e');
       return 'Could not regenerate the checklist. Try again.';
     }
+    // The AI call can take a while: the student may have switched accounts or removed the
+    // scholarship meanwhile, and ticked items while waiting, so re-read the state now.
+    if (user == null) return 'You signed out, so the checklist was not changed.';
+    if (_session(uid) == null) return 'You switched accounts, so the checklist was not changed.';
+    final cur = saved[s.id];
+    if (cur == null) return 'Save the scholarship first';
     final doneIds = {for (final c in cur.checklist) if (c.done) c.id};
     final aiIds = {for (final i in result.items) i.id};
     final custom = cur.checklist.where((c) => c.id.startsWith('custom-') && !aiIds.contains(c.id));
@@ -376,9 +394,10 @@ class AppController extends ChangeNotifier {
       for (final i in result.items) ChecklistEntry(id: i.id, label: i.label, done: doneIds.contains(i.id)),
       ...custom,
     ];
+    // Only show AI tips and the "Sourced · AI" badge for a checklist that was actually saved.
+    if (!await setChecklist(s, items, uid: uid)) return 'Could not save your checklist. Try again.';
     checklistTips[s.id] = {for (final i in result.items) if (i.tip != null && i.tip!.isNotEmpty) i.id: i.tip!};
     checklistSource[s.id] = result.source;
-    await setChecklist(s, items);
     notifyListeners();
     return result.source == AiSource.rules
         ? 'Checklist rebuilt from the official requirements'

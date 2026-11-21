@@ -37,6 +37,7 @@ To go live:
 1. Get `google-services.json` for `com.lumina.app` from the backend engineer and put it at `frontend/android/app/google-services.json`. It is gitignored, so **never commit it**.
 2. Ask backend to enable the **Google** and **Email/Password** sign-in providers in Firebase Auth.
 3. Run a debug build once and look in logcat for `Enter this debug secret into the allow list`. Register that token in Firebase Console → App Check → Manage debug tokens. Without it, cloud AI answers fail with `appCheckFailed`.
+   To use a token that is already registered instead, put `{"APP_CHECK_DEBUG_TOKEN": "<token>"}` in `_local/app_check.json` (gitignored) and build with `--dart-define-from-file=../_local/app_check.json`. Never commit the token.
 
 To refresh the demo data: `cp ../backend/data/scholarships.json assets/demo/scholarships.json`.
 

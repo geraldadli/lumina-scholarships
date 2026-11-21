@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../models/saved_scholarship.dart';
+import '../state/app_controller.dart';
 import '../state/app_scope.dart';
 import '../theme.dart';
 import '../util/format.dart';
@@ -27,9 +30,21 @@ class _PrepareScreenState extends State<PrepareScreen> {
   bool _notesLoaded = false;
   bool _regenerating = false;
 
+  /// Kept from when the screen was active: dispose() can no longer look up AppScope, and the
+  /// last notes edit must go to the account it was typed in, never to one signed in after it.
+  late AppController _controller;
+  String? _uid;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller = AppScope.read(context);
+    _uid ??= _controller.user?.uid;
+  }
+
   @override
   void dispose() {
-    _notesDebounce?.cancel();
+    // Flush first: it saves only while the autosave is still pending, then cancels it.
     _flushNotes();
     _newItem.dispose();
     _notes.dispose();
@@ -43,11 +58,12 @@ class _PrepareScreenState extends State<PrepareScreen> {
     }
   }
 
+  /// Also runs from dispose() (leaving Prepare before the autosave fired), so it must not use
+  /// [context]. A failure still reaches the student through the controller's notices.
   void _saveNotes() {
-    final c = AppScope.read(context);
-    final s = c.byId(widget.scholarshipId);
-    // Also runs from dispose(); a failure still reaches the student through the controller's notices.
-    if (s != null) unawaited(c.setNotes(s, _notes.text));
+    final uid = _uid;
+    final s = _controller.byId(widget.scholarshipId);
+    if (s != null && uid != null) unawaited(_controller.setNotes(s, _notes.text, uid: uid));
   }
 
   @override
@@ -195,14 +211,16 @@ class _PrepareScreenState extends State<PrepareScreen> {
                             Expanded(child: Text('Notes', style: ts(16, weight: FontWeight.w700))),
                             ValueListenableBuilder(
                               valueListenable: _notes,
-                              builder: (_, v, _) => Text('${v.text.length} / 5000', style: ts(12, color: LColors.text2)),
+                              builder: (_, v, _) => Text('${v.text.length} / $maxNotesLength', style: ts(12, color: LColors.text2)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _notes,
-                          maxLength: 5000,
+                          // Limit in UTF-16 units like the backend and the counter (maxLength counts
+                          // graphemes, so emoji-heavy notes would be cut silently on save).
+                          inputFormatters: [_Utf16Limit(maxNotesLength)],
                           minLines: 5,
                           maxLines: 8,
                           textCapitalization: TextCapitalization.sentences,
@@ -256,6 +274,17 @@ class _PrepareScreenState extends State<PrepareScreen> {
       ),
     );
   }
+}
+
+/// Rejects edits that would make the text longer than [max] UTF-16 code units.
+class _Utf16Limit extends TextInputFormatter {
+  _Utf16Limit(this.max);
+
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) =>
+      newValue.text.length <= max ? newValue : oldValue;
 }
 
 /// Shown when the scholarship is no longer in the catalog (withdrawn by the research team).

@@ -82,8 +82,8 @@ class Scholarship {
 
   int? daysLeftAt(DateTime now) {
     if (deadline == null) return null;
-    final hours = deadline!.difference(now).inHours;
-    return (hours / 24).ceil();
+    // Seconds, not whole hours: with 30 minutes left it is still "1 day", not "0 days".
+    return (deadline!.difference(now).inSeconds / Duration.secondsPerDay).ceil();
   }
 
   /// Backend sets `isUrgent` at 14 days or less; recompute too in case the flag is stale.
