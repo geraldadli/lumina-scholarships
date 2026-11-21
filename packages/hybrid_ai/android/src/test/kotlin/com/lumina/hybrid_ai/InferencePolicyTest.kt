@@ -3,6 +3,7 @@ package com.lumina.hybrid_ai
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 internal class InferencePolicyTest {
 
@@ -60,6 +61,46 @@ internal class InferencePolicyTest {
             ErrorCodes.ON_DEVICE_UNSUPPORTED,
             InferencePolicy.precheck(AiMode.ONLY_ON_DEVICE, ModelAvailability.UNAVAILABLE, allowCloud = true)?.code,
         )
+    }
+
+    @Test
+    fun precheck_unknownCauseIsNeverReportedAsUnsupported() {
+        for (allowCloud in listOf(true, false)) {
+            assertEquals(
+                ErrorCodes.ON_DEVICE_UNAVAILABLE,
+                InferencePolicy.precheck(AiMode.ONLY_ON_DEVICE, ModelAvailability.UNKNOWN, allowCloud)?.code,
+            )
+        }
+        assertNull(InferencePolicy.precheck(AiMode.PREFER_ON_DEVICE, ModelAvailability.UNKNOWN, true))
+    }
+
+    @Test
+    fun nanoProbe_onlyARealAnswerCanBeUnavailable() {
+        assertEquals(ModelAvailability.UNKNOWN, NanoStatusProbe.ExtensionMissing.toAvailability())
+        assertEquals(ModelAvailability.UNKNOWN, NanoStatusProbe.CheckFailed(RuntimeException("boom")).toAvailability())
+        assertEquals(
+            ModelAvailability.UNAVAILABLE,
+            NanoStatusProbe.Reported(ModelAvailability.UNAVAILABLE, "UNAVAILABLE").toAvailability(),
+        )
+        assertEquals(
+            ModelAvailability.AVAILABLE,
+            NanoStatusProbe.Reported(ModelAvailability.AVAILABLE, "AVAILABLE").toAvailability(),
+        )
+    }
+
+    @Test
+    fun nanoProbe_logLineNamesTheOutcome() {
+        assertTrue("EXTENSION_MISSING" in NanoStatusProbe.ExtensionMissing.describe())
+        val failed = NanoStatusProbe.CheckFailed(IllegalStateException("AICore not reachable")).describe()
+        assertTrue("CHECK_FAILED" in failed && "IllegalStateException" in failed && "AICore not reachable" in failed)
+        val reported = NanoStatusProbe.Reported(ModelAvailability.UNAVAILABLE, "UNAVAILABLE").describe()
+        assertTrue("REPORTED" in reported && "UNAVAILABLE" in reported)
+    }
+
+    @Test
+    fun nanoProbe_longErrorMessagesAreTruncatedInTheLog() {
+        val line = NanoStatusProbe.CheckFailed(RuntimeException("x".repeat(5_000))).describe()
+        assertTrue(line.length < 400)
     }
 
     @Test

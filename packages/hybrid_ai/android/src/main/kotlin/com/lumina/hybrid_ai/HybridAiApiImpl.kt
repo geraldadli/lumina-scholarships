@@ -96,6 +96,10 @@ class HybridAiApiImpl(
                 ErrorCodes.ON_DEVICE_UNSUPPORTED,
                 "This device does not support Gemini Nano.",
             )
+            ModelAvailability.UNKNOWN -> throw HybridAiError(
+                ErrorCodes.ON_DEVICE_UNAVAILABLE,
+                "On-device AI is unavailable.",
+            )
             else -> Unit
         }
         val extension = model.onDeviceExtension ?: throw HybridAiError(
@@ -243,13 +247,34 @@ class HybridAiApiImpl(
             )
         }
 
+    /**
+     * Asks AICore for the Nano status and logs WHICH outcome happened. Only a real UNAVAILABLE answer
+     * becomes [ModelAvailability.UNAVAILABLE]; a missing extension or a failed check is
+     * [ModelAvailability.UNKNOWN], so the UI never claims "not supported" without knowing.
+     */
     private suspend fun availability(model: GenerativeModel): ModelAvailability {
-        val status = runCatching { model.onDeviceExtension?.checkStatus() }.getOrNull()
-        return when (status) {
-            OnDeviceModelStatus.AVAILABLE -> ModelAvailability.AVAILABLE
-            OnDeviceModelStatus.DOWNLOADABLE -> ModelAvailability.DOWNLOADABLE
-            OnDeviceModelStatus.DOWNLOADING -> ModelAvailability.DOWNLOADING
-            else -> ModelAvailability.UNAVAILABLE
+        val probe = probeStatus(model)
+        val availability = probe.toAvailability()
+        if (availability == ModelAvailability.UNKNOWN) Log.w(TAG, probe.describe()) else Log.i(TAG, probe.describe())
+        return availability
+    }
+
+    private suspend fun probeStatus(model: GenerativeModel): NanoStatusProbe {
+        val extension = model.onDeviceExtension ?: return NanoStatusProbe.ExtensionMissing
+        return try {
+            val status = extension.checkStatus()
+            val availability = when (status) {
+                OnDeviceModelStatus.AVAILABLE -> ModelAvailability.AVAILABLE
+                OnDeviceModelStatus.DOWNLOADABLE -> ModelAvailability.DOWNLOADABLE
+                OnDeviceModelStatus.DOWNLOADING -> ModelAvailability.DOWNLOADING
+                OnDeviceModelStatus.UNAVAILABLE -> ModelAvailability.UNAVAILABLE
+                else -> ModelAvailability.UNKNOWN // a status value this version does not know
+            }
+            NanoStatusProbe.Reported(availability, status.toString())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            NanoStatusProbe.CheckFailed(e)
         }
     }
 

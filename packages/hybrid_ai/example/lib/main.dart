@@ -332,6 +332,8 @@ class _LabPageState extends State<LabPage> {
         ModelAvailability.downloadable => 'Can be downloaded',
         ModelAvailability.downloading => 'Downloading…',
         ModelAvailability.unavailable => 'Not supported on this device',
+        // The cause is unknown (see the "LuminaHybridAi" log): do not claim "not supported".
+        ModelAvailability.unknown => 'On-device AI is unavailable',
       };
 
   static String _sourceLabel(AiSource s, String? model) => switch (s) {
