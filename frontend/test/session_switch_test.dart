@@ -21,9 +21,13 @@ class _WriteLog extends DemoBackend {
 
   final updates = <({String uid, SavedPatch patch})>[];
 
+  /// When set, checklist writes wait for it, like Firestore still confirming the save.
+  Completer<void>? checklistWriteGate;
+
   @override
-  Future<void> updateSaved(String uid, String scholarshipId, SavedPatch patch) {
+  Future<void> updateSaved(String uid, String scholarshipId, SavedPatch patch) async {
     updates.add((uid: uid, patch: patch));
+    if (patch.checklist != null) await checklistWriteGate?.future;
     return super.updateSaved(uid, scholarshipId, patch);
   }
 }
@@ -64,6 +68,33 @@ void main() {
     await pumpEventQueue();
 
     expect(backend.updates.where((u) => u.patch.checklist != null), isEmpty);
+    expect(c.checklistTips, isEmpty);
+    expect(c.checklistSource, isEmpty);
+  });
+
+  test("account A's AI tips never reach account B when the switch happens while Firestore confirms", () async {
+    final backend = _WriteLog(loadCatalog())..checklistWriteGate = Completer<void>();
+    final c = AppController(backend: backend, ai: HybridAi(hostApi: FakeHost()), clock: () => testNow)..start();
+    await backend.signInWithEmail('a@lumina.test', 'secret123');
+    await pumpEventQueue();
+    final accountA = c.user!.uid;
+    await _onboardAndSave(backend, c, pumpEventQueue);
+
+    final pending = c.regenerateChecklist(c.byId(_fulbright)!);
+    await pumpEventQueue();
+    // The AI has answered and the checklist write to A has started, but is not confirmed yet.
+    expect(backend.updates.where((u) => u.patch.checklist != null).map((u) => u.uid), [accountA]);
+
+    await backend.signOut();
+    await backend.signInWithEmail('b@lumina.test', 'secret456');
+    await pumpEventQueue();
+    await _onboardAndSave(backend, c, pumpEventQueue); // B has the same scholarship saved
+    expect(c.checklistTips, isEmpty);
+
+    backend.checklistWriteGate!.complete(); // Firestore confirms A's write
+    await pending;
+    await pumpEventQueue();
+
     expect(c.checklistTips, isEmpty);
     expect(c.checklistSource, isEmpty);
   });

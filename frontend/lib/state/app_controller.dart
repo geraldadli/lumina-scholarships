@@ -396,6 +396,9 @@ class AppController extends ChangeNotifier {
     ];
     // Only show AI tips and the "Sourced · AI" badge for a checklist that was actually saved.
     if (!await setChecklist(s, items, uid: uid)) return 'Could not save your checklist. Try again.';
+    // Check again: the account can change while Firestore confirms the write, and the tips
+    // belong to account [uid] only. Its checklist is saved; the Prepare screen is gone.
+    if (_session(uid) == null) return 'Checklist saved to the account you were signed in with.';
     checklistTips[s.id] = {for (final i in result.items) if (i.tip != null && i.tip!.isNotEmpty) i.id: i.tip!};
     checklistSource[s.id] = result.source;
     notifyListeners();
