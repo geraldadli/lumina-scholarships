@@ -306,11 +306,14 @@ class AcademicsSection extends StatelessWidget {
         row('Duolingo', 'duolingo', draft.duolingo, '10 – 160'),
         row('JLPT', 'jlpt', draft.jlpt, 'N5 – N1', text: true),
         row('TOPIK', 'topik', draft.topik, '1 – 6'),
-        const CvImportButton(),
+        if (showCvImport) const CvImportButton(),
       ],
     );
   }
 }
+
+/// CV import is not built yet, so its buttons stay hidden until it is. Flip to show them again.
+const showCvImport = false;
 
 class CvImportButton extends StatelessWidget {
   const CvImportButton({super.key, this.label = 'Import from CV (optional)'});
@@ -678,15 +681,17 @@ class PrivacyScreen extends StatelessWidget {
                         }
                       },
                     ),
-                    const SizedBox(height: 24),
-                    Text('CV data', style: ts(16, weight: FontWeight.w700)),
-                    const SizedBox(height: 10),
-                    const CvImportButton(label: 'Import CV'),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Your raw CV file is never stored. Only a short summary of skills and scores is kept.',
-                      style: ts(13, color: LColors.text2, height: 1.45),
-                    ),
+                    if (showCvImport) ...[
+                      const SizedBox(height: 24),
+                      Text('CV data', style: ts(16, weight: FontWeight.w700)),
+                      const SizedBox(height: 10),
+                      const CvImportButton(label: 'Import CV'),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Your raw CV file is never stored. Only a short summary of skills and scores is kept.',
+                        style: ts(13, color: LColors.text2, height: 1.45),
+                      ),
+                    ],
                   ],
                 ),
               ),

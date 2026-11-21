@@ -56,7 +56,7 @@ Dates are displayed in WIB, matching how the research team publishes deadlines.
 
 ## Known gaps (later sprints)
 
-- CV import (button shows "arrives in a later sprint").
+- CV import: hidden for now (`showCvImport` in `lib/screens/profile_form.dart`). An existing `cvSummary` is still read for match scores.
 - Bahasa Indonesia UI.
 - Share sheet (Details copies the official link for now).
 - `minMatchScore` is read from `HybridAi.getStatus()` (Remote Config via the plugin), with the contract default `0.65` until that returns.

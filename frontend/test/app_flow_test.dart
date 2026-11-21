@@ -44,6 +44,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Academics'), findsOneWidget);
+    expect(find.textContaining('CV'), findsNothing); // CV import is hidden for now
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
