@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         // Harus sama dengan package name yang terdaftar di Firebase (google-services.json).
-        applicationId = "com.lumina.app"
+        applicationId = "com.lumina.hybrid_ai.example"
         // firebase-ai-ondevice (Gemini Nano) membutuhkan API level 26+.
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
