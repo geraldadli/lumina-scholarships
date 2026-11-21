@@ -336,7 +336,8 @@ class _PrivacyState extends State<_Privacy> {
         ModelAvailability.available => 'Ready',
         ModelAvailability.downloadable => 'Not downloaded',
         ModelAvailability.downloading => 'Downloading',
-        _ => 'Not supported',
+        ModelAvailability.unknown => 'Status unknown',
+        ModelAvailability.unavailable => 'Not supported',
       };
 
   @override
