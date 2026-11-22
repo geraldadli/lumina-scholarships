@@ -13,7 +13,17 @@ const doc = (data: Record<string, unknown> = {}) =>
 function stalledBody(signal: AbortSignal): Response {
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
-      signal.addEventListener('abort', () => controller.error(signal.reason), { once: true });
+      // AbortSignal.timeout() timers are unref'd, so without a ref'd handle the event loop can drain
+      // while this stream is pending and the test runner cancels the test (seen on Node 22 / CI).
+      const keepAlive = setInterval(() => {}, 1_000);
+      signal.addEventListener(
+        'abort',
+        () => {
+          clearInterval(keepAlive);
+          controller.error(signal.reason);
+        },
+        { once: true },
+      );
     },
   });
   return new Response(body, { status: 200, headers: { 'content-type': 'text/html' } });
