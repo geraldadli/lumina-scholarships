@@ -35,7 +35,7 @@ export function sha256(text: string): string {
   return createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
-interface CheckResult {
+export interface CheckResult {
   sourceId: string;
   status: Exclude<SourceRunStatus, 'seeded'>;
   hash?: string;
@@ -43,33 +43,53 @@ interface CheckResult {
   error?: string;
 }
 
-/** Coba ulang hanya untuk error jaringan/timeout dan HTTP 5xx; 4xx dikembalikan apa adanya. */
-async function fetchWithRetry(url: string): Promise<Response> {
+export interface FetchOptions {
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+  attempts?: number;
+}
+
+export interface FetchedPage {
+  status: number;
+  ok: boolean;
+  body: string;
+}
+
+/**
+ * Satu percobaan = kirim request DAN unduh seluruh isi halaman, keduanya di bawah satu timeout.
+ * Situs yang sudah membalas header tapi macet saat mengirim isi halaman (body) juga dihitung gagal
+ * dan dicoba ulang. Coba ulang untuk error jaringan/timeout dan HTTP 5xx; 4xx dikembalikan apa adanya.
+ */
+export async function fetchPageWithRetry(url: string, opts: FetchOptions = {}): Promise<FetchedPage> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const timeoutMs = opts.timeoutMs ?? FETCH_TIMEOUT_MS;
+  const attempts = opts.attempts ?? FETCH_ATTEMPTS;
   let lastError: unknown;
-  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const res = await fetch(url, {
+      const res = await fetchImpl(url, {
         headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
         redirect: 'follow',
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
-      if (res.status < 500 || attempt === FETCH_ATTEMPTS) return res;
+      const page: FetchedPage = { status: res.status, ok: res.ok, body: res.ok ? await res.text() : '' };
+      if (res.status < 500 || attempt === attempts) return page;
     } catch (err) {
       lastError = err;
-      if (attempt === FETCH_ATTEMPTS) throw err;
+      if (attempt === attempts) throw err;
     }
   }
   throw lastError;
 }
 
-async function checkOne(doc: QueryDocumentSnapshot): Promise<CheckResult> {
+export async function checkOne(doc: QueryDocumentSnapshot, opts: FetchOptions = {}): Promise<CheckResult> {
   const source = doc.data() as Source;
   try {
-    const res = await fetchWithRetry(source.url);
+    const res = await fetchPageWithRetry(source.url, opts);
     if (!res.ok) {
       return { sourceId: doc.id, status: 'error', httpStatus: res.status, error: `HTTP ${res.status}` };
     }
-    const text = normalizeHtml(await res.text(), source.ignorePatterns);
+    const text = normalizeHtml(res.body, source.ignorePatterns);
     if (text.length < 50) {
       // Halaman kosong / dirender JS: jangan simpan hash yang tidak bermakna.
       return { sourceId: doc.id, status: 'error', httpStatus: res.status, error: 'Page content is too short' };
@@ -118,7 +138,7 @@ export async function checkSources(db: Firestore, opts: { dryRun?: boolean } = {
 
   // Batasi paralelisme agar sopan terhadap situs sumber.
   for (let i = 0; i < snap.docs.length; i += CONCURRENCY) {
-    results.push(...(await Promise.all(snap.docs.slice(i, i + CONCURRENCY).map(checkOne))));
+    results.push(...(await Promise.all(snap.docs.slice(i, i + CONCURRENCY).map((d) => checkOne(d)))));
   }
 
   const summary: SourceCheckSummary = {
