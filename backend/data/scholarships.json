@@ -28,8 +28,8 @@
     ],
     "lastVerified": "2026-11-21",
     "verifiedBy": "Fiko",
-    "notes": "2028 intake, changed the date to the correct one and removed old label (upcoming)",
-    "changeSummary": "Added a list of what the scholarship covers."
+    "notes": "2028 intake. Must apply for a course in Indonesia's priority fields of study (list not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75.",
+    "changeSummary": "Moved to the 2028 intake: new id, open and close dates, status set to active. Added a list of what the scholarship covers."
   },
   {
     "id": "lpdp-australia-awards-2027",
@@ -324,7 +324,7 @@
     "fieldsOfStudy": ["ALL"],
     "minGpa": null,
     "languageRequirement": "Set by each UK university",
-    "deadline": "2026-10-06",
+    "deadline": "2026-10-06T11:00:00Z",
     "status": "closed",
     "sourceUrl": "https://www.chevening.org/scholarship/indonesia/",
     "description": "Fully funded one-year master's degree at a UK university for future leaders with work experience.",
