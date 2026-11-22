@@ -12,7 +12,7 @@
     "languageRequirement": "IELTS 6.5 by the end of pre-departure training (entry minimum not confirmed on official site)",
     "openDate": "2027-02-01",
     "deadline": "2027-04-28",
-    "status": "upcoming",
+    "status": "active",
     "sourceUrl": "https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true",
     "description": "Fully funded Masters or PhD study at an Australian university for Indonesian citizens. Covers return air travel, a one-off establishment allowance, full tuition fees and a contribution to living expenses.",
     "requirements": [
@@ -28,7 +28,7 @@
     ],
     "lastVerified": "2026-11-21",
     "verifiedBy": "Fiko",
-    "notes": "2028 intake, changed the date to the correct one and added a new label (upcoming)",
+    "notes": "2028 intake, changed the date to the correct one and removed old label (upcoming)",
     "changeSummary": "Added a list of what the scholarship covers."
   },
   {
@@ -161,7 +161,7 @@
     "languageRequirement": "Set by each Swedish master's programme",
     "openDate": "2027-02-08",
     "deadline": "2027-02-24",
-    "status": "upcoming",
+    "status": "active",
     "sourceUrl": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
     "description": "Fully funded Master's study in Sweden for professionals with leadership experience from 34 countries, including Indonesia. Applicants must first apply to an eligible programme through University Admissions in Sweden.",
     "requirements": [
