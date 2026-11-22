@@ -268,7 +268,7 @@
     "minGpa": 3.0,
     "languageRequirement": "Overseas: Master's IELTS 6.5 / TOEFL iBT 80, Doctoral IELTS 7.0 / TOEFL iBT 94 (lower for affirmation categories; waived with unconditional LoA)",
     "openDate": "2026-06-30",
-    "deadline": "2026-07-31T16:59:00Z",
+    "deadline": "2026-07-31",
     "status": "closed",
     "sourceUrl": "https://lpdp.kemenkeu.go.id/en/beasiswa/beasiswa-share/beasiswa-share/",
     "description": "Indonesian government scholarship for Master's (up to 24 months) or Doctoral (up to 48 months) study in social, humanities, arts, religious and education fields, at home or abroad.",
@@ -291,8 +291,8 @@
     ],
     "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "2026 batch 2. Final results 30 November 2026; study starts from 1 January 2027. GPA, age and language rules differ for CPNS/PNS/TNI/POLRI, Papua, affirmation regions, low-income and disability categories. The 2027 batch 1 schedule is not out yet. Deadline time (31 Jul 2026, 23:59 WIB) from news reports (JournalArta, 31 Jul 2026).",
-    "changeSummary": "Added deadline time (23:59 WIB) from news reports."
+    "notes": "2026 batch 2. Final results 30 November 2026; study starts from 1 January 2027. GPA, age and language rules differ for CPNS/PNS/TNI/POLRI, Papua, affirmation regions, low-income and disability categories. The 2027 batch 1 schedule is not out yet.",
+    "changeSummary": "Removed deadline time (23:59 WIB) from news reports."
   },
   {
     "id": "lpdp-stem-industri-strategis-2026-tahap-2",
@@ -306,7 +306,7 @@
     "minGpa": 3.0,
     "languageRequirement": "Overseas Master's: IELTS 6.5, TOEFL iBT 80 or Duolingo 120 (waived with unconditional LoA)",
     "openDate": "2026-06-30",
-    "deadline": "2026-07-31T16:59:00Z",
+    "deadline": "2026-07-31",
     "status": "closed",
     "sourceUrl": "https://lpdp.kemenkeu.go.id/beasiswa/beasiswa-stem-industri-strategis/industri-strategis/",
     "description": "Indonesian government scholarship for Master's and Doctoral study in STEM fields for strategic industries, at home or abroad. LPDP reserves at least 80% of awards for STEM fields.",
@@ -326,8 +326,8 @@
     ],
     "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "2026 batch 2, same schedule as other LPDP programmes (results 30 November 2026). Benefits assumed to match LPDP's standard full-scheme funding components. Deadline time (31 Jul 2026, 23:59 WIB) from news reports (JournalArta, 31 Jul 2026).",
-    "changeSummary": "Added deadline time (23:59 WIB) from news reports."
+    "notes": "2026 batch 2, same schedule as other LPDP programmes (results 30 November 2026). Benefits assumed to match LPDP's standard full-scheme funding components.",
+    "changeSummary": "Removed deadline time (23:59 WIB) from news reports."
   },
   {
     "id": "chevening-indonesia-2027",
