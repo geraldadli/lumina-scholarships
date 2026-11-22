@@ -11,7 +11,7 @@
     "minGpa": 2.9,
     "languageRequirement": "IELTS 6.5 by the end of pre-departure training (entry minimum not confirmed on official site)",
     "openDate": "2027-02-01",
-    "deadline": "2027-04-28",
+    "deadline": "2027-04-28T04:00:00Z",
     "status": "active",
     "sourceUrl": "https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true",
     "description": "Fully funded Masters or PhD study at an Australian university for Indonesian citizens. Covers return air travel, a one-off establishment allowance, full tuition fees and a contribution to living expenses.",
@@ -26,10 +26,10 @@
       "One-off establishment allowance",
       "Contribution to living expenses"
     ],
-    "lastVerified": "2026-11-21",
+    "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "2028 intake. Must apply for a course in Indonesia's priority fields of study (list not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75.",
-    "changeSummary": "Moved to the 2028 intake: new id, open and close dates, status set to active. Added a list of what the scholarship covers."
+    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in Indonesia's priority fields of study (list not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75.",
+    "changeSummary": "Moved to the 2028 intake: new id, open and close dates, status set to active, deadline time 11:00 WIB. Added a list of what the scholarship covers."
   },
   {
     "id": "lpdp-australia-awards-2027",
@@ -80,7 +80,7 @@
     "fieldsOfStudy": ["ALL"],
     "minGpa": 3.0,
     "languageRequirement": "TOEFL ITP 550, TOEFL iBT 80, IELTS 6.5 or Duolingo 125 (minimum varies by field)",
-    "deadline": "2027-02-15",
+    "deadline": "2027-02-15T16:59:00Z",
     "status": "active",
     "sourceUrl": "https://www.aminef.or.id/grants-for-indonesians/fulbright-programs/scholarship/fulbright-masters-degree-scholarship/",
     "description": "One to two years of Master's study at a U.S. university for Indonesian S1 graduates. Grant of up to USD 52,000 per year for tuition, stipend and health cover, plus flights, visa and settling-in support.",
@@ -104,9 +104,10 @@
       "Pre-academic (gateway) program",
       "TOEFL iBT/GRE/GMAT and university application fees"
     ],
-    "lastVerified": "2026-11-21",
+    "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Study starts in the fall term of the following year. All fields except medicine involving patient care or clinical contact. No financial support for dependants. Preference for applicants without recent substantial U.S. experience."
+    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Study starts in the fall term of the following year. All fields except medicine involving patient care or clinical contact. No financial support for dependants. Preference for applicants without recent substantial U.S. experience.",
+    "changeSummary": "Added deadline time (23:59 WIB) from the official form."
   },
   {
     "id": "fulbright-phd-indonesia-2027",
@@ -119,7 +120,7 @@
     "fieldsOfStudy": ["ALL"],
     "minGpa": 3.0,
     "languageRequirement": "TOEFL ITP 575, TOEFL iBT 90, IELTS 7.0 or Duolingo 135",
-    "deadline": "2027-02-15",
+    "deadline": "2027-02-15T16:59:00Z",
     "status": "active",
     "sourceUrl": "https://www.aminef.or.id/grants-for-indonesians/fulbright-programs/scholarship/fulbright-doctoral-degree-phd-scholarship/",
     "description": "Three years of PhD funding at a U.S. university for Indonesians with an S2 degree who intend to take up or return to an academic position. Grant of up to USD 50,000 per year plus travel and visa support.",
@@ -144,9 +145,10 @@
       "Pre-academic (gateway) program",
       "Admission test and university application fees"
     ],
-    "lastVerified": "2026-11-21",
+    "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Funding for three years. Not open to medicine involving patient care. No U.S. government exchange program in the previous three years. No financial support for dependants."
+    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Funding for three years. Not open to medicine involving patient care. No U.S. government exchange program in the previous three years. No financial support for dependants.",
+    "changeSummary": "Added deadline time (23:59 WIB) from the official form."
   },
   {
     "id": "si-global-professionals-2027",
@@ -160,7 +162,7 @@
     "minGpa": null,
     "languageRequirement": "Set by each Swedish master's programme",
     "openDate": "2027-02-08",
-    "deadline": "2027-02-24",
+    "deadline": "2027-02-24T13:59:00Z",
     "status": "active",
     "sourceUrl": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
     "description": "Fully funded Master's study in Sweden for professionals with leadership experience from 34 countries, including Indonesia. Applicants must first apply to an eligible programme through University Admissions in Sweden.",
@@ -176,9 +178,10 @@
       "Monthly living allowance of SEK 12,000",
       "One-time travel grant of SEK 15,000"
     ],
-    "lastVerified": "2026-11-21",
+    "lastVerified": "2026-11-22",
     "verifiedBy": "Fiko",
-    "notes": "2027/28 intake. Two steps: university application 16 Oct 2026 – 15 Jan 2027, then SI scholarship portal 8–24 Feb 2027 (portal closing time not confirmed, apply early). Eligible programmes list published 13 Nov 2026. Does not include insurance or family grants."
+    "notes": "2027/28 intake. Two steps: university application 16 Oct 2026 – 15 Jan 2027, then SI scholarship portal 8–24 Feb 2027 (portal closes 14:59 CET on 24 Feb 2027). Eligible programmes list published 13 Nov 2026. Does not include insurance or family grants.",
+    "changeSummary": "Added deadline time (14:59 CET) from the official portal."
   },
   {
     "id": "stipendium-hungaricum-2026",
