@@ -3,7 +3,9 @@ import { FieldValue, type Firestore, type QueryDocumentSnapshot } from 'firebase
 import { getDb, isDryRun } from './firebase';
 import { COLLECTIONS, type Source, type SourceCheckSummary, type SourceRunStatus } from './schema';
 
-const FETCH_TIMEOUT_MS = 20_000;
+// Beberapa situs resmi lambat dari IP datacenter (GitHub runner): beri waktu lebih + 1x coba ulang.
+const FETCH_TIMEOUT_MS = 45_000;
+const FETCH_ATTEMPTS = 2;
 const CONCURRENCY = 4;
 // Identitas klien generik: tanpa nama/email pribadi.
 const USER_AGENT = 'LuminaScholarshipMonitor/1.0 (nonprofit student scholarship app)';
@@ -41,14 +43,29 @@ interface CheckResult {
   error?: string;
 }
 
+/** Coba ulang hanya untuk error jaringan/timeout dan HTTP 5xx; 4xx dikembalikan apa adanya. */
+async function fetchWithRetry(url: string): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (res.status < 500 || attempt === FETCH_ATTEMPTS) return res;
+    } catch (err) {
+      lastError = err;
+      if (attempt === FETCH_ATTEMPTS) throw err;
+    }
+  }
+  throw lastError;
+}
+
 async function checkOne(doc: QueryDocumentSnapshot): Promise<CheckResult> {
   const source = doc.data() as Source;
   try {
-    const res = await fetch(source.url, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const res = await fetchWithRetry(source.url);
     if (!res.ok) {
       return { sourceId: doc.id, status: 'error', httpStatus: res.status, error: `HTTP ${res.status}` };
     }
