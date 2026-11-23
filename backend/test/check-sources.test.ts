@@ -1,7 +1,17 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { checkOne } from '../src/check-sources';
+import { checkOne, normalizeHtml } from '../src/check-sources';
+
+describe('normalizeHtml entity decoding', () => {
+  test('decodes each entity once (no double unescaping)', () => {
+    assert.equal(normalizeHtml('<p>&amp;lt;b&amp;gt; and &amp;amp;</p>'), '&lt;b&gt; and &amp;');
+  });
+
+  test('still decodes common entities', () => {
+    assert.equal(normalizeHtml('<p>R&amp;D &lt;3 &quot;x&quot; it&#39;s&nbsp;ok</p>'), 'R&D <3 "x" it\'s ok');
+  });
+});
 
 const PAGE =
   '<html><body><h1>Scholarship</h1><p>Applications are open until the deadline stated on this official page.</p></body></html>';
