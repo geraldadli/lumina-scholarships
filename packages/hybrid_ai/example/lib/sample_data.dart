@@ -29,7 +29,7 @@ final sampleScholarships = <ScholarshipContext>[
     sourceUrl: 'https://www.id.emb-japan.go.jp/sch.html',
   ),
   ScholarshipContext(
-    id: 'australia-awards-2027',
+    id: 'australia-awards-2028',
     title: 'Australia Awards Scholarships',
     provider: 'Australian Government (DFAT)',
     description:
@@ -41,9 +41,9 @@ final sampleScholarships = <ScholarshipContext>[
     fieldsOfStudy: [],
     minGpa: 2.9,
     languageRequirement: 'IELTS 6.5 by the end of pre-departure training',
-    openDate: '2026-02-01',
-    deadline: '2026-04-30',
-    status: 'closed',
+    openDate: '2027-02-01',
+    deadline: '2027-04-28',
+    status: 'active',
     requirements: [
       RequirementItem(id: 'online-application-form', label: 'Online application form'),
       RequirementItem(
@@ -53,7 +53,7 @@ final sampleScholarships = <ScholarshipContext>[
     ],
     benefits: [],
     sourceUrl: 'https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true',
-    notes: 'Min GPA: Masters 2.9, PhD 3.0. The next intake is expected to open around Feb 2027.',
+    notes: '2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Min GPA: Masters 2.9, PhD 3.0.',
   ),
 ];
 

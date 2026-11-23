@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumina/data/demo_backend.dart';
 import 'package:lumina/data/firebase_backend.dart';
 import 'package:lumina/models/user_profile.dart';
 import 'package:lumina/util/format.dart';
@@ -10,38 +11,49 @@ void main() {
     final catalog = loadCatalog();
 
     test('loads every record, sorted by deadline', () {
-      expect(catalog, hasLength(12));
+      expect(catalog, hasLength(10));
       final deadlines = catalog.map((s) => s.deadline!).toList();
       expect(deadlines, orderedEquals([...deadlines]..sort()));
     });
 
     test('YYYY-MM-DD deadline is 23:59:59 WIB and round-trips to the same date', () {
-      final s = catalog.firstWhere((s) => s.id == 'fulbright-masters-indonesia-2027');
-      expect(s.deadline, DateTime.utc(2027, 2, 15, 16, 59, 59));
-      expect(s.toContext().deadline, '2027-02-15');
-      expect(formatDate(s.deadline!), '15 Feb 2027');
+      final s = catalog.firstWhere((s) => s.id == 'lpdp-australia-awards-2027');
+      expect(s.deadline, DateTime.utc(2026, 5, 4, 16, 59, 59));
+      expect(s.toContext().deadline, '2026-05-04');
+      expect(formatDate(s.deadline!), '4 May 2026');
     });
 
     test('ISO deadline with a time zone is kept as an instant', () {
       final s = catalog.firstWhere((s) => s.id == 'chevening-indonesia-2027');
       expect(s.deadline, DateTime.utc(2026, 10, 6, 11));
+      final f = catalog.firstWhere((s) => s.id == 'fulbright-masters-indonesia-2027');
+      expect(f.deadline, DateTime.utc(2027, 2, 15, 16, 59));
+      expect(formatDate(f.deadline!), '15 Feb 2027');
     });
 
-    test('requirements get stable ids; pending-human-review is not verified', () {
-      final s = catalog.firstWhere((s) => s.id == 'australia-awards-2027');
+    test('requirements get stable ids; fields not announced yet', () {
+      final s = catalog.firstWhere((s) => s.id == 'australia-awards-2028');
       expect(s.requirements.first.id, 'online-application-form');
-      expect(s.verified, isFalse);
+      expect(s.verified, isTrue);
       expect(s.fieldsOfStudy, isEmpty);
       expect(s.fieldsLabel, 'Not announced yet');
+    });
+
+    test('pending-human-review is not verified', () {
+      final s = parseResearchJson(
+        '[{"id": "x-2027", "title": "X", "provider": "Y", "deadline": "2027-01-01", '
+        '"verifiedBy": "pending-human-review"}]',
+      ).single;
+      expect(s.verified, isFalse);
     });
 
     test('closed / open state uses status and deadline', () {
       final open = catalog.where((s) => !s.isClosedAt(testNow)).map((s) => s.id).toSet();
       expect(open, {
+        'australia-awards-2028',
         'fulbright-masters-indonesia-2027',
         'fulbright-phd-indonesia-2027',
         'si-global-professionals-2027',
-        'chinese-government-scholarship-indonesia-2027',
       });
     });
   });
