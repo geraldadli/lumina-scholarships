@@ -20,11 +20,12 @@ export function normalizeHtml(html: string, ignorePatterns: string[] = []): stri
     .replace(/<(script|style|noscript|svg|template|iframe)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;|&#160;/gi, ' ')
-    .replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'");
+    .replace(/&#39;|&apos;/gi, "'")
+    // `&amp;` last: decoding it first would turn "&amp;lt;" into "&lt;" and then "<" (double unescaping).
+    .replace(/&amp;/gi, '&');
   for (const pattern of ignorePatterns) {
     text = text.replace(new RegExp(pattern, 'gi'), ' ');
   }
