@@ -23,7 +23,7 @@
       "energy transition and climate and infrastructure partnership",
       "animal/human health services and biosecurity"
     ],
-    "minGpa": 2.75,
+    "minGpa": 2.9,
     "languageRequirement": "Required at application. Masters: IELTS 6.0 / TOEFL iBT 80 / TOEFL ITP 552 / PTE 56 (equity target groups: IELTS 4.5 / iBT 33 / ITP 425 / PTE 32). PhD: IELTS 6.5 / iBT 88 / ITP 570 / PTE 61 (Government of Indonesia and equity target groups: IELTS 6.0 / iBT 80 / ITP 552 / PTE 56)",
     "openDate": "2027-02-01",
     "deadline": "2027-04-28T04:00:00Z",
@@ -44,7 +44,7 @@
     ],
     "lastVerified": "2026-11-23",
     "verifiedBy": "Fiko",
-    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in the priority fields of study (focus areas of the Australia-Indonesia Development Partnership Plan 2024-2028). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75 (minGpa holds the lowest so the GPA filter never hides it from an eligible student). English test validity date differs between the General Requirements page (valid on 1 Jan 2027) and the Supporting Documents page (valid on 1 Jan 2028); confirm with AAI before stating it.",
+    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in the priority fields of study (focus areas of the Australia-Indonesia Development Partnership Plan 2024-2028). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75. minGpa stays at the Masters value (2.9) until the app can show different GPA thresholds per level and category; the full breakdown is in requirements. English test validity date differs between the General Requirements page (valid on 1 Jan 2027) and the Supporting Documents page (valid on 1 Jan 2028); confirm with AAI before stating it.",
     "changeSummary": "Corrected the English requirement (a score is required at application), added the priority fields of study, and added the GPA minimums for Masters, PhD and equity target groups."
   },
   {
@@ -298,7 +298,7 @@
       "Minimum GPA: Master's 3.00, Doctoral 3.25 (general category)",
       "Maximum age on 31 December: Master's 35, Doctoral 40 (general category)",
       "English certificate valid within two years, unless holding an unconditional LoA",
-      "Domestic study: university accredited A/Unggul and in the QS World University Rankings top 1,200, programme accredited A/Unggul/Internasional (general and civil-servant categories)",
+      "Domestic study: university accredited A/Unggul and, if outside LPDP's approved list, in the QS World University Rankings top 1,200; programme accredited A/Unggul/Internasional (general and civil-servant categories)",
       "Full or partial funding scheme (partial only for general and CPNS/PNS/TNI/POLRI applicants)"
     ],
     "benefits": [
@@ -352,7 +352,7 @@
       "English certificate valid within two years, unless holding an unconditional LoA",
       "Maximum age on 31 December: Master's 35, Doctoral 40 (general category)",
       "Online application on the LPDP portal",
-      "Domestic study: university accredited A/Unggul and in the QS World University Rankings top 1,200, programme accredited A/Unggul/Internasional (general and civil-servant categories)",
+      "Domestic study: university accredited A/Unggul and, if outside LPDP's approved list, in the QS World University Rankings top 1,200; programme accredited A/Unggul/Internasional (general and civil-servant categories)",
       "Full or partial funding scheme (partial only for general and CPNS/PNS/TNI/POLRI applicants)"
     ],
     "benefits": [
