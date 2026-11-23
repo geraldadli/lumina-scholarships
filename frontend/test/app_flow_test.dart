@@ -1,17 +1,43 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
+import 'package:lumina/models/scholarship.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'fakes.dart';
 
+const _fulbrightMasters = 'fulbright-masters-indonesia-2027';
+const _closedSummary = 'Applications closed: the deadline of 15 February 2027 has passed.';
+
+/// The bundled catalog after backend/src/process-deadlines.ts runs at [at]: active listings
+/// past their deadline become closed with a change summary and a newer updatedAt.
+List<Scholarship> _runDeadlineJob(DateTime at) {
+  final raw = jsonDecode(File('assets/demo/scholarships.json').readAsStringSync()) as List;
+  for (final d in raw.cast<Map<String, dynamic>>()) {
+    final deadline = DateTime.parse(d['deadline'] as String);
+    if (d['status'] == 'active' && deadline.isBefore(at)) {
+      expect(d['id'], anyOf(_fulbrightMasters, 'fulbright-phd-indonesia-2027'));
+      d['status'] = 'closed';
+      d['changeSummary'] = _closedSummary;
+      // Demo data takes updatedAt from lastVerified; the job's serverTimestamp is "now".
+      d['lastVerified'] = at.toIso8601String();
+    }
+  }
+  return parseResearchJson(jsonEncode(raw));
+}
+
 /// Sprint 1 path on the demo backend: sign in → onboarding → browse → details → save → Ask AI.
 void main() {
   late FakeHost host;
+  late DemoBackend backend;
   late AppController controller;
+  late DateTime now;
 
   Future<void> pumpApp(WidgetTester tester) async {
     tester.view
@@ -19,10 +45,12 @@ void main() {
       ..devicePixelRatio = 3;
     addTearDown(tester.view.reset);
     host = FakeHost();
+    now = testNow;
+    backend = DemoBackend(loadCatalog());
     controller = AppController(
-      backend: DemoBackend(loadCatalog()),
+      backend: backend,
       ai: HybridAi(hostApi: host),
-      clock: () => testNow,
+      clock: () => now,
     );
     await tester.pumpWidget(LuminaApp(controller: controller, splashDuration: Duration.zero, googleFonts: false));
     await tester.pumpAndSettle();
@@ -99,6 +127,56 @@ void main() {
     expect(host.asked.single.allowCloud, isFalse); // private mode by default
     expect(find.text('The deadline is 2027-02-15.'), findsOneWidget);
     expect(find.text('aminef.or.id'), findsOneWidget); // official source chip
+  });
+
+  testWidgets('backend demo listings: new one in Browse, saved one closes and shows Closed + Updated', (tester) async {
+    await pumpApp(tester);
+    await signInAndOnboard(tester);
+
+    // The new listing from the research update shows up in Browse.
+    await tester.tap(find.text('Browse'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Australia Awards');
+    await tester.pumpAndSettle();
+    expect(find.text('Australia Awards Scholarships'), findsOneWidget);
+
+    // Save the open demo listing before its deadline.
+    await tester.enterText(find.byType(TextField).first, 'Fulbright Master');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Fulbright Master's Degree Scholarship"));
+    await tester.pumpAndSettle();
+    expect(find.text('Apply on official website'), findsOneWidget);
+    await tester.tap(find.byTooltip('Save'));
+    await tester.pumpAndSettle();
+    expect(controller.isSaved(_fulbrightMasters), isTrue);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+
+    // The deadline passes and the backend's deadline job closes it.
+    now = DateTime.utc(2027, 2, 16, 3);
+    backend.setCatalog(_runDeadlineJob(now));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Saved'));
+    await tester.pumpAndSettle();
+    expect(find.text('Closed: 15 Feb'), findsOneWidget);
+    expect(find.text('UPDATED'), findsOneWidget);
+    expect(find.text(_closedSummary), findsOneWidget);
+
+    // Details: what changed, the official source, and Ask AI / Prepare still there.
+    await tester.tap(find.text("Fulbright Master's Degree Scholarship"));
+    await tester.pumpAndSettle();
+    expect(find.text('What changed'), findsOneWidget);
+    expect(find.text('View official source'), findsOneWidget);
+    expect(find.text('Apply on official website'), findsNothing);
+    expect(find.text('Ask AI'), findsOneWidget);
+    expect(find.text('Prepare'), findsOneWidget);
+
+    // Opening the details marks the change as seen, so the badge goes away.
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Closed: 15 Feb'), findsOneWidget);
+    expect(find.text('UPDATED'), findsNothing);
   });
 
   testWidgets('AI unavailable shows the cloud-off card with actions', (tester) async {

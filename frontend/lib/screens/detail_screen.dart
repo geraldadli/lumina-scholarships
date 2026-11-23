@@ -296,7 +296,8 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
               LButton(
-                label: 'Apply on official website',
+                // Applications are over, but the official page is still the source of truth.
+                label: s.isClosedAt(now) ? 'View official source' : 'Apply on official website',
                 trailingIcon: Icons.north_east_rounded,
                 onPressed: () => openOfficialPage(context, s.sourceUrl),
               ),
