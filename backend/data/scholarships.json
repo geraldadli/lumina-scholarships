@@ -7,15 +7,31 @@
     "educationLevels": ["masters", "phd"],
     "eligibleCitizenships": ["ID"],
     "hostCountries": ["AU"],
-    "fieldsOfStudy": [],
-    "minGpa": 2.9,
-    "languageRequirement": "IELTS 6.5 by the end of pre-departure training (entry minimum not confirmed on official site)",
+    "fieldsOfStudy": [
+      "economic governance",
+      "trade and investment",
+      "education",
+      "research and innovation",
+      "secure jobs",
+      "digital transformation",
+      "health",
+      "social protection",
+      "decentralised governance and basic service delivery",
+      "GEDSI (gender equality, disability and social inclusion)",
+      "civil society",
+      "scholarships",
+      "energy transition and climate and infrastructure partnership",
+      "animal/human health services and biosecurity"
+    ],
+    "minGpa": 2.75,
+    "languageRequirement": "Required at application. Masters: IELTS 6.0 / TOEFL iBT 80 / TOEFL ITP 552 / PTE 56 (equity target groups: IELTS 4.5 / iBT 33 / ITP 425 / PTE 32). PhD: IELTS 6.5 / iBT 88 / ITP 570 / PTE 61 (Government of Indonesia and equity target groups: IELTS 6.0 / iBT 80 / ITP 552 / PTE 56)",
     "openDate": "2027-02-01",
     "deadline": "2027-04-28T04:00:00Z",
     "status": "active",
     "sourceUrl": "https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true",
     "description": "Fully funded Masters or PhD study at an Australian university for Indonesian citizens. Covers return air travel, a one-off establishment allowance, full tuition fees and a contribution to living expenses.",
     "requirements": [
+      "Minimum GPA: Masters 2.9, PhD 3.0 (equity target groups 2.75 for both)",
       "Online application form",
       "Supporting documents listed in the Australia Awards Scholarships Policy Handbook",
       "Targeted categories only: SK PNS, KTP from an equity-target province, or letter confirming disability status"
@@ -26,10 +42,10 @@
       "One-off establishment allowance",
       "Contribution to living expenses"
     ],
-    "lastVerified": "2026-11-22",
+    "lastVerified": "2026-11-23",
     "verifiedBy": "Fiko",
-    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in Indonesia's priority fields of study (list not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75.",
-    "changeSummary": "Moved to the 2028 intake: new id, open and close dates, status set to active, deadline time 11:00 WIB. Added a list of what the scholarship covers."
+    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in the priority fields of study (focus areas of the Australia-Indonesia Development Partnership Plan 2024-2028). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75 (minGpa holds the lowest so the GPA filter never hides it from an eligible student). English test validity date differs between the General Requirements page (valid on 1 Jan 2027) and the Supporting Documents page (valid on 1 Jan 2028); confirm with AAI before stating it.",
+    "changeSummary": "Corrected the English requirement (a score is required at application), added the priority fields of study, and added the GPA minimums for Masters, PhD and equity target groups."
   },
   {
     "id": "lpdp-australia-awards-2027",
