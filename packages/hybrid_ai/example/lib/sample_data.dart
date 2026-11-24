@@ -31,13 +31,16 @@ final sampleScholarships = <ScholarshipContext>[
   ScholarshipContext(
     id: 'australia-awards-2028',
     title: 'Australia Awards Scholarships',
-    provider: 'Australian Government (DFAT)',
+    provider: 'Australian Government (DFAT), managed by Australia Awards in Indonesia',
     description:
-        "Full Master's/PhD scholarship in Australia for Indonesian citizens: airfare, establishment allowance, full tuition, and living costs.",
+        'Fully funded Masters or PhD study at an Australian university for Indonesian citizens. '
+        'Covers return air travel, a one-off establishment allowance, full tuition fees and a '
+        'contribution to living expenses.',
     fundingType: 'full',
     educationLevels: ['masters', 'phd'],
     eligibleCitizenships: ['ID'],
     hostCountries: ['AU'],
+    // Priority fields: focus areas of the Australia-Indonesia Development Partnership Plan 2024-2028.
     fieldsOfStudy: [
       'economic governance',
       'trade and investment',
@@ -56,20 +59,38 @@ final sampleScholarships = <ScholarshipContext>[
     ],
     minGpa: 2.9,
     languageRequirement:
-        'Required at application. Masters: IELTS 6.0 / TOEFL iBT 80 / TOEFL ITP 552 / PTE 56 (equity target groups: IELTS 4.5 / iBT 33 / ITP 425 / PTE 32). PhD: IELTS 6.5 / iBT 88 / ITP 570 / PTE 61 (Government of Indonesia and equity target groups: IELTS 6.0 / iBT 80 / ITP 552 / PTE 56)',
+        'Required at application. Masters: IELTS 6.0 / TOEFL iBT 80 / TOEFL ITP 552 / PTE 56 '
+        '(equity target groups: IELTS 4.5 / iBT 33 / ITP 425 / PTE 32). PhD: IELTS 6.5 / iBT 88 / '
+        'ITP 570 / PTE 61 (Government of Indonesia and equity target groups: IELTS 6.0 / iBT 80 / '
+        'ITP 552 / PTE 56)',
     openDate: '2027-02-01',
     deadline: '2027-04-28',
     status: 'active',
     requirements: [
+      RequirementItem(
+        id: 'minimum-gpa-masters-2-9-phd-3-0-equity-target-gr',
+        label: 'Minimum GPA: Masters 2.9, PhD 3.0 (equity target groups 2.75 for both)',
+      ),
       RequirementItem(id: 'online-application-form', label: 'Online application form'),
       RequirementItem(
-        id: 'supporting-documents',
+        id: 'supporting-documents-listed-in-the-australia-awa',
         label: 'Supporting documents listed in the Australia Awards Scholarships Policy Handbook',
       ),
+      RequirementItem(
+        id: 'targeted-categories-only-sk-pns-ktp-from-an-equi',
+        label: 'Targeted categories only: SK PNS, KTP from an equity-target province, or letter confirming disability status',
+      ),
     ],
-    benefits: [],
+    benefits: ['Full tuition fees', 'Return air travel', 'One-off establishment allowance', 'Contribution to living expenses'],
     sourceUrl: 'https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true',
-    notes: '2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Min GPA: Masters 2.9, PhD 3.0.',
+    notes:
+        '2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in the priority '
+        'fields of study (focus areas of the Australia-Indonesia Development Partnership Plan '
+        '2024-2028). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75. minGpa stays at the '
+        'Masters value (2.9) until the app can show different GPA thresholds per level and '
+        'category; the full breakdown is in requirements. English test validity date differs '
+        'between the General Requirements page (valid on 1 Jan 2027) and the Supporting Documents '
+        'page (valid on 1 Jan 2028); confirm with AAI before stating it.',
   ),
 ];
 
