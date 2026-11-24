@@ -30,7 +30,7 @@ void main() {
     final f = BrowseFilters()
       ..showClosed = true
       ..fields.add('Medicine');
-    expect(run(f), contains('australia-awards-2028'));
+    expect(run(f), contains('stipendium-hungaricum-2026'));
   });
 
   test('host country GLOBAL matches any country filter', () {

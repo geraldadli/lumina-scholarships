@@ -33,10 +33,12 @@ void main() {
 
     test('requirements get stable ids; fields not announced yet', () {
       final s = catalog.firstWhere((s) => s.id == 'australia-awards-2028');
-      expect(s.requirements.first.id, 'online-application-form');
+      expect(s.requirements.first.id, 'minimum-gpa-masters-2-9-phd-3-0-equity-target-gr');
       expect(s.verified, isTrue);
-      expect(s.fieldsOfStudy, isEmpty);
-      expect(s.fieldsLabel, 'Not announced yet');
+      // Stipendium Hungaricum is the listing whose fields are not announced yet.
+      final noFields = catalog.firstWhere((s) => s.id == 'stipendium-hungaricum-2026');
+      expect(noFields.fieldsOfStudy, isEmpty);
+      expect(noFields.fieldsLabel, 'Not announced yet');
     });
 
     test('pending-human-review is not verified', () {
