@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../models/saved_scholarship.dart';
@@ -229,20 +231,22 @@ class _SavedCard extends StatelessWidget {
                     _MenuRow(
                       label: savedStatusLabels[st]!,
                       checked: saved.status == st,
-                      onTap: () async {
+                      // Not awaited: offline, Firestore only confirms once back online. A failure
+                      // is reported by the controller's notices (shown from the app root).
+                      onTap: () {
                         onCloseMenu();
-                        if (await c.setStatus(s, st) && context.mounted) {
-                          showToast(context, 'Moved to ${savedStatusLabels[st]}');
-                        }
+                        unawaited(c.setStatus(s, st));
+                        showToast(context, 'Moved to ${savedStatusLabels[st]}');
                       },
                     ),
                   _MenuRow(
                     label: 'Remove from saved',
                     muted: true,
                     last: true,
-                    onTap: () async {
+                    onTap: () {
                       onCloseMenu();
-                      if (await c.unsave(s.id) && context.mounted) showToast(context, 'Removed from saved');
+                      unawaited(c.unsave(s.id));
+                      showToast(context, 'Removed from saved');
                     },
                   ),
                 ],
@@ -294,8 +298,9 @@ class _GoneCard extends StatelessWidget {
             height: 44,
             radius: 12,
             fontSize: 14,
-            onPressed: () async {
-              if (await c.unsave(saved.scholarshipId) && context.mounted) showToast(context, 'Removed from saved');
+            onPressed: () {
+              unawaited(c.unsave(saved.scholarshipId));
+              showToast(context, 'Removed from saved');
             },
           ),
         ],

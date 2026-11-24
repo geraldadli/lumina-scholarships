@@ -15,7 +15,7 @@ void main() {
     final f = BrowseFilters();
     expect(run(f), hasLength(4));
     f.showClosed = true;
-    expect(run(f), hasLength(12));
+    expect(run(f), hasLength(10));
     // Closed ones sort last.
     expect(run(f).take(4).toSet(), run(BrowseFilters()).toSet());
   });
@@ -30,7 +30,7 @@ void main() {
     final f = BrowseFilters()
       ..showClosed = true
       ..fields.add('Medicine');
-    expect(run(f), contains('australia-awards-2027'));
+    expect(run(f), contains('stipendium-hungaricum-2026'));
   });
 
   test('host country GLOBAL matches any country filter', () {

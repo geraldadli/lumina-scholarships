@@ -26,16 +26,8 @@ String deadlineLine(Scholarship s, DateTime now) {
   return 'Deadline: ${formatShortDate(s.deadline!)} · ${plural(d, 'day')}';
 }
 
-Future<void> toggleSaveWithToast(BuildContext context, Scholarship s) async {
-  final c = AppScope.read(context);
-  try {
-    final msg = await c.toggleSave(s);
-    if (context.mounted) showToast(context, msg);
-  } on Object catch (e) {
-    debugPrint('Lumina: save failed: $e');
-    if (context.mounted) showToast(context, 'Could not update saved. Try again.', icon: Icons.error_outline_rounded);
-  }
-}
+/// A failed write is reported by the controller's notices (shown from the app root).
+void toggleSaveWithToast(BuildContext context, Scholarship s) => showToast(context, AppScope.read(context).toggleSave(s));
 
 void openScholarship(BuildContext context, Scholarship s) =>
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => DetailScreen(scholarshipId: s.id)));

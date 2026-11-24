@@ -274,15 +274,19 @@ class AppController extends ChangeNotifier {
 
   bool isSaved(String id) => saved.containsKey(id);
 
-  /// Returns the toast message for the action taken.
-  Future<String> toggleSave(Scholarship s) async {
+  /// Returns the toast message for the action taken, without waiting for the write.
+  ///
+  /// Firestore shows a write locally at once but only confirms it once the server has it, so
+  /// waiting would hold the toast for as long as the phone is offline. A failure arrives on
+  /// [notices] instead.
+  String toggleSave(Scholarship s) {
     final u = user;
     if (u == null) return 'Sign in to save scholarships';
     if (isSaved(s.id)) {
-      await backend.unsave(u.uid, s.id);
+      unawaited(_write(() => backend.unsave(u.uid, s.id), 'Could not remove it from saved. Try again.'));
       return 'Removed from saved';
     }
-    await backend.save(u.uid, s, matchScore: matchFor(s).score);
+    unawaited(_write(() => backend.save(u.uid, s, matchScore: matchFor(s).score), 'Could not save it. Try again.'));
     return 'Saved. Track it in the Saved tab';
   }
 

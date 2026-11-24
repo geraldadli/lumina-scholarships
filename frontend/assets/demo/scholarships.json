@@ -1,21 +1,37 @@
 [
   {
-    "id": "australia-awards-2027",
+    "id": "australia-awards-2028",
     "title": "Australia Awards Scholarships",
     "provider": "Australian Government (DFAT), managed by Australia Awards in Indonesia",
     "fundingType": "full",
     "educationLevels": ["masters", "phd"],
     "eligibleCitizenships": ["ID"],
     "hostCountries": ["AU"],
-    "fieldsOfStudy": [],
+    "fieldsOfStudy": [
+      "economic governance",
+      "trade and investment",
+      "education",
+      "research and innovation",
+      "secure jobs",
+      "digital transformation",
+      "health",
+      "social protection",
+      "decentralised governance and basic service delivery",
+      "GEDSI (gender equality, disability and social inclusion)",
+      "civil society",
+      "scholarships",
+      "energy transition and climate and infrastructure partnership",
+      "animal/human health services and biosecurity"
+    ],
     "minGpa": 2.9,
-    "languageRequirement": "IELTS 6.5 by the end of pre-departure training (entry minimum not confirmed on official site)",
-    "openDate": "2026-02-01",
-    "deadline": "2026-04-30",
-    "status": "closed",
+    "languageRequirement": "Required at application. Masters: IELTS 6.0 / TOEFL iBT 80 / TOEFL ITP 552 / PTE 56 (equity target groups: IELTS 4.5 / iBT 33 / ITP 425 / PTE 32). PhD: IELTS 6.5 / iBT 88 / ITP 570 / PTE 61 (Government of Indonesia and equity target groups: IELTS 6.0 / iBT 80 / ITP 552 / PTE 56)",
+    "openDate": "2027-02-01",
+    "deadline": "2027-04-28T04:00:00Z",
+    "status": "active",
     "sourceUrl": "https://www.australiaawardsindonesia.org/content/158/12/general-requirements?sub=true",
     "description": "Fully funded Masters or PhD study at an Australian university for Indonesian citizens. Covers return air travel, a one-off establishment allowance, full tuition fees and a contribution to living expenses.",
     "requirements": [
+      "Minimum GPA: Masters 2.9, PhD 3.0 (equity target groups 2.75 for both)",
       "Online application form",
       "Supporting documents listed in the Australia Awards Scholarships Policy Handbook",
       "Targeted categories only: SK PNS, KTP from an equity-target province, or letter confirming disability status"
@@ -26,10 +42,10 @@
       "One-off establishment allowance",
       "Contribution to living expenses"
     ],
-    "lastVerified": "2026-11-18",
-    "verifiedBy": "pending-human-review",
-    "notes": "2027 intake. Must apply for a course in Indonesia's priority fields of study (list for next intake not yet published, so fieldsOfStudy is empty). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75. Next intake (2028) is expected to open around Feb 2027.",
-    "changeSummary": "Added a list of what the scholarship covers."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2028 intake. Deadline 28 Apr 2027, 11:00 WIB. Must apply for a course in the priority fields of study (focus areas of the Australia-Indonesia Development Partnership Plan 2024-2028). Min GPA: Masters 2.9, PhD 3.0; equity target groups 2.75. minGpa stays at the Masters value (2.9) until the app can show different GPA thresholds per level and category; the full breakdown is in requirements. English test validity date differs between the General Requirements page (valid on 1 Jan 2027) and the Supporting Documents page (valid on 1 Jan 2028); confirm with AAI before stating it.",
+    "changeSummary": "Corrected the English requirement (a score is required at application), added the priority fields of study, and added the GPA minimums for Masters, PhD and equity target groups."
   },
   {
     "id": "lpdp-australia-awards-2027",
@@ -49,25 +65,29 @@
       "advanced materials and manufacturing"
     ],
     "minGpa": 3.0,
-    "languageRequirement": "IELTS 6.5 (no band below 6.0) or equivalent",
+    "languageRequirement": "IELTS 6.5 (no band below 6.0), TOEFL iBT 84 (no section below 21) or PTE Academic 58 (no skill below 50)",
     "openDate": "2026-04-02",
     "deadline": "2026-05-04",
     "status": "closed",
     "sourceUrl": "https://www.australiaawardsindonesia.org/content/1000276/12/lpdp-australia-awards-scholarships?sub=true",
     "description": "Masters scholarship at an Australian university, jointly offered by LPDP and Australia Awards for Indonesian citizens. Includes a stipend, Overseas Student Health Cover and English training before departure.",
     "requirements": [
+      "Maximum age 42 on 31 December of the application year",
+      "Single-degree, full-time Master's (24 months); choose 3 universities, no LoA needed to apply",
       "Online application via LPDP",
-      "Documents listed in the LPDP-Australia Awards Application Guide (not yet itemised here)"
+      "Documents: KTP, bachelor's certificate and transcript, degree equivalence and GPA conversion documents, English certificate, online recommendation letter, declaration, personal profile and commitment to return to Indonesia (a missing essential document means automatic rejection)"
     ],
     "benefits": [
+      "Tuition fees",
       "Living stipend",
+      "Return economy airfare to Australia",
       "Overseas Student Health Cover (OSHC)",
       "English language training before departure"
     ],
-    "lastVerified": "2026-11-18",
-    "verifiedBy": "pending-human-review",
-    "notes": "2027 intake. IELTS figure confirmed in the 2025-intake country profile; re-check for the next intake. People with disability and residents of target areas are encouraged to apply. Benefits list only covers what the official page names; tuition and airfare not yet confirmed.",
-    "changeSummary": "Added a list of what the scholarship covers."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2027 intake, classes start February 2027. English scores from the LPDP-AAS General Requirements page. People with disability and residents of target areas are encouraged to apply. Co-funded by LPDP and Australia Awards: tuition is listed as an LPDP funding component, return airfare on the Australia Awards entitlement page. Closing time not published: the Australian Embassy and Australia Awards Indonesia only give the date (4 May 2026). No 2028-intake dates published for LPDP-AAS yet (the general Australia Awards round opens 1 Feb 2027 but does not name LPDP-AAS).",
+    "changeSummary": "Added the age limit, TOEFL iBT and PTE scores, the document list, tuition and return airfare."
   },
   {
     "id": "fulbright-masters-indonesia-2027",
@@ -80,7 +100,7 @@
     "fieldsOfStudy": ["ALL"],
     "minGpa": 3.0,
     "languageRequirement": "TOEFL ITP 550, TOEFL iBT 80, IELTS 6.5 or Duolingo 125 (minimum varies by field)",
-    "deadline": "2027-02-15",
+    "deadline": "2027-02-15T16:59:00Z",
     "status": "active",
     "sourceUrl": "https://www.aminef.or.id/grants-for-indonesians/fulbright-programs/scholarship/fulbright-masters-degree-scholarship/",
     "description": "One to two years of Master's study at a U.S. university for Indonesian S1 graduates. Grant of up to USD 52,000 per year for tuition, stipend and health cover, plus flights, visa and settling-in support.",
@@ -104,9 +124,10 @@
       "Pre-academic (gateway) program",
       "TOEFL iBT/GRE/GMAT and university application fees"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Study starts in the fall term of the following year. All fields except medicine involving patient care or clinical contact. No financial support for dependants. Preference for applicants without recent substantial U.S. experience."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Study starts in the fall term of the following year. All fields except medicine involving patient care or clinical contact. No financial support for dependants. Preference for applicants without recent substantial U.S. experience.",
+    "changeSummary": "Added deadline time (23:59 WIB) from the official form."
   },
   {
     "id": "fulbright-phd-indonesia-2027",
@@ -119,7 +140,7 @@
     "fieldsOfStudy": ["ALL"],
     "minGpa": 3.0,
     "languageRequirement": "TOEFL ITP 575, TOEFL iBT 90, IELTS 7.0 or Duolingo 135",
-    "deadline": "2027-02-15",
+    "deadline": "2027-02-15T16:59:00Z",
     "status": "active",
     "sourceUrl": "https://www.aminef.or.id/grants-for-indonesians/fulbright-programs/scholarship/fulbright-doctoral-degree-phd-scholarship/",
     "description": "Three years of PhD funding at a U.S. university for Indonesians with an S2 degree who intend to take up or return to an academic position. Grant of up to USD 50,000 per year plus travel and visa support.",
@@ -144,9 +165,10 @@
       "Pre-academic (gateway) program",
       "Admission test and university application fees"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Funding for three years. Not open to medicine involving patient care. No U.S. government exchange program in the previous three years. No financial support for dependants."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "Deadline 15 Feb 2027, 23:59 WIB. Funding for three years. Not open to medicine involving patient care. No U.S. government exchange program in the previous three years. No financial support for dependants.",
+    "changeSummary": "Added deadline time (23:59 WIB) from the official form."
   },
   {
     "id": "si-global-professionals-2027",
@@ -156,11 +178,11 @@
     "educationLevels": ["masters"],
     "eligibleCitizenships": ["ID"],
     "hostCountries": ["SE"],
-    "fieldsOfStudy": [],
+    "fieldsOfStudy": ["governance", "public health", "entrepreneurship and innovation", "STEM"],
     "minGpa": null,
     "languageRequirement": "Set by each Swedish master's programme",
     "openDate": "2027-02-08",
-    "deadline": "2027-02-24",
+    "deadline": "2027-02-24T13:59:00Z",
     "status": "active",
     "sourceUrl": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
     "description": "Fully funded Master's study in Sweden for professionals with leadership experience from 34 countries, including Indonesia. Applicants must first apply to an eligible programme through University Admissions in Sweden.",
@@ -169,86 +191,18 @@
       "At least 3,000 hours of work experience before February 2027, from at most three employers",
       "Demonstrated leadership experience",
       "Be liable to pay tuition fees in Sweden",
-      "Be admitted to the programme on the first admissions day"
+      "Be admitted to the programme on the first admissions day",
+      "Documents on SI templates: CV, proof of work and leadership experience, two reference letters; plus a passport or national ID copy and a motivation written in the portal"
     ],
     "benefits": [
       "Full tuition fees, paid directly to the university",
       "Monthly living allowance of SEK 12,000",
       "One-time travel grant of SEK 15,000"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2027/28 intake. Two steps: university application 16 Oct 2026 – 15 Jan 2027, then SI scholarship portal 8–24 Feb 2027 (portal closing time not confirmed, apply early). Eligible programmes list published 13 Nov 2026. Does not include insurance or family grants."
-  },
-  {
-    "id": "chinese-government-scholarship-indonesia-2027",
-    "title": "Chinese Government Scholarship – China-Indonesia Higher Education Program",
-    "provider": "China Scholarship Council, via the Embassy of China in Indonesia",
-    "fundingType": "full",
-    "educationLevels": ["undergraduate", "masters", "phd"],
-    "eligibleCitizenships": ["ID"],
-    "hostCountries": ["CN"],
-    "fieldsOfStudy": ["marine", "medical", "health", "tourism", "education"],
-    "minGpa": null,
-    "languageRequirement": "HSK 4 for Chinese-taught master's/PhD; IELTS/TOEFL per university for English-taught programmes",
-    "openDate": "2026-10-27",
-    "deadline": "2027-02-13",
-    "status": "active",
-    "sourceUrl": "https://id.china-embassy.gov.cn/eng/sgdt/202610/t20261027_12047753.htm",
-    "description": "Bilateral Chinese Government Scholarship for Indonesians, 20 places for undergraduate, master's and doctoral study in China for the 2027/2028 academic year. Full scholarship, international airfare not included.",
-    "requirements": [
-      "Age limits: undergraduate under 25, master's under 35, doctoral under 40",
-      "Online application at campuschina.org with Indonesian agency number 3602",
-      "Pre-admission letter from at least one Chinese university",
-      "Notarized highest diploma and academic transcripts",
-      "Study plan or research proposal (800 words for postgraduates)",
-      "Two recommendation letters from professors (postgraduate)",
-      "Foreigner Physical Examination Form and non-criminal record certificate",
-      "CSCA score report (bachelor's applicants only)"
-    ],
-    "benefits": [
-      "Tuition waiver",
-      "University accommodation or accommodation subsidy",
-      "Monthly living stipend",
-      "Comprehensive medical insurance"
-    ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "Embassy deadline is 'before 14 February 2027'. International travel is not covered. Benefits follow CSC's standard full scholarship; current stipend rates not stated in the 2027 notice. Results July–August 2027."
-  },
-  {
-    "id": "turkiye-burslari-2026",
-    "title": "Türkiye Scholarships (Türkiye Bursları)",
-    "provider": "Government of Türkiye (YTB – Presidency for Turks Abroad and Related Communities)",
-    "fundingType": "full",
-    "educationLevels": ["undergraduate", "masters", "phd"],
-    "eligibleCitizenships": ["GLOBAL"],
-    "hostCountries": ["TR"],
-    "fieldsOfStudy": ["ALL"],
-    "minGpa": null,
-    "languageRequirement": "Not required to apply; one-year Turkish language course provided",
-    "openDate": "2026-01-10",
-    "deadline": "2026-02-20",
-    "status": "closed",
-    "sourceUrl": "https://www.turkiyeburslari.gov.tr/scholarshipsprograms",
-    "description": "Government of Türkiye scholarship for bachelor's, master's and PhD study, with university placement included. Open to students from all countries.",
-    "requirements": [
-      "Age limits: bachelor's under 21, master's under 30, PhD under 35",
-      "Minimum academic score: 70% for bachelor's, 75% for master's and PhD, 90% for medicine, dentistry and pharmacy",
-      "Online application on turkiyeburslari.gov.tr"
-    ],
-    "benefits": [
-      "Tuition fees",
-      "Monthly stipend: 6,500 TL (bachelor's), 9,500 TL (master's), 13,000 TL (PhD)",
-      "Accommodation",
-      "Health insurance",
-      "Flight ticket at the start and end of study",
-      "One-year Turkish language course",
-      "University and department placement"
-    ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2026 round (start 2026/27). The general round runs 10 January – 20 February each year; the 2027 round has not been officially announced yet."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2027/28 intake. Two steps: university application 16 Oct 2026 – 15 Jan 2027, then SI scholarship portal 8–24 Feb 2027 (portal closes 14:59 CET on 24 Feb 2027). Eligible programmes list published 13 Nov 2026. Does not include insurance or family grants.",
+    "changeSummary": "Added the eligible fields of study and the required documents."
   },
   {
     "id": "stipendium-hungaricum-2026",
@@ -261,7 +215,7 @@
     "fieldsOfStudy": [],
     "minGpa": null,
     "languageRequirement": "Set by each Hungarian university; Hungarian-taught programmes need B2 Hungarian",
-    "deadline": "2026-01-15T14:00:00+01:00",
+    "deadline": "2026-01-15T13:00:00Z",
     "status": "closed",
     "sourceUrl": "https://stipendiumhungaricum.hu/apply/",
     "description": "Hungarian government scholarship for bachelor's, master's and doctoral study at Hungarian universities, for citizens of partner countries including Indonesia.",
@@ -269,7 +223,7 @@
       "Online application at apply.stipendiumhungaricum.hu",
       "Nomination by the Indonesian sending partner (may have an earlier internal deadline)",
       "Only programmes supported by the Hungary-Indonesia cooperation agreement",
-      "Medical certificate on the official form"
+      "Medical certificate on the official form (awardees only, presented at the compulsory medical examination in Hungary)"
     ],
     "benefits": [
       "Tuition-free study",
@@ -277,9 +231,10 @@
       "Free dormitory place or HUF 40,000 monthly housing contribution",
       "Medical care under Hungarian law plus supplementary insurance up to HUF 65,000 per year"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2026/27 round. Stipend figures come from the 2024/25 provisions notice and may have changed. The 2027/28 call has not been published yet; previous deadlines were mid-January."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2026/27 round. Stipend, housing and insurance figures from the official About page (exchange rate of 13 Oct 2025). The 2027/28 call has not been published yet; previous deadlines were mid-January. Deadline time (15 Jan 2026, 2 p.m. Central European Time) and Indonesia's eligibility from the official 2026/27 Call for Applications.",
+    "changeSummary": "Clarified that the medical certificate is only needed by awardees, at the medical examination in Hungary."
   },
   {
     "id": "mext-research-student-2027",
@@ -290,31 +245,42 @@
     "eligibleCitizenships": ["ID"],
     "hostCountries": ["JP"],
     "fieldsOfStudy": ["ALL"],
-    "minGpa": null,
-    "languageRequirement": "Japanese or English, depending on the programme",
-    "deadline": "2026-04-22",
+    "minGpa": 3.2,
+    "languageRequirement": "TOEFL iBT 72, IELTS 5.5, TOEIC L&R 785, TOEIC S&W 310 or JLPT N2 (issued July 2024 or later; Duolingo, TOEFL Prediction and NAT-TEST/J-TEST not accepted)",
+    "openDate": "2026-04-01",
+    "deadline": "2026-04-22T16:59:00Z",
     "status": "closed",
-    "sourceUrl": "https://www.studyinjapan.go.jp/en/smap-stopj-applications-research.html",
+    "sourceUrl": "https://www.id.emb-japan.go.jp/itpr_id/sch_rs.html",
     "description": "Japanese government scholarship for graduate study or research at a Japanese university, through embassy recommendation. Covers tuition, a monthly allowance and airfare.",
     "requirements": [
-      "Born on or after 2 April 1992 (under 35)",
-      "Eligible for a master's or doctoral programme at a Japanese graduate school",
-      "Application forms, certificate of health and recommendation letter submitted to the Embassy of Japan, not to MEXT",
-      "First screening by the embassy between May and July"
+      "Born on or after 2 April 1992 (maximum age 34 on 1 April 2027)",
+      "D4, S1 or S2 graduate with a final GPA of at least 3.2",
+      "Field of study in the same discipline as the previous degree",
+      "English or Japanese certificate (TOEFL iBT, IELTS, TOEIC or JLPT) issued July 2024 or later",
+      "Online registration at daftar.beasiswamext.com, then documents posted in 3 sets to the Embassy of Japan in Jakarta",
+      "Application Form 2027 with a colour photo",
+      "Field of Study and Research Plan 2027 (maximum 2 pages)",
+      "Transcript and diploma of the last degree in English or Japanese, legalized by the university",
+      "Recommendation letter from the rector, dean, head of department or a lecturer (original signature)",
+      "Recommendation letter from employer (if employed)",
+      "Abstract of thesis or final project",
+      "Portfolio (art or design applicants only)"
     ],
     "benefits": [
       "Tuition, admission and entrance exam fees exempted",
       "Monthly allowance: ¥143,000 (non-regular research student), ¥144,000 (master's), ¥145,000 (doctoral)",
       "Regional supplement of ¥2,000–3,000 per month in designated areas",
-      "Economy round-trip airfare"
+      "Economy round-trip airfare",
+      "Free student visa processing"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2027 intake (April or September/October 2027). The 22 April 2026 Indonesia embassy deadline comes from a secondary source and needs checking on id.emb-japan.go.jp. The 2028 round is expected to open around April 2027."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2027 intake (April or September/October 2027). Registration 1–22 Apr 2026; documents had to arrive at the Embassy of Japan in Jakarta by 22 Apr 2026, 23:59 WIB. Selection: document screening, written test (English and Japanese), then interview in Jakarta. The 2028 round is not announced yet; based on past rounds it may open around April 2027.",
+    "changeSummary": "Added free student visa processing to the benefits."
   },
   {
     "id": "lpdp-share-2026-tahap-2",
-    "title": "LPDP SHARE Scholarship (Social, Humanities, Art, Religious Studies, Education)",
+    "title": "LPDP SHARE Scholarship (Social, Humanities, Art for People, Religious Studies, Education)",
     "provider": "LPDP (Lembaga Pengelola Dana Pendidikan), Ministry of Finance of Indonesia",
     "fundingType": "full",
     "educationLevels": ["masters", "phd"],
@@ -322,7 +288,7 @@
     "hostCountries": ["GLOBAL"],
     "fieldsOfStudy": ["social sciences", "culture", "humanities", "religious studies", "education"],
     "minGpa": 3.0,
-    "languageRequirement": "Overseas: Master's IELTS 6.5 / TOEFL iBT 80, Doctoral IELTS 7.0 / TOEFL iBT 94 (lower for affirmation categories; waived with unconditional LoA)",
+    "languageRequirement": "Overseas Master's: IELTS 6.5, TOEFL iBT 80, PTE Academic 58 or Duolingo 120. Overseas Doctoral: IELTS 7.0, TOEFL iBT 94, PTE Academic 65 or Duolingo 130 (general category; lower for affirmation categories; waived with unconditional LoA)",
     "openDate": "2026-06-30",
     "deadline": "2026-07-31",
     "status": "closed",
@@ -332,22 +298,26 @@
       "Minimum GPA: Master's 3.00, Doctoral 3.25 (general category)",
       "Maximum age on 31 December: Master's 35, Doctoral 40 (general category)",
       "English certificate valid within two years, unless holding an unconditional LoA",
-      "Domestic study: BAN-PT A/Unggul accredited programme"
+      "Domestic study: university accredited A/Unggul and, if outside LPDP's approved list, in the QS World University Rankings top 1,200; programme accredited A/Unggul/Internasional (general and civil-servant categories)",
+      "Full or partial funding scheme (partial only for general and CPNS/PNS/TNI/POLRI applicants)"
     ],
     "benefits": [
       "Registration and tuition fees",
       "Book allowance",
       "Thesis or dissertation research funding",
       "International seminar and journal publication funding",
+      "International competition funding",
       "Transportation and visa costs",
       "Health insurance",
       "Arrival allowance",
       "Monthly living allowance",
-      "Family allowance (Doctoral only)"
+      "Family allowance (Doctoral only)",
+      "Emergency funds (if needed)"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2026 batch 2. Final results 30 November 2026; study starts from 1 January 2027. GPA, age and language rules differ for CPNS/PNS/TNI/POLRI, Papua, affirmation regions, low-income and disability categories. The 2027 batch 1 schedule is not out yet."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2026 batch 2. Final results 30 November 2026; earliest study start 1 January 2027. GPA, age and language rules differ for CPNS/PNS/TNI/POLRI, Papua, affirmation regions, low-income and disability categories. The 2027 batch 1 schedule is not out yet.",
+    "changeSummary": "Added PTE and Duolingo scores, the partial funding scheme, the QS ranking rule for domestic study, and two missing benefits."
   },
   {
     "id": "lpdp-stem-industri-strategis-2026-tahap-2",
@@ -357,9 +327,21 @@
     "educationLevels": ["masters", "phd"],
     "eligibleCitizenships": ["ID"],
     "hostCountries": ["GLOBAL"],
-    "fieldsOfStudy": ["STEM (strategic industries)"],
+    "fieldsOfStudy": [
+      "health",
+      "food security",
+      "digitalisation (AI and semiconductors)",
+      "downstreaming and industrialisation",
+      "defence",
+      "advanced materials and manufacturing",
+      "energy",
+      "maritime",
+      "public policy",
+      "law",
+      "business and economics"
+    ],
     "minGpa": 3.0,
-    "languageRequirement": "Overseas Master's: IELTS 6.5, TOEFL iBT 80 or Duolingo 120 (waived with unconditional LoA)",
+    "languageRequirement": "Overseas Master's: IELTS 6.5, TOEFL iBT 80, PTE Academic 58 or Duolingo 120. Overseas Doctoral: IELTS 7.0, TOEFL iBT 94, PTE Academic 65 or Duolingo 130 (general category; civil-servant doctoral applicants use the Master's scores; waived with unconditional LoA)",
     "openDate": "2026-06-30",
     "deadline": "2026-07-31",
     "status": "closed",
@@ -368,20 +350,28 @@
     "requirements": [
       "Minimum GPA: Master's 3.00, Doctoral 3.25 (full funding)",
       "English certificate valid within two years, unless holding an unconditional LoA",
-      "Online application on the LPDP portal"
+      "Maximum age on 31 December: Master's 35, Doctoral 40 (general category)",
+      "Online application on the LPDP portal",
+      "Domestic study: university accredited A/Unggul and, if outside LPDP's approved list, in the QS World University Rankings top 1,200; programme accredited A/Unggul/Internasional (general and civil-servant categories)",
+      "Full or partial funding scheme (partial only for general and CPNS/PNS/TNI/POLRI applicants)"
     ],
     "benefits": [
       "Registration and tuition fees",
       "Book allowance",
-      "Research funding",
+      "Thesis or dissertation research funding",
+      "International seminar and journal publication funding",
+      "International competition funding",
       "Transportation and visa costs",
       "Health insurance",
       "Arrival allowance",
-      "Monthly living allowance"
+      "Monthly living allowance",
+      "Family allowance (Doctoral only)",
+      "Emergency funds (if needed)"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2026 batch 2, same schedule as other LPDP programmes (results 30 November 2026). The official requirements page is titled batch 1 and mixes full and partial schemes; check figures against the batch 2 guide. Benefits assumed to match LPDP's standard full-scheme funding components."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2026 batch 2, same schedule as other LPDP programmes (results 30 November 2026). Covers the 8 strategic industries plus the supporting fields public policy, law, and business and economics. Entrepreneurship and creative industries have their own requirements (not checked). Benefits from the official funding components list (14 items).",
+    "changeSummary": "Listed the 8 strategic industries and supporting fields, added Doctoral English scores, the age limit, the partial funding scheme and the full benefits list."
   },
   {
     "id": "chevening-indonesia-2027",
@@ -402,7 +392,7 @@
       "At least two years (2,800 hours) of work experience after the undergraduate degree",
       "Apply to three different eligible UK master's courses",
       "Return to home country for at least two years after the scholarship",
-      "Unconditional offer from a UK university by 8 July 2027"
+      "Unconditional offer from one of the three courses by 17:00 UK time on 8 July 2027"
     ],
     "benefits": [
       "Tuition fees",
@@ -413,8 +403,9 @@
       "Travel top-up allowance",
       "Up to £75 for TB testing if required"
     ],
-    "lastVerified": "2026-11-19",
-    "verifiedBy": "pending-human-review",
-    "notes": "2027/28 round, now closed. Deadline date taken from other countries' 2027/28 announcements (6 Oct 2026, 11:00 UTC); confirm for Indonesia. Interviews March–April 2027, results from mid-June 2027. No provision for dependants. Next round usually opens in August."
+    "lastVerified": "2026-11-23",
+    "verifiedBy": "Fiko",
+    "notes": "2027/28 round, now closed. Applications opened in August 2026 and closed in October 2026 at 11:00 UTC.",
+    "changeSummary": "Added the time for the unconditional offer deadline."
   }
 ]
