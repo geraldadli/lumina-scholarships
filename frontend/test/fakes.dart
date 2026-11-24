@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:hybrid_ai/src/hybrid_ai.g.dart' show HybridAiHostApi;
 import 'package:lumina/data/demo_backend.dart';
@@ -12,6 +14,29 @@ final testNow = DateTime.utc(2026, 11, 21, 3);
 
 /// The real research data, as bundled for demo mode.
 List<Scholarship> loadCatalog() => parseResearchJson(File('assets/demo/scholarships.json').readAsStringSync());
+
+/// The demo listing that is open at [testNow] and closes on 15 Feb 2027.
+const fulbrightMasters = 'fulbright-masters-indonesia-2027';
+const closedSummary = 'Applications closed: the deadline of 15 February 2027 has passed.';
+
+/// The bundled catalog after backend/src/process-deadlines.ts runs at [at]: active listings
+/// past their deadline become closed with a change summary and a newer updatedAt.
+List<Scholarship> runDeadlineJob(DateTime at) {
+  // Deadlines as the app reads them: a date-only deadline is 23:59:59 WIB, not local midnight.
+  final deadlines = {for (final s in loadCatalog()) s.id: s.deadline};
+  final raw = jsonDecode(File('assets/demo/scholarships.json').readAsStringSync()) as List;
+  for (final d in raw.cast<Map<String, dynamic>>()) {
+    final deadline = deadlines[d['id']];
+    if (d['status'] == 'active' && deadline != null && deadline.isBefore(at)) {
+      expect(d['id'], anyOf(fulbrightMasters, 'fulbright-phd-indonesia-2027'));
+      d['status'] = 'closed';
+      d['changeSummary'] = closedSummary;
+      // Demo data takes updatedAt from lastVerified; the job's serverTimestamp is "now".
+      d['lastVerified'] = at.toIso8601String();
+    }
+  }
+  return parseResearchJson(jsonEncode(raw));
+}
 
 /// Stand-in for the Kotlin side of hybrid_ai (same approach as the plugin's own tests).
 class FakeHost implements HybridAiHostApi {

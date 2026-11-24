@@ -1,36 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
-import 'package:lumina/models/scholarship.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'fakes.dart';
-
-const _fulbrightMasters = 'fulbright-masters-indonesia-2027';
-const _closedSummary = 'Applications closed: the deadline of 15 February 2027 has passed.';
-
-/// The bundled catalog after backend/src/process-deadlines.ts runs at [at]: active listings
-/// past their deadline become closed with a change summary and a newer updatedAt.
-List<Scholarship> _runDeadlineJob(DateTime at) {
-  final raw = jsonDecode(File('assets/demo/scholarships.json').readAsStringSync()) as List;
-  for (final d in raw.cast<Map<String, dynamic>>()) {
-    final deadline = DateTime.parse(d['deadline'] as String);
-    if (d['status'] == 'active' && deadline.isBefore(at)) {
-      expect(d['id'], anyOf(_fulbrightMasters, 'fulbright-phd-indonesia-2027'));
-      d['status'] = 'closed';
-      d['changeSummary'] = _closedSummary;
-      // Demo data takes updatedAt from lastVerified; the job's serverTimestamp is "now".
-      d['lastVerified'] = at.toIso8601String();
-    }
-  }
-  return parseResearchJson(jsonEncode(raw));
-}
 
 /// Sprint 1 path on the demo backend: sign in → onboarding → browse → details → save → Ask AI.
 void main() {
@@ -148,20 +124,20 @@ void main() {
     expect(find.text('Apply on official website'), findsOneWidget);
     await tester.tap(find.byTooltip('Save'));
     await tester.pumpAndSettle();
-    expect(controller.isSaved(_fulbrightMasters), isTrue);
+    expect(controller.isSaved(fulbrightMasters), isTrue);
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
 
     // The deadline passes and the backend's deadline job closes it.
     now = DateTime.utc(2027, 2, 16, 3);
-    backend.setCatalog(_runDeadlineJob(now));
+    backend.setCatalog(runDeadlineJob(now));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Saved'));
     await tester.pumpAndSettle();
     expect(find.text('Closed: 15 Feb'), findsOneWidget);
     expect(find.text('UPDATED'), findsOneWidget);
-    expect(find.text(_closedSummary), findsOneWidget);
+    expect(find.text(closedSummary), findsOneWidget);
 
     // Details: what changed, the official source, and Ask AI / Prepare still there.
     await tester.tap(find.text("Fulbright Master's Degree Scholarship"));

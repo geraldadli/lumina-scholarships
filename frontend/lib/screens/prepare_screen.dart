@@ -256,16 +256,16 @@ class _PrepareScreenState extends State<PrepareScreen> {
                 label: sv?.status == 'applied' ? 'Applied' : 'Mark as applied',
                 onPressed: sv == null || sv.status == 'applied'
                     ? null
-                    : () async {
-                        final nav = Navigator.of(context);
+                    : () {
                         _flushNotes();
-                        if (!await c.setStatus(s, 'applied')) return;
+                        // Not awaited: offline, Firestore only confirms once back online. A failure
+                        // is reported by the controller's notices (shown from the app root).
+                        unawaited(c.setStatus(s, 'applied'));
                         c
                           ..setSavedSegment('applied')
                           ..setTab(2);
-                        if (!context.mounted) return;
                         showToast(context, 'Marked as applied');
-                        nav.popUntil((r) => r.isFirst);
+                        Navigator.of(context).popUntil((r) => r.isFirst);
                       },
               ),
             ]),
