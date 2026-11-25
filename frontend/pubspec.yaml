@@ -40,6 +40,7 @@ dependencies:
   hybrid_ai:
     path: ../packages/hybrid_ai
   google_sign_in: 7.2.0
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:

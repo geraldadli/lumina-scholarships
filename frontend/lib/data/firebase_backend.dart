@@ -163,9 +163,11 @@ class FirebaseBackend implements LuminaBackend {
   // ───────────── users/{uid} ─────────────
 
   @override
-  Stream<UserProfile?> profile(String uid) => _user(uid).snapshots().map((d) {
+  /// With metadata changes, so the profile is sent again once Firestore confirms a write
+  /// (`savePending` goes false). A write still pending after a restart shows as pending too.
+  Stream<UserProfile?> profile(String uid) => _user(uid).snapshots(includeMetadataChanges: true).map((d) {
         final data = d.data();
-        return data == null ? null : UserProfile.fromMap(data);
+        return data == null ? null : UserProfile.fromMap(data).copyWith(savePending: d.metadata.hasPendingWrites);
       });
 
   @override

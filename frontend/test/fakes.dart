@@ -43,6 +43,9 @@ class FakeHost implements HybridAiHostApi {
   FakeHost({this.askError, this.availability = ModelAvailability.downloadable});
 
   PlatformException? askError;
+
+  /// Thrown only for questions sent without cloud AI, like the Kotlin side's on-device checks.
+  PlatformException? askErrorWithoutCloud;
   final ModelAvailability availability;
 
   /// When set, `generateChecklist` waits for it, like a slow AI call.
@@ -65,6 +68,7 @@ class FakeHost implements HybridAiHostApi {
   Future<AiAnswer> ask(AskRequest request) async {
     asked.add(request);
     if (askError != null) throw askError!;
+    if (!request.allowCloud && askErrorWithoutCloud != null) throw askErrorWithoutCloud!;
     return AiAnswer(
       text: 'The deadline is ${request.scholarship.deadline}.',
       source: AiSource.cloud,

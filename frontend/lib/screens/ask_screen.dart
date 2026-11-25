@@ -147,7 +147,7 @@ class _AskScreenState extends State<AskScreen> {
                   ],
                   if (t.error != null) ...[
                     const SizedBox(height: 14),
-                    _UnavailableCard(scholarship: s, error: t.error!, onEditQuestion: () {
+                    _UnavailableCard(scholarship: s, error: t.error!, askedWithCloud: t.askedWithCloud, onEditQuestion: () {
                       _draft.text = t.failedQuestion ?? '';
                       _focus.requestFocus();
                     }),
@@ -287,12 +287,29 @@ class _AiBubble extends StatelessWidget {
   }
 }
 
+/// On-device errors that cloud AI would have avoided. `MODEL_DOWNLOADING` is left out: its
+/// progress bar and "Try again" fit better than asking to switch to cloud mid-download.
+const _onDeviceCodes = {
+  HybridAiErrorCode.privateModeUnavailable,
+  HybridAiErrorCode.onDeviceUnsupported,
+  HybridAiErrorCode.onDeviceUnavailable,
+  HybridAiErrorCode.modelNotDownloaded,
+};
+
 /// The single "AI unavailable" state, driven by `HybridAiException.unavailability`.
 class _UnavailableCard extends StatelessWidget {
-  const _UnavailableCard({required this.scholarship, required this.error, required this.onEditQuestion});
+  const _UnavailableCard({
+    required this.scholarship,
+    required this.error,
+    required this.askedWithCloud,
+    required this.onEditQuestion,
+  });
 
   final Scholarship scholarship;
   final HybridAiException error;
+
+  /// Whether cloud AI was allowed when the failed question was asked.
+  final bool askedWithCloud;
   final VoidCallback onEditQuestion;
 
   @override
@@ -300,31 +317,60 @@ class _UnavailableCard extends StatelessWidget {
     final c = AppScope.of(context);
     final u = error.unavailability;
     void privacy() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()));
-    Future<void> allowCloudAndRetry() async {
-      try {
-        await c.setCloudAllowed(true);
-      } on Object catch (e) {
-        debugPrint('Lumina: allow cloud AI failed: $e');
-        if (context.mounted) showToast(context, 'Could not turn on cloud AI. Try again.', icon: Icons.error_outline_rounded);
-        return;
-      }
-      await c.retryLast(scholarship);
-    }
+    void retry() => c.retryLast(scholarship);
 
-    final cloudOff = !c.cloudAllowed &&
-        (u.action == AiUnavailableAction.openPrivacySettings || u.action == AiUnavailableAction.downloadModel);
+    // Asks again with cloud AI at once. If the setting then fails to save, the controller's
+    // notices say the question was sent and that cloud AI is off again.
+    void allowCloudAndRetry() => c.allowCloudAndRetry(scholarship);
+
+    // The question failed on the phone because cloud AI was off when it was asked.
+    final onDeviceOnly = !askedWithCloud && _onDeviceCodes.contains(error.code);
+    // ...and cloud AI is still off: offer it.
+    final cloudOff = onDeviceOnly && !c.cloudAllowed;
+    // ...but cloud AI was turned on since (e.g. in Privacy & AI): asking again will work.
+    final cloudNowOn = onDeviceOnly && c.cloudAllowed;
+    final phoneUnsupported = error.code == HybridAiErrorCode.privateModeUnavailable ||
+        error.code == HybridAiErrorCode.onDeviceUnsupported ||
+        c.aiStatus?.onDeviceModel == ModelAvailability.unavailable;
+
+    final title = cloudOff
+        ? 'Cloud AI is turned off'
+        : cloudNowOn
+            ? 'Cloud AI is on now'
+            : u.title;
+    final message = cloudNowOn
+        ? 'Cloud AI was off when you asked. Try again to get an answer.'
+        : cloudOff && phoneUnsupported
+            ? 'This phone does not support on-device AI, so with cloud AI off the assistant cannot answer. '
+                'Allow cloud AI to use it.'
+            : cloudOff && error.code == HybridAiErrorCode.onDeviceUnavailable
+                ? 'On-device AI is not available on this phone right now, and cloud AI is off. '
+                    'Allow cloud AI to get an answer, or try again later.'
+                : u.message;
 
     final buttons = <Widget>[
-      if (cloudOff) ...[
+      if (cloudNowOn)
+        LButton(label: 'Try again', height: 44, radius: 12, fontSize: 14, onPressed: retry)
+      else if (cloudOff) ...[
         LButton(label: 'Allow cloud AI', height: 44, radius: 12, fontSize: 14, onPressed: allowCloudAndRetry),
-        LButton(
-          label: 'Download on-device model instead',
-          kind: LButtonKind.secondary,
-          height: 40,
-          radius: 12,
-          fontSize: 13,
-          onPressed: privacy,
-        ),
+        if (error.code == HybridAiErrorCode.onDeviceUnavailable)
+          LButton(
+            label: 'Try again',
+            kind: LButtonKind.secondary,
+            height: 40,
+            radius: 12,
+            fontSize: 13,
+            onPressed: retry,
+          )
+        else if (!phoneUnsupported)
+          LButton(
+            label: 'Download on-device model instead',
+            kind: LButtonKind.secondary,
+            height: 40,
+            radius: 12,
+            fontSize: 13,
+            onPressed: privacy,
+          ),
       ] else
         ...switch (u.action) {
           AiUnavailableAction.openPrivacySettings => [
@@ -381,15 +427,21 @@ class _UnavailableCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(10)),
-                child: Icon(cloudOff ? Icons.cloud_off_rounded : Icons.info_outline_rounded, size: 20, color: LColors.primary),
+                child: Icon(
+                  cloudOff
+                      ? Icons.cloud_off_rounded
+                      : cloudNowOn
+                          ? Icons.cloud_done_rounded
+                          : Icons.info_outline_rounded,
+                  size: 20,
+                  color: LColors.primary,
+                ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(cloudOff ? 'Cloud AI is turned off' : u.title, style: ts(15, weight: FontWeight.w700)),
-              ),
+              Expanded(child: Text(title, style: ts(15, weight: FontWeight.w700))),
             ],
           ),
-          Text(u.message, style: ts(13, color: LColors.text3, height: 1.45)),
+          Text(message, style: ts(13, color: LColors.text3, height: 1.45)),
           ...buttons,
           TextButton(
             onPressed: () => openOfficialPage(context, scholarship.sourceUrl),
