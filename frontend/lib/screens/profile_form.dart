@@ -670,16 +670,8 @@ class PrivacyScreen extends StatelessWidget {
                     PrivacySection(
                       showTitle: false,
                       cloudAllowed: c.cloudAllowed,
-                      onCloudChanged: (v) async {
-                        try {
-                          await c.setCloudAllowed(v);
-                        } on Object catch (e) {
-                          debugPrint('Lumina: privacy save failed: $e');
-                          if (context.mounted) {
-                            showToast(context, 'Could not save. Try again.', icon: Icons.error_outline_rounded);
-                          }
-                        }
-                      },
+                      // A failed save keeps cloud AI off on this phone and says so (controller notices).
+                      onCloudChanged: c.setCloudAllowed,
                     ),
                     if (showCvImport) ...[
                       const SizedBox(height: 24),

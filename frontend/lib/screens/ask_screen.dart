@@ -319,14 +319,9 @@ class _UnavailableCard extends StatelessWidget {
     void privacy() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()));
     void retry() => c.retryLast(scholarship);
 
-    // Retries at once: the controller uses the new setting before Firestore confirms it.
-    void allowCloudAndRetry() {
-      c.setCloudAllowed(true).catchError((Object e) {
-        debugPrint('Lumina: allow cloud AI failed: $e');
-        if (context.mounted) showToast(context, 'Could not turn on cloud AI. Try again.', icon: Icons.error_outline_rounded);
-      });
-      retry();
-    }
+    // Asks again with cloud AI at once. If the setting then fails to save, the controller's
+    // notices say the question was sent and that cloud AI is off again.
+    void allowCloudAndRetry() => c.allowCloudAndRetry(scholarship);
 
     // The question failed on the phone because cloud AI was off when it was asked.
     final onDeviceOnly = !askedWithCloud && _onDeviceCodes.contains(error.code);
