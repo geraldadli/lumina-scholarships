@@ -39,6 +39,9 @@ class ChatThread {
   /// The last failure, shown as the "AI unavailable" card until the next attempt.
   HybridAiException? error;
   String? failedQuestion;
+
+  /// Whether cloud AI was allowed for the last question sent (the one in [failedQuestion] if it failed).
+  bool askedWithCloud = false;
 }
 
 /// App-wide state: session, profile, catalog, saved scholarships and AI.
@@ -222,10 +225,23 @@ class AppController extends ChangeNotifier {
     await backend.saveProfile(u.uid, p, isNew: isNew);
   }
 
+  /// Takes effect at once, so a question asked right after uses the new choice: the profile
+  /// stream only reports it once Firestore has the write. Put back if the write fails.
   Future<void> setCloudAllowed(bool allowed) async {
     final p = profile;
     if (p == null) return;
-    await saveProfile(p.copyWith(cloudAiAllowed: allowed));
+    final next = p.copyWith(cloudAiAllowed: allowed);
+    profile = next;
+    notifyListeners();
+    try {
+      await saveProfile(next);
+    } on Object {
+      if (identical(profile, next)) {
+        profile = p;
+        notifyListeners();
+      }
+      rethrow;
+    }
   }
 
   bool get cloudAllowed => profile?.cloudAiAllowed ?? false;
@@ -495,14 +511,15 @@ class AppController extends ChangeNotifier {
     t
       ..thinking = true
       ..error = null
-      ..failedQuestion = null;
+      ..failedQuestion = null
+      ..askedWithCloud = cloudAllowed;
     notifyListeners();
     try {
       final answer = await ai.ask(AskRequest(
         question: q.length > maxQuestionLength ? q.substring(0, maxQuestionLength) : q,
         scholarship: s.toContext(),
         student: profile?.toStudentContext(),
-        allowCloud: cloudAllowed,
+        allowCloud: t.askedWithCloud,
         languageCode: 'en',
       ));
       t.messages.add(ChatMessage.ai(answer.text, source: answer.source, citations: answer.citations));
