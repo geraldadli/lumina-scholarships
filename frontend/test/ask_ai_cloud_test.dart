@@ -5,32 +5,45 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
+import 'package:lumina/data/privacy_store.dart';
 import 'package:lumina/models/user_profile.dart';
 import 'package:lumina/state/app_controller.dart';
+import 'package:lumina/widgets/common.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'fakes.dart';
 
-/// Profile writes wait for [gate], like Firestore confirming over a slow network, or fail
-/// when [reject] is set.
-class _SlowProfileBackend extends DemoBackend {
-  _SlowProfileBackend(super.catalog);
+/// Profile writes behave like Firestore: shown at once as pending (`savePending`), then
+/// confirmed once [gate] opens, or dropped (the account's value comes back) when [reject].
+class _FirestoreLikeBackend extends DemoBackend {
+  _FirestoreLikeBackend(super.catalog);
 
   Completer<void>? gate;
   bool reject = false;
+  final _confirmed = <String, UserProfile>{};
+
+  /// The account's confirmed profile.
+  UserProfile account(String uid) => _confirmed[uid]!;
 
   @override
   Future<void> saveProfile(String uid, UserProfile profile, {required bool isNew}) async {
+    final before = _confirmed[uid];
+    await super.saveProfile(uid, profile.copyWith(savePending: true), isNew: isNew);
     await gate?.future;
-    if (reject) throw Exception('permission-denied');
-    return super.saveProfile(uid, profile, isNew: isNew);
+    if (reject) {
+      if (before != null) await super.saveProfile(uid, before, isNew: false);
+      throw Exception('permission-denied');
+    }
+    _confirmed[uid] = profile;
+    await super.saveProfile(uid, profile, isNew: isNew);
   }
 }
 
 /// Ask AI with cloud AI off on a phone where on-device AI does not answer.
 void main() {
   late FakeHost host;
-  late _SlowProfileBackend backend;
+  late _FirestoreLikeBackend backend;
+  late MemoryPrivacyStore store;
   late AppController controller;
 
   Future<void> openAsk(WidgetTester tester, {required String error, ModelAvailability device = ModelAvailability.unavailable}) async {
@@ -38,9 +51,10 @@ void main() {
       ..physicalSize = const Size(1179, 2556)
       ..devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    backend = _SlowProfileBackend(loadCatalog());
+    backend = _FirestoreLikeBackend(loadCatalog());
+    store = MemoryPrivacyStore();
     host = FakeHost(availability: device)..askErrorWithoutCloud = PlatformException(code: error);
-    controller = AppController(backend: backend, ai: HybridAi(hostApi: host), clock: () => testNow);
+    controller = AppController(backend: backend, ai: HybridAi(hostApi: host), clock: () => testNow, privacyStore: store);
     await tester.pumpWidget(LuminaApp(controller: controller, splashDuration: Duration.zero, googleFonts: false));
     await tester.pumpAndSettle();
     await backend.signInWithEmail('kevin@example.com', 'secret123');
@@ -74,6 +88,23 @@ void main() {
     expect(host.asked, hasLength(before + 1));
   }
 
+  /// Closes the app and opens it again: same account, same phone storage, new controller.
+  Future<void> restart(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+    controller = AppController(backend: backend, ai: HybridAi(hostApi: host), clock: () => testNow, privacyStore: store);
+    await tester.pumpWidget(LuminaApp(controller: controller, splashDuration: Duration.zero, googleFonts: false));
+    await tester.pumpAndSettle();
+    expect(controller.user, isNotNull); // still signed in
+  }
+
+  /// Asks a question straight through the controller; returns whether it went with cloud AI.
+  Future<bool> askNow(WidgetTester tester) async {
+    await controller.ask(controller.byId(fulbrightMasters)!, 'What documents do I need?');
+    await tester.pumpAndSettle();
+    return host.asked.last.allowCloud;
+  }
+
   void expectCloudAnswer() {
     expect(host.asked.last.allowCloud, isTrue);
     expect(find.text('Answered with cloud AI'), findsOneWidget);
@@ -96,6 +127,11 @@ void main() {
     expect(host.asked, hasLength(2));
     expectCloudAnswer();
     expect(find.text('Am I eligible?'), findsNWidgets(2)); // the chip and one question: not asked twice
+
+    // This question went with cloud AI (the tap is consent for it), but the setting only
+    // counts for the next questions once Firestore confirms it.
+    expect(controller.cloudAllowed, isFalse);
+    expect(controller.cloudSwitch, isTrue);
 
     backend.gate!.complete();
     await tester.pumpAndSettle();
@@ -150,7 +186,8 @@ void main() {
     await tester.pumpAndSettle();
     expectCloudAnswer();
     expect(
-      find.text('Your question was sent with cloud AI, but the setting could not be saved, so cloud AI is off again.'),
+      find.text('Your question was sent with cloud AI, but the setting could not be saved, '
+          'so cloud AI is still off for your next questions.'),
       findsOneWidget,
     );
     expect(controller.cloudAllowed, isFalse);
@@ -231,6 +268,128 @@ void main() {
       expect(await controller.setCloudAllowed(true), isTrue);
       await tester.pumpAndSettle();
       expect(controller.cloudAllowed, isTrue);
+    });
+  });
+
+  group('restart', () {
+    testWidgets('an Off that failed to save is still off after a restart', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      expect(await controller.setCloudAllowed(true), isTrue);
+      backend.reject = true;
+      expect(await controller.setCloudAllowed(false), isFalse);
+      await tester.pumpAndSettle();
+
+      await restart(tester);
+      expect(controller.profile!.cloudAiAllowed, isTrue); // the account still has the old "on"
+      expect(controller.cloudAllowed, isFalse);
+      expect(controller.cloudSwitch, isFalse);
+      expect(await askNow(tester), isFalse);
+    });
+
+    testWidgets('an Off still saving when the app closes is still off after a restart', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      expect(await controller.setCloudAllowed(true), isTrue);
+      backend.gate = Completer<void>(); // Firestore never confirms before the app closes
+      unawaited(controller.setCloudAllowed(false));
+      await tester.pumpAndSettle();
+
+      await restart(tester);
+      expect(controller.cloudAllowed, isFalse);
+      expect(await askNow(tester), isFalse);
+    });
+
+    testWidgets('after a restart the remembered Off is saved to the account, then forgotten', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      expect(await controller.setCloudAllowed(true), isTrue);
+      backend.reject = true;
+      expect(await controller.setCloudAllowed(false), isFalse);
+      await tester.pumpAndSettle();
+      expect(await store.unsavedCloudOff(controller.user!.uid), isTrue);
+
+      backend.reject = false;
+      await restart(tester);
+      expect(backend.account(controller.user!.uid).cloudAiAllowed, isFalse);
+      expect(await store.unsavedCloudOff(controller.user!.uid), isFalse);
+      expect(controller.cloudAllowed, isFalse);
+
+      // Turning it on again works as usual.
+      expect(await controller.setCloudAllowed(true), isTrue);
+      await tester.pumpAndSettle();
+      expect(controller.cloudAllowed, isTrue);
+    });
+
+    testWidgets('an On Firestore has not confirmed does not count after a restart', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      backend.gate = Completer<void>();
+      unawaited(controller.setCloudAllowed(true));
+      await tester.pumpAndSettle();
+
+      await restart(tester);
+      expect(controller.profile!.cloudAiAllowed, isTrue);
+      expect(controller.profile!.savePending, isTrue);
+      expect(controller.cloudAllowed, isFalse);
+      expect(await askNow(tester), isFalse);
+    });
+  });
+
+  group('turning cloud AI on from Privacy & AI', () {
+    testWidgets('questions stay on the phone until Firebase confirms it', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      backend.gate = Completer<void>();
+      final saving = controller.setCloudAllowed(true);
+      await tester.pumpAndSettle();
+      expect(controller.cloudSwitch, isTrue); // the switch shows the choice...
+      expect(controller.cloudSaving, isTrue);
+      expect(controller.cloudAllowed, isFalse); // ...but questions do not use cloud AI yet
+      expect(await askNow(tester), isFalse);
+
+      backend.gate!.complete();
+      expect(await saving, isTrue);
+      await tester.pumpAndSettle();
+      expect(controller.cloudAllowed, isTrue);
+      expect(await askNow(tester), isTrue);
+    });
+
+    testWidgets('an On rejected after a wait never sent a question to the cloud', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      backend
+        ..gate = Completer<void>()
+        ..reject = true;
+      final saving = controller.setCloudAllowed(true);
+      await tester.pumpAndSettle();
+      expect(await askNow(tester), isFalse);
+
+      backend.gate!.complete();
+      expect(await saving, isFalse);
+      await tester.pumpAndSettle();
+      expect(controller.cloudAllowed, isFalse);
+      expect(controller.cloudSwitch, isFalse);
+      expect(host.asked.where((r) => r.allowCloud), isEmpty);
+    });
+
+    testWidgets('the switch shows the choice with a saving note', (tester) async {
+      await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Profile').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Privacy & AI'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('On-device AI model'), findsOneWidget); // on Privacy & AI
+
+      backend.gate = Completer<void>();
+      await tester.tap(find.byType(LToggle));
+      await tester.pumpAndSettle();
+      expect(find.text('Saving… Cloud AI is used once your account has this setting.'), findsOneWidget);
+      expect(find.text('AI off'), findsWidgets); // inference mode: not yet
+
+      backend.gate!.complete();
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Saving…'), findsNothing);
+      expect(find.text('Cloud AI'), findsWidgets);
     });
   });
 }

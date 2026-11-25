@@ -669,10 +669,18 @@ class PrivacyScreen extends StatelessWidget {
                   children: [
                     PrivacySection(
                       showTitle: false,
-                      cloudAllowed: c.cloudAllowed,
+                      // The latest choice, even while saving; questions follow c.cloudAllowed.
+                      cloudAllowed: c.cloudSwitch,
                       // A failed save keeps cloud AI off on this phone and says so (controller notices).
                       onCloudChanged: c.setCloudAllowed,
                     ),
+                    if (c.cloudSaving && c.cloudSwitch) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        'Saving… Cloud AI is used once your account has this setting.',
+                        style: ts(13, color: LColors.text2, height: 1.4),
+                      ),
+                    ],
                     if (showCvImport) ...[
                       const SizedBox(height: 24),
                       Text('CV data', style: ts(16, weight: FontWeight.w700)),

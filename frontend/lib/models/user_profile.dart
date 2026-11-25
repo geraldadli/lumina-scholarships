@@ -71,6 +71,7 @@ class UserProfile {
     this.onboardingCompleted = false,
     this.cvSkills = const [],
     this.cvExperienceYears,
+    this.savePending = false,
   });
 
   final String displayName;
@@ -98,6 +99,10 @@ class UserProfile {
   /// From `cvSummary` (read-only here; CV import comes in a later sprint).
   final List<String> cvSkills;
   final int? cvExperienceYears;
+
+  /// Not stored: this copy includes a change Firestore has not confirmed yet (it may still be
+  /// rejected), so its `cloudAiAllowed: true` must not send questions to the cloud yet.
+  final bool savePending;
 
   String get firstName {
     final n = displayName.trim();
@@ -146,6 +151,7 @@ class UserProfile {
     String? Function()? fundingPreference,
     bool? cloudAiAllowed,
     bool? onboardingCompleted,
+    bool? savePending,
   }) =>
       UserProfile(
         displayName: displayName ?? this.displayName,
@@ -161,6 +167,7 @@ class UserProfile {
         onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
         cvSkills: cvSkills,
         cvExperienceYears: cvExperienceYears,
+        savePending: savePending ?? this.savePending,
       );
 
   /// Reads the plain-JSON fields of a `users/{uid}` document (timestamps are ignored here).

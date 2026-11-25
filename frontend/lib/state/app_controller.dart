@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 
 import '../data/backend.dart';
+import '../data/privacy_store.dart';
 import '../models/saved_scholarship.dart';
 import '../models/scholarship.dart';
 import '../models/user_profile.dart';
@@ -46,7 +47,9 @@ class ChatThread {
 
 /// App-wide state: session, profile, catalog, saved scholarships and AI.
 class AppController extends ChangeNotifier {
-  AppController({required this.backend, required this.ai, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  AppController({required this.backend, required this.ai, DateTime Function()? clock, LocalPrivacyStore? privacyStore})
+      : _clock = clock ?? DateTime.now,
+        privacyStore = privacyStore ?? MemoryPrivacyStore();
 
   final LuminaBackend backend;
   final HybridAi ai;
@@ -94,10 +97,11 @@ class AppController extends ChangeNotifier {
     authResolved = true;
     profile = null;
     profileLoaded = false;
-    _cloudChoice = null;
+    _privacyLoaded = false;
     _cloudOffHere = false;
-    _cloudSaving = false;
+    _cloudRequest = null;
     _cloudAttempt++;
+    _offSyncTried = false;
     saved = const {};
     scholarships = const [];
     catalogLoaded = false;
@@ -115,7 +119,7 @@ class AppController extends ChangeNotifier {
         ..add(backend.profile(u.uid).listen((p) {
           profile = p;
           profileLoaded = true;
-          if (!_cloudSaving && _cloudChoice != null && p?.cloudAiAllowed == _cloudChoice) _cloudChoice = null;
+          _settleCloudOff();
           _matchCache.clear();
           _seedFilters();
           notifyListeners();
@@ -129,6 +133,7 @@ class AppController extends ChangeNotifier {
           notifyListeners();
         }, onError: (Object e) => debugPrint('Lumina: saved stream failed: $e')));
       _subscribeCatalog();
+      unawaited(_loadPrivacy(u.uid));
     }
     notifyListeners();
   }
@@ -223,80 +228,143 @@ class AppController extends ChangeNotifier {
 
   // ───────────── Profile ─────────────
 
+  /// Saves the profile from onboarding or Edit preferences. Its cloud AI value is the one
+  /// chosen on this phone (an unsaved "off", or a change still saving), not an older copy.
   Future<void> saveProfile(UserProfile p) async {
     final u = user;
     if (u == null) return;
-    final isNew = profile == null;
-    // Other profile saves (Edit preferences) carry the cloud AI choice made on this phone,
-    // not an older value from the profile stream.
     final forcedOff = _cloudOffHere;
-    final cloud = forcedOff ? false : _cloudChoice;
-    await backend.saveProfile(u.uid, cloud == null ? p : p.copyWith(cloudAiAllowed: cloud), isNew: isNew);
-    if (forcedOff && _cloudOffHere) {
-      _cloudOffHere = false; // "off" is saved now
+    await _saveProfileNow(u.uid, p, cloud: forcedOff ? false : _cloudRequest);
+    if (forcedOff && _cloudOffHere && _cloudRequest == null && user?.uid == u.uid) {
+      _clearCloudOff(u.uid); // the account has "off" now
       notifyListeners();
     }
   }
 
-  /// The cloud AI choice made on this phone that the profile stream does not show yet.
-  bool? _cloudChoice;
+  Future<void> _saveProfileNow(String uid, UserProfile p, {bool? cloud}) =>
+      backend.saveProfile(uid, cloud == null ? p : p.copyWith(cloudAiAllowed: cloud), isNew: profile == null);
 
-  /// A cloud AI choice failed to save: cloud AI stays off on this phone, whatever the saved
-  /// profile says, until the student turns it on again and that is saved (privacy first).
+  // ───────────── Cloud AI setting (privacy first) ─────────────
+  //
+  // Questions use cloud AI only when the account has "on", confirmed by Firestore, and this
+  // phone has no unsaved "off". "Off" counts at once and is remembered on the phone until the
+  // account has it, also across a restart. "On" counts only once Firestore confirms it.
+
+  /// Remembers an unsaved "off" across restarts.
+  final LocalPrivacyStore privacyStore;
+
+  /// The remembered "off" has been read for this user. Until then cloud AI stays off.
+  bool _privacyLoaded = false;
+
+  /// "Off" was chosen on this phone and the account does not have it yet.
   bool _cloudOffHere = false;
+
+  /// A change being saved: what the switch shows meanwhile.
+  bool? _cloudRequest;
 
   /// Counts [setCloudAllowed] calls, so only the latest one settles the choice.
   int _cloudAttempt = 0;
-  bool _cloudSaving = false;
 
-  bool get cloudAllowed => !_cloudOffHere && (_cloudChoice ?? profile?.cloudAiAllowed ?? false);
+  /// A remembered "off" was re-saved to the account once since sign-in.
+  bool _offSyncTried = false;
 
-  /// Takes effect at once, so a question asked right after uses the new choice: the profile
-  /// stream only reports it once Firestore has the write.
-  ///
-  /// If the write fails, cloud AI is OFF on this phone either way: turning it off must not
-  /// quietly turn it back on, and turning it on did not happen. [failure] (or a default
-  /// message) is reported on [notices]. Returns whether the choice was saved.
+  /// Whether questions may use cloud AI (see above).
+  bool get cloudAllowed {
+    final p = profile;
+    return _privacyLoaded && !_cloudOffHere && _cloudRequest == null && p != null && p.cloudAiAllowed && !p.savePending;
+  }
+
+  /// What the "Allow cloud AI" switch shows: the latest choice, even while it saves.
+  bool get cloudSwitch => _cloudRequest ?? (!_cloudOffHere && (profile?.cloudAiAllowed ?? false));
+
+  /// A change to the cloud AI setting is waiting for Firestore.
+  bool get cloudSaving => _cloudRequest != null;
+
+  /// "Off" counts at once (and is remembered on this phone first); "on" counts only once
+  /// saved. If the save fails, cloud AI is off on this phone either way, and [failure] (or a
+  /// default message) is reported on [notices]. Returns whether the choice was saved.
   Future<bool> setCloudAllowed(bool allowed, {String? failure}) async {
-    if (profile == null) return false;
+    final u = user;
+    if (u == null || profile == null) return false;
     final attempt = ++_cloudAttempt;
-    _cloudChoice = allowed;
-    _cloudOffHere = false;
-    _cloudSaving = true;
+    _cloudRequest = allowed;
+    if (!allowed) _cloudOffHere = true;
     notifyListeners();
+    if (!allowed) await _rememberCloudOff(u.uid, true);
     final saved = await _write(
-      () => saveProfile(profile!),
+      () => _saveProfileNow(u.uid, profile!, cloud: allowed),
       failure ??
           (allowed
               ? 'Could not turn on cloud AI, so it is still off. Try again.'
               : 'Could not save that to your account, but cloud AI is off on this phone. Try again to save it.'),
     );
-    if (attempt != _cloudAttempt) return saved; // a newer choice is in charge
-    _cloudSaving = false;
-    if (!saved) {
-      _cloudChoice = null;
-      _cloudOffHere = true;
-    } else if (profile?.cloudAiAllowed == allowed) {
-      _cloudChoice = null; // the profile stream shows it now
-    }
+    if (attempt != _cloudAttempt || user?.uid != u.uid) return saved; // a newer choice is in charge
+    _cloudRequest = null;
+    // Saved: the account has the choice, so nothing is left to remember here. Not saved: a
+    // remembered "off" stays, and a failed "on" never counted.
+    if (saved) _clearCloudOff(u.uid);
     notifyListeners();
     return saved;
   }
 
-  /// "Allow cloud AI" on a question that failed with cloud AI off: allows it and asks again
-  /// with it right away. If the setting then fails to save, the message says the question
-  /// was already sent with cloud AI, and cloud AI is off again for the next ones.
+  /// "Allow cloud AI" on a question that failed with cloud AI off: sends that question with
+  /// cloud AI right away (the tap is consent for it) and saves the setting, which counts for
+  /// the next questions only once Firestore confirms it. If the save fails, the message says
+  /// the question was already sent with cloud AI and that cloud AI is still off.
   Future<void> allowCloudAndRetry(Scholarship s) async {
-    final sending = thread(s.id).failedQuestion != null && !thread(s.id).thinking;
+    final t = thread(s.id);
+    final sending = t.failedQuestion != null && !t.thinking;
     final saving = setCloudAllowed(
       true,
       failure: sending
-          ? 'Your question was sent with cloud AI, but the setting could not be saved, so cloud AI is off again.'
+          ? 'Your question was sent with cloud AI, but the setting could not be saved, '
+              'so cloud AI is still off for your next questions.'
           : null,
     );
-    // Reads the new choice synchronously, before the save can fail.
-    await retryLast(s);
+    await retryLast(s, allowCloud: true);
     await saving;
+  }
+
+  Future<void> _loadPrivacy(String uid) async {
+    var off = false;
+    try {
+      off = await privacyStore.unsavedCloudOff(uid);
+    } on Object catch (e) {
+      debugPrint('Lumina: reading the cloud AI choice failed: $e');
+    }
+    if (user?.uid != uid) return;
+    _cloudOffHere = _cloudOffHere || off;
+    _privacyLoaded = true;
+    _settleCloudOff();
+    notifyListeners();
+  }
+
+  /// A remembered "off" the account lacks is saved once more; one the account already has is
+  /// forgotten.
+  void _settleCloudOff() {
+    final u = user;
+    final p = profile;
+    if (u == null || p == null || !_privacyLoaded || !_cloudOffHere || _cloudRequest != null || p.savePending) return;
+    if (!p.cloudAiAllowed) {
+      _clearCloudOff(u.uid);
+    } else if (!_offSyncTried) {
+      _offSyncTried = true;
+      saveProfile(p).catchError((Object e) => debugPrint('Lumina: saving cloud AI off failed again: $e'));
+    }
+  }
+
+  void _clearCloudOff(String uid) {
+    if (!_cloudOffHere) return;
+    _cloudOffHere = false;
+    unawaited(_rememberCloudOff(uid, false));
+  }
+
+  Future<void> _rememberCloudOff(String uid, bool off) async {
+    try {
+      await privacyStore.setUnsavedCloudOff(uid, off);
+    } on Object catch (e) {
+      debugPrint('Lumina: storing the cloud AI choice failed: $e');
+    }
   }
 
   // ───────────── Match score (hybrid_ai MatchScorer) ─────────────
@@ -555,7 +623,8 @@ class AppController extends ChangeNotifier {
 
   static const maxQuestionLength = 1000;
 
-  Future<void> ask(Scholarship s, String question, {bool retry = false}) async {
+  /// [allowCloud] overrides the setting for this one question ("Allow cloud AI" on the card).
+  Future<void> ask(Scholarship s, String question, {bool retry = false, bool? allowCloud}) async {
     final q = question.trim();
     if (q.isEmpty) return;
     final t = thread(s.id);
@@ -565,7 +634,7 @@ class AppController extends ChangeNotifier {
       ..thinking = true
       ..error = null
       ..failedQuestion = null
-      ..askedWithCloud = cloudAllowed;
+      ..askedWithCloud = allowCloud ?? cloudAllowed;
     notifyListeners();
     try {
       final answer = await ai.ask(AskRequest(
@@ -595,9 +664,9 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> retryLast(Scholarship s) async {
+  Future<void> retryLast(Scholarship s, {bool? allowCloud}) async {
     final q = thread(s.id).failedQuestion;
-    if (q != null) await ask(s, q, retry: true);
+    if (q != null) await ask(s, q, retry: true, allowCloud: allowCloud);
   }
 
   // ───────────── Account ─────────────
