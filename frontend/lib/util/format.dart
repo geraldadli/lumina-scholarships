@@ -18,8 +18,8 @@ const countryNames = <String, String>{
   'JP': 'Japan',
   'KR': 'South Korea',
   'DE': 'Germany',
-  'GB': 'UK',
-  'US': 'US',
+  'GB': 'United Kingdom',
+  'US': 'United States',
   'AU': 'Australia',
   'SG': 'Singapore',
   'NL': 'Netherlands',
@@ -67,7 +67,7 @@ const currentLevelLabels = {
   'masters': "Master's degree",
   'phd': 'Doctorate',
 };
-const fundingLabels = {'full': 'Full', 'partial': 'Partial', 'any': 'Any'};
+const fundingLabels = {'full': 'Fully funded', 'partial': 'Partly funded', 'any': 'Any funding'};
 
 String levelLabel(String v) => levelLabels[v] ?? v;
 String fundingLabel(String v) => fundingLabels[v] ?? v;

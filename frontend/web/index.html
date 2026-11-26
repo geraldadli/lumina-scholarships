@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Replaced by the value of `--base-href` given to `flutter build web`. -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Lumina helps students find scholarships, check eligibility and keep track of deadlines.">
+  <meta name="theme-color" content="#233447">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Lumina">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <title>Lumina · Android app demo</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* The loading screen, shown while the app downloads and starts. */
+    :root {
+      --bg: #f7f9fb;
+      --ink: #17222e;
+      --text: #475769;
+      --primary: #233447;
+      --tint: #e0eefc;
+    }
+    :root[data-dark] {
+      --bg: #111820;
+      --ink: #f1f5f9;
+      --text: #b4c0cd;
+      --primary: #a9cbf2;
+      --tint: #243344;
+    }
+    html, body { height: 100%; margin: 0; background: var(--bg); }
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .35s ease;
+    }
+    #loading.done { opacity: 0; pointer-events: none; }
+    .logo {
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: var(--primary);
+      display: grid;
+      place-items: center;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    .logo svg { width: 46px; height: 46px; fill: var(--bg); }
+    h1 { margin: 22px 0 6px; font-size: 32px; letter-spacing: -.02em; }
+    p { margin: 0; color: var(--text); font-size: 16px; }
+    .bar {
+      width: 180px;
+      height: 5px;
+      margin: 32px 0 14px;
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--tint);
+    }
+    .bar span {
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 3px;
+      background: var(--primary);
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    #loading-status { font-size: 14px; min-height: 1.4em; }
+    #loading-retry {
+      display: none;
+      margin-top: 18px;
+      padding: 12px 24px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--primary);
+      color: var(--bg);
+      font: 600 15px system-ui, sans-serif;
+      cursor: pointer;
+    }
+    #loading.failed .bar { display: none; }
+    #loading.failed .logo { animation: none; }
+    #loading.failed #loading-status { margin-top: 28px; }
+    #loading.failed #loading-retry { display: inline-block; }
+    @keyframes pulse { 50% { transform: scale(1.06); } }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .logo, .bar span { animation: none; }
+      .bar span { width: 50%; }
+      #loading { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" role="status" aria-live="polite">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+    </div>
+    <h1>Lumina</h1>
+    <p>Scholarships, matched to you</p>
+    <div class="bar" aria-hidden="true"><span></span></div>
+    <p id="loading-status">Loading the Android app demo…</p>
+    <button id="loading-retry" type="button">Try again</button>
+  </div>
+
+  <script>
+    (function () {
+      var screen = document.getElementById('loading');
+      var status = document.getElementById('loading-status');
+
+      // Match the look chosen in the app (dark mode and colour theme), so the hand-over does not flash.
+      try {
+        var saved = localStorage.getItem('flutter.lumina.appearance') || localStorage.getItem('lumina.appearance');
+        if (saved) {
+          var look = JSON.parse(saved);
+          if (typeof look === 'string') look = JSON.parse(look);
+          var colours = {
+            navy: ['#233447', '#a9cbf2', '#e0eefc'],
+            ocean: ['#0b5c75', '#8fd3e8', '#ddf2f8'],
+            forest: ['#1e5b3f', '#9ad9b8', '#e0f2e8'],
+            plum: ['#5b2a6e', '#d6aee5', '#f2e6f7'],
+            clay: ['#8a3b22', '#f0b49f', '#fbeae3']
+          }[look.accent];
+          if (look.dark) document.documentElement.setAttribute('data-dark', '');
+          if (colours) {
+            document.documentElement.style.setProperty('--primary', colours[look.dark ? 1 : 0]);
+            if (!look.dark) document.documentElement.style.setProperty('--tint', colours[2]);
+          }
+        }
+      } catch (e) { /* Storage can be blocked; the default look is fine. */ }
+
+      var slow = setTimeout(function () {
+        status.textContent = 'Still loading. A slow connection can take a little longer.';
+      }, 8000);
+
+      function fail() {
+        clearTimeout(slow);
+        screen.classList.add('failed');
+        status.textContent = "Lumina couldn't load. Check your connection and try again.";
+      }
+
+      document.getElementById('loading-retry').addEventListener('click', function () { location.reload(); });
+      // A script that fails to download never reaches the app.
+      window.addEventListener('error', function (event) {
+        if (screen.isConnected && event.target && event.target.tagName === 'SCRIPT') fail();
+      }, true);
+      // Gone as soon as the app has drawn its first frame.
+      window.addEventListener('flutter-first-frame', function () {
+        clearTimeout(slow);
+        screen.classList.add('done');
+        setTimeout(function () { screen.remove(); }, 400);
+      });
+      window.luminaLoadFailed = fail;
+    })();
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

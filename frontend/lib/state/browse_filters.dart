@@ -59,7 +59,7 @@ class BrowseFilters {
     final out = all.where((s) {
       if (!showClosed && s.isClosedAt(now)) return false;
       if (q.isNotEmpty) {
-        final hay = [s.title, s.provider, ...s.hostCountries.map(countryName), s.description ?? ''].join(' ').toLowerCase();
+        final hay = [s.title, s.provider, ...s.hostCountries, ...s.hostCountries.map(countryName), s.description ?? ''].join(' ').toLowerCase();
         if (!hay.contains(q)) return false;
       }
       if (levels.isNotEmpty && !s.educationLevels.any(levels.contains)) return false;

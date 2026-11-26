@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -6,6 +7,7 @@ import '../state/app_scope.dart';
 import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
+import '../widgets/layout.dart';
 
 /// Editable copy of [UserProfile] backing the onboarding / preferences / privacy forms.
 class ProfileDraft {
@@ -127,7 +129,7 @@ class _Dropdown extends StatelessWidget {
         isExpanded: true,
         decoration: lInputDecoration(),
         hint: Text(hint, style: ts(15, color: LColors.muted)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(L.r(12)),
         dropdownColor: LColors.white,
         style: ts(15),
         items: [for (final e in items.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
@@ -200,9 +202,9 @@ class StudyGoalsSection extends StatelessWidget {
   final VoidCallback onChanged;
 
   Widget _group(String title, List<Widget> chips) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: ts(14, weight: FontWeight.w600)),
+          Text(title, style: ts(15, weight: FontWeight.w700)),
           const SizedBox(height: 10),
           Wrap(spacing: 8, runSpacing: 8, children: chips),
         ],
@@ -273,39 +275,49 @@ class AcademicsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final errors = showErrors ? draft.scoreErrors : const <String, String>{};
-    Widget row(String label, String key, TextEditingController c, String hint, {bool text = false}) => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    Widget field(String label, String key, TextEditingController c, String hint, {bool text = false}) => LField(
+          label: label,
+          child: TextField(
+            controller: c,
+            keyboardType: text ? TextInputType.text : const TextInputType.numberWithOptions(decimal: true),
+            textCapitalization: text ? TextCapitalization.characters : TextCapitalization.none,
+            decoration: lInputDecoration(hint: hint).copyWith(errorText: errors[key], errorMaxLines: 2),
+            onChanged: (_) => onChanged(),
+          ),
+        );
+    Widget group(String title, List<Widget> fields) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 12,
           children: [
-            SizedBox(
-              width: 92,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: Text(label, style: ts(14, weight: FontWeight.w600)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: c,
-                keyboardType: text ? TextInputType.text : const TextInputType.numberWithOptions(decimal: true),
-                textCapitalization: text ? TextCapitalization.characters : TextCapitalization.none,
-                decoration: lInputDecoration(hint: hint).copyWith(errorText: errors[key]),
-                onChanged: (_) => onChanged(),
-              ),
+            Text(title, style: ts(15, weight: FontWeight.w700)),
+            LayoutBuilder(
+              builder: (context, box) {
+                final columns = box.maxWidth >= 300 ? 2 : 1;
+                final width = (box.maxWidth - 12 * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 16,
+                  children: [for (final f in fields) SizedBox(width: width, child: f)],
+                );
+              },
             ),
           ],
         );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
+      spacing: L.s(22),
       children: [
         const _SectionTitle('Academics', 'Optional. Scores let us check minimum requirements for you.'),
-        row('GPA (0–4)', 'gpa', draft.gpa, 'e.g. 3.40'),
-        row('IELTS', 'ielts', draft.ielts, '0 – 9'),
-        row('TOEFL iBT', 'toefl', draft.toefl, '0 – 120'),
-        row('Duolingo', 'duolingo', draft.duolingo, '10 – 160'),
-        row('JLPT', 'jlpt', draft.jlpt, 'N5 – N1', text: true),
-        row('TOPIK', 'topik', draft.topik, '1 – 6'),
+        group('Grades', [field('GPA (0–4)', 'gpa', draft.gpa, 'e.g. 3.40')]),
+        group('English tests', [
+          field('IELTS', 'ielts', draft.ielts, '0 – 9'),
+          field('TOEFL iBT', 'toefl', draft.toefl, '0 – 120'),
+          field('Duolingo', 'duolingo', draft.duolingo, '10 – 160'),
+        ]),
+        group('Japanese and Korean tests', [
+          field('JLPT (Japanese)', 'jlpt', draft.jlpt, 'N5 – N1', text: true),
+          field('TOPIK (Korean)', 'topik', draft.topik, '1 – 6'),
+        ]),
         if (showCvImport) const CvImportButton(),
       ],
     );
@@ -324,8 +336,8 @@ class CvImportButton extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: LColors.bg,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: LColors.muted),
+          borderRadius: BorderRadius.circular(L.r(12)),
+          side: BorderSide(color: LColors.muted),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -335,7 +347,7 @@ class CvImportButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.upload_file_rounded, size: 20, color: LColors.ink),
+                Icon(Icons.upload_file_rounded, size: 20, color: LColors.ink),
                 const SizedBox(width: 8),
                 Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: ts(14, weight: FontWeight.w600))),
               ],
@@ -369,7 +381,7 @@ class PrivacySection extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.shield_outlined, size: 24, color: LColors.primary),
+              Icon(Icons.shield_outlined, size: 24, color: LColors.primary),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -378,8 +390,11 @@ class PrivacySection extends StatelessWidget {
                     Text('On-device AI by default', style: ts(15, weight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
-                      'Questions are answered on your phone. Nothing leaves your device unless you allow cloud AI.',
-                      style: ts(13, color: LColors.text3, height: 1.45),
+                      kIsWeb
+                          ? 'On a supported Android phone, questions are answered on the phone. '
+                              'AI answers are not available in this web version.'
+                          : 'Questions are answered on your phone. Nothing leaves your device unless you allow cloud AI.',
+                      style: ts(14, color: LColors.text3, height: 1.5),
                     ),
                   ],
                 ),
@@ -399,7 +414,7 @@ class PrivacySection extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       'Sends your question and the relevant scholarship text to a server for faster answers.',
-                      style: ts(13, color: LColors.text2, height: 1.4),
+                      style: ts(14, color: LColors.text2, height: 1.4),
                     ),
                   ],
                 ),
@@ -414,30 +429,24 @@ class PrivacySection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 12,
             children: [
-              Row(
-                children: [
-                  Expanded(child: Text('On-device AI model', style: ts(15, weight: FontWeight.w600))),
-                  LBadge(c.modelStatusLabel),
-                ],
+              _StatusRow(
+                label: Text('On-device AI model', style: ts(15, weight: FontWeight.w600)),
+                value: LBadge(c.modelStatusLabel),
               ),
-              Row(
-                children: [
-                  Expanded(child: Text('Inference mode', style: ts(13, color: LColors.text2))),
-                  Text(c.inferModeLabel, style: ts(13, weight: FontWeight.w600)),
-                ],
+              _StatusRow(
+                label: Text('Inference mode', style: ts(14, color: LColors.text2)),
+                value: Text(c.inferModeLabel, style: ts(14, weight: FontWeight.w600)),
               ),
               if (c.aiStatus?.onDeviceModelName != null)
-                Row(
-                  children: [
-                    Expanded(child: Text('Model', style: ts(13, color: LColors.text2))),
-                    Text(c.aiStatus!.onDeviceModelName!, style: ts(13, weight: FontWeight.w600)),
-                  ],
+                _StatusRow(
+                  label: Text('Model', style: ts(14, color: LColors.text2)),
+                  value: Text(c.aiStatus!.onDeviceModelName!, style: ts(14, weight: FontWeight.w600)),
                 ),
               if (c.downloading) ...[
                 LProgressBar(value: fraction ?? 0.05),
                 Text(
                   fraction == null ? 'Downloading…' : 'Downloading… ${(fraction * 100).round()}%',
-                  style: ts(13, color: LColors.text2),
+                  style: ts(14, color: LColors.text2),
                 ),
               ] else if (canDownload)
                 LButton(
@@ -450,20 +459,37 @@ class PrivacySection extends StatelessWidget {
                   onPressed: c.startModelDownload,
                 ),
               if (dl?.state == DownloadState.failed)
-                Text(dl!.errorMessage ?? 'Download failed. Try again.', style: ts(13, color: LColors.text2)),
+                Text(dl!.errorMessage ?? 'Download failed. Try again.', style: ts(14, color: LColors.text2)),
               if (c.aiStatus?.onDeviceModel == ModelAvailability.unavailable)
                 Text(
                   'This phone does not support on-device AI. Allow cloud AI to use the assistant.',
-                  style: ts(13, color: LColors.text2, height: 1.4),
+                  style: ts(14, color: LColors.text2, height: 1.4),
                 ),
               if (c.aiStatus == null && c.aiStatusError != null)
-                Text(c.aiStatusError!.userMessage, style: ts(13, color: LColors.text2, height: 1.4)),
+                Text(c.aiStatusError!.userMessage, style: ts(14, color: LColors.text2, height: 1.4)),
             ],
           ),
         ),
       ],
     );
   }
+}
+
+/// A name on the left and its value on the right; the value moves below when they do not fit.
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({required this.label, required this.value});
+
+  final Widget label;
+  final Widget value;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 6,
+        children: [label, value],
+      );
 }
 
 /// First-run setup: About you → Study goals → Academics → Privacy & AI.
@@ -543,23 +569,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 6, 20, 14),
-                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: LColors.soft))),
-                child: Row(
-                  children: [
-                    LIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: _back),
-                    const SizedBox(width: 12),
-                    Expanded(child: LProgressBar(value: _step / 4)),
-                    const SizedBox(width: 12),
-                    Text('$_step of 4', style: ts(13, weight: FontWeight.w600, color: LColors.text2)),
-                  ],
+              Gutter(
+                builder: (context, side) => Container(
+                  padding: EdgeInsets.fromLTRB(side, 10, side, 14),
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: LColors.soft))),
+                  child: Row(
+                    children: [
+                      LIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: _back),
+                      const SizedBox(width: 14),
+                      Expanded(child: LProgressBar(value: _step / 4)),
+                      const SizedBox(width: 14),
+                      Text('$_step of 4', style: ts(14, weight: FontWeight.w600, color: LColors.text2)),
+                    ],
+                  ),
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
-                  child: section,
+                child: Gutter(
+                  builder: (context, side) => SingleChildScrollView(
+                    // A new step starts at its top, not where the last one was scrolled to.
+                    key: ValueKey(_step),
+                    padding: EdgeInsets.fromLTRB(side, 24, side, 28),
+                    child: section,
+                  ),
                 ),
               ),
               LFooter(children: [
@@ -628,16 +660,22 @@ class _EditPreferencesScreenState extends State<EditPreferencesScreen> {
           children: [
             const LHeader(title: 'Edit preferences'),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 30,
-                  children: [
-                    AboutYouSection(draft: _draft, onChanged: changed),
-                    StudyGoalsSection(draft: _draft, onChanged: changed),
-                    AcademicsSection(draft: _draft, onChanged: changed, showErrors: _showErrors),
-                  ],
+              child: Gutter(
+                builder: (context, side) => SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(side, 20, side, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: L.s(20),
+                    children: [
+                      // One card per section, so the long form reads as three short ones.
+                      for (final section in [
+                        AboutYouSection(draft: _draft, onChanged: changed),
+                        StudyGoalsSection(draft: _draft, onChanged: changed),
+                        AcademicsSection(draft: _draft, onChanged: changed, showErrors: _showErrors),
+                      ])
+                        LCard(child: section),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -662,37 +700,39 @@ class PrivacyScreen extends StatelessWidget {
           children: [
             const LHeader(title: 'Privacy & AI'),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    PrivacySection(
-                      showTitle: false,
-                      // The latest choice, even while saving; questions follow c.cloudAllowed.
-                      cloudAllowed: c.cloudSwitch,
-                      // A failed save keeps cloud AI off on this phone and says so (controller notices).
-                      onCloudChanged: c.setCloudAllowed,
-                    ),
-                    if (c.cloudSaving && c.cloudSwitch) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        'Saving… Cloud AI is used once your account has this setting.',
-                        style: ts(13, color: LColors.text2, height: 1.4),
+              child: Gutter(
+                builder: (context, side) => SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(side, 22, side, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      PrivacySection(
+                        showTitle: false,
+                        // The latest choice, even while saving; questions follow c.cloudAllowed.
+                        cloudAllowed: c.cloudSwitch,
+                        // A failed save keeps cloud AI off on this phone and says so (controller notices).
+                        onCloudChanged: c.setCloudAllowed,
                       ),
+                      if (c.cloudSaving && c.cloudSwitch) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          'Saving… Cloud AI is used once your account has this setting.',
+                          style: ts(14, color: LColors.text2, height: 1.4),
+                        ),
+                      ],
+                      if (showCvImport) ...[
+                        const SizedBox(height: 24),
+                        Text('CV data', style: ts(16, weight: FontWeight.w700)),
+                        const SizedBox(height: 10),
+                        const CvImportButton(label: 'Import CV'),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Your raw CV file is never stored. Only a short summary of skills and scores is kept.',
+                          style: ts(14, color: LColors.text2, height: 1.45),
+                        ),
+                      ],
                     ],
-                    if (showCvImport) ...[
-                      const SizedBox(height: 24),
-                      Text('CV data', style: ts(16, weight: FontWeight.w700)),
-                      const SizedBox(height: 10),
-                      const CvImportButton(label: 'Import CV'),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Your raw CV file is never stored. Only a short summary of skills and scores is kept.',
-                        style: ts(13, color: LColors.text2, height: 1.45),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),

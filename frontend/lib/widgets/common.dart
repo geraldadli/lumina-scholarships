@@ -1,10 +1,11 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme.dart';
+import 'layout.dart';
 
 enum LButtonKind { primary, secondary, soft, ghost }
 
-/// The prototype's buttons: dark primary, white outlined secondary, soft-blue, and text-only.
+/// The app's buttons: solid primary, outlined secondary, tinted soft, and text-only.
 class LButton extends StatelessWidget {
   const LButton({
     super.key,
@@ -26,6 +27,8 @@ class LButton extends StatelessWidget {
   final IconData? icon;
   final IconData? trailingIcon;
   final Widget? leading;
+
+  /// Smallest height; the button grows if large text needs more room.
   final double height;
   final double radius;
   final double fontSize;
@@ -45,37 +48,42 @@ class LButton extends StatelessWidget {
       child: Material(
         color: bg,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: BorderRadius.circular(L.r(radius)),
           side: border == null ? BorderSide.none : BorderSide(color: border),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: enabled ? onPressed : null,
           hoverColor: kind == LButtonKind.primary ? LColors.primaryHover : LColors.soft,
-          child: SizedBox(
-            height: height,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (busy)
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: fg),
-                  )
-                else ...[
-                  if (leading != null) ...[leading!, const SizedBox(width: 10)],
-                  if (icon != null) ...[Icon(icon, size: 20, color: fg), const SizedBox(width: 6)],
-                  Flexible(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: ts(fontSize, weight: FontWeight.w600, color: fg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: height),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (busy)
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: fg),
+                    )
+                  else ...[
+                    if (leading != null) ...[leading!, const SizedBox(width: 10)],
+                    if (icon != null) ...[Icon(icon, size: 20, color: fg), const SizedBox(width: 8)],
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: ts(fontSize, weight: FontWeight.w600, color: fg, height: 1.25),
+                      ),
                     ),
-                  ),
-                  if (trailingIcon != null) ...[const SizedBox(width: 4), Icon(trailingIcon, size: 18, color: fg)],
+                    if (trailingIcon != null) ...[const SizedBox(width: 6), Icon(trailingIcon, size: 18, color: fg)],
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -90,10 +98,10 @@ class LIconButton extends StatelessWidget {
     super.key,
     required this.icon,
     required this.onPressed,
-    this.size = 40,
+    this.size = 44,
     this.iconSize = 22,
-    this.color = LColors.ink,
-    this.background = LColors.white,
+    this.color,
+    this.background,
     this.tooltip,
     this.badge = false,
   });
@@ -102,18 +110,18 @@ class LIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final double size;
   final double iconSize;
-  final Color color;
-  final Color background;
+  final Color? color;
+  final Color? background;
   final String? tooltip;
   final bool badge;
 
   @override
   Widget build(BuildContext context) {
     Widget button = Material(
-      color: background,
+      color: background ?? LColors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(size * 0.3),
-        side: const BorderSide(color: LColors.line),
+        borderRadius: BorderRadius.circular(L.r(size * 0.3)),
+        side: BorderSide(color: LColors.line),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -125,7 +133,7 @@ class LIconButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(icon, size: iconSize, color: color),
+              Icon(icon, size: iconSize, color: color ?? LColors.ink),
               if (badge)
                 Positioned(
                   top: size * 0.22,
@@ -133,7 +141,7 @@ class LIconButton extends StatelessWidget {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(color: LColors.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: LColors.primary, shape: BoxShape.circle),
                   ),
                 ),
             ],
@@ -146,7 +154,7 @@ class LIconButton extends StatelessWidget {
   }
 }
 
-/// Selectable pill chip used in filters and study goals.
+/// Selectable chip used in filters and study goals. Only as wide as its label.
 class LChip extends StatelessWidget {
   const LChip({super.key, required this.label, required this.selected, required this.onTap});
 
@@ -155,26 +163,43 @@ class LChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: selected ? LColors.soft : LColors.white,
-        shape: StadiumBorder(side: BorderSide(color: selected ? LColors.primary : LColors.line)),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: ts(14, weight: selected ? FontWeight.w600 : FontWeight.w500),
+  Widget build(BuildContext context) => Semantics(
+        selected: selected,
+        button: true,
+        child: Material(
+          color: selected ? LColors.soft : LColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(L.r(18)),
+            side: BorderSide(color: selected ? LColors.primary : LColors.line, width: selected ? 1.5 : 1),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 40),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // A tick, so "selected" does not depend on colour alone.
+                    if (selected) ...[
+                      Icon(Icons.check_rounded, size: 16, color: LColors.ink),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(label, style: ts(14, weight: selected ? FontWeight.w700 : FontWeight.w500)),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       );
 }
 
-/// Small rectangular tag (Full, Masters, Japan, Urgent, Closed).
+/// Small rectangular tag (Urgent, Closed, Verified).
 class LTag extends StatelessWidget {
   const LTag(this.label, {super.key, this.strong = false, this.icon});
 
@@ -184,25 +209,30 @@ class LTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
           color: strong ? LColors.primary : LColors.bg,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(L.r(7)),
           border: Border.all(color: strong ? LColors.primary : LColors.line),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[Icon(icon, size: 14, color: LColors.text2), const SizedBox(width: 3)],
-            Text(label, style: ts(12, weight: FontWeight.w600, color: strong ? LColors.bg : LColors.text2)),
+            if (icon != null) ...[
+              Icon(icon, size: 15, color: strong ? LColors.bg : LColors.text2),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: Text(label, style: ts(13, weight: FontWeight.w600, color: strong ? LColors.bg : LColors.text2)),
+            ),
           ],
         ),
       );
 }
 
-/// Soft-blue badge ("Match 82%", "Cloud AI", "Ready").
+/// Tinted badge ("82% match", "Cloud AI", "Ready").
 class LBadge extends StatelessWidget {
-  const LBadge(this.label, {super.key, this.icon, this.size = 12});
+  const LBadge(this.label, {super.key, this.icon, this.size = 13});
 
   final String label;
   final IconData? icon;
@@ -210,17 +240,17 @@ class LBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(6)),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(L.r(7))),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[Icon(icon, size: 14, color: LColors.primary), const SizedBox(width: 4)],
+            if (icon != null) ...[Icon(icon, size: 15, color: LColors.ink), const SizedBox(width: 5)],
             Flexible(
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: ts(size, weight: FontWeight.w700, color: LColors.primary),
+                style: ts(size, weight: FontWeight.w700),
               ),
             ),
           ],
@@ -228,7 +258,7 @@ class LBadge extends StatelessWidget {
       );
 }
 
-/// The prototype's 46x28 toggle.
+/// The app's 46x28 toggle.
 class LToggle extends StatelessWidget {
   const LToggle({super.key, required this.value, required this.onChanged, this.semanticLabel});
 
@@ -241,27 +271,30 @@ class LToggle extends StatelessWidget {
         toggled: value,
         label: semanticLabel,
         button: true,
-        child: GestureDetector(
-          onTap: () => onChanged(!value),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 46,
-            height: 28,
-            decoration: BoxDecoration(
-              color: value ? LColors.primary : LColors.line,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: AnimatedAlign(
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => onChanged(!value),
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                margin: const EdgeInsets.all(3),
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: LColors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Color(0x401F2D3D), blurRadius: 3, offset: Offset(0, 1))],
+              width: 46,
+              height: 28,
+              decoration: BoxDecoration(
+                color: value ? LColors.primary : LColors.muted.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.all(3),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: value ? LColors.bg : const Color(0xFFFFFFFF),
+                    shape: BoxShape.circle,
+                    boxShadow: const [BoxShadow(color: Color(0x401F2D3D), blurRadius: 3, offset: Offset(0, 1))],
+                  ),
                 ),
               ),
             ),
@@ -270,12 +303,14 @@ class LToggle extends StatelessWidget {
       );
 }
 
-/// White bordered card with 16px radius.
+/// White bordered card.
 class LCard extends StatelessWidget {
-  const LCard({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.onTap, this.color});
+  const LCard({super.key, required this.child, this.padding, this.onTap, this.color});
 
   final Widget child;
-  final EdgeInsetsGeometry padding;
+
+  /// Defaults to 18 all round, scaled by the "Spacing" setting.
+  final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
   final Color? color;
 
@@ -283,87 +318,81 @@ class LCard extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: color ?? LColors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: LColors.line),
+          borderRadius: BorderRadius.circular(L.r(16)),
+          side: BorderSide(color: LColors.line),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          hoverColor: LColors.bg,
-          child: Padding(padding: padding, child: child),
+          hoverColor: LColors.soft.withValues(alpha: 0.35),
+          child: Padding(padding: padding ?? EdgeInsets.all(L.s(18)), child: child),
         ),
       );
 }
 
-/// Soft-blue info panel (profile completeness, privacy notice).
+/// Tinted info panel (profile completeness, privacy notice).
 class LPanel extends StatelessWidget {
-  const LPanel({super.key, required this.child, this.padding = const EdgeInsets.all(16)});
+  const LPanel({super.key, required this.child, this.padding});
 
   final Widget child;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: padding,
-        decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(16)),
+        padding: padding ?? EdgeInsets.all(L.s(16)),
+        decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(L.r(16))),
         child: child,
       );
 }
 
 class LProgressBar extends StatelessWidget {
-  const LProgressBar({super.key, required this.value, this.track = LColors.soft});
+  const LProgressBar({super.key, required this.value, this.track});
 
   /// 0.0–1.0
   final double value;
-  final Color track;
+  final Color? track;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(4),
         child: Container(
-          height: 6,
-          color: track,
+          height: 8,
+          color: track ?? LColors.soft,
           alignment: Alignment.centerLeft,
           child: AnimatedFractionallySizedBox(
             duration: const Duration(milliseconds: 300),
             widthFactor: value.clamp(0.0, 1.0),
             heightFactor: 1,
             child: Container(
-              decoration: BoxDecoration(color: LColors.primary, borderRadius: BorderRadius.circular(3)),
+              decoration: BoxDecoration(color: LColors.primary, borderRadius: BorderRadius.circular(4)),
             ),
           ),
         ),
       );
 }
 
-InputDecoration lInputDecoration({String? hint, Widget? prefix, String? counter}) => InputDecoration(
-      hintText: hint,
-      hintStyle: ts(15, color: LColors.muted),
-      prefixIcon: prefix,
-      counterText: counter,
-      isDense: true,
-      filled: true,
-      fillColor: LColors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: LColors.line),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: LColors.primary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFB3261E)),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFB3261E), width: 1.5),
-      ),
-    );
+InputDecoration lInputDecoration({String? hint, Widget? prefix, String? counter}) {
+  OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(L.r(12)),
+        borderSide: BorderSide(color: color, width: width),
+      );
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: ts(15, color: LColors.muted),
+    prefixIcon: prefix,
+    counterText: counter,
+    isDense: true,
+    filled: true,
+    fillColor: LColors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+    enabledBorder: border(LColors.line),
+    focusedBorder: border(LColors.primary, 2),
+    errorBorder: border(LColors.danger),
+    focusedErrorBorder: border(LColors.danger, 2),
+  );
+}
 
-/// Label above a field, as in the onboarding form.
+/// Label above a form field.
 class LField extends StatelessWidget {
   const LField({super.key, required this.label, required this.child});
 
@@ -381,69 +410,100 @@ class LField extends StatelessWidget {
       );
 }
 
-/// Back button + title row used by pushed screens.
+/// Back button, title and optional subtitle for pushed screens.
 class LHeader extends StatelessWidget {
-  const LHeader({super.key, required this.title, this.actions = const [], this.bottom, this.border = true});
+  const LHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.actions = const [],
+    this.bottom,
+    this.border = true,
+    this.maxWidth = LBreak.reading,
+  });
 
   final String title;
+  final String? subtitle;
   final List<Widget> actions;
   final Widget? bottom;
   final bool border;
 
+  /// Match the width of the content below, so the title lines up with it.
+  final double maxWidth;
+
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
-        decoration: BoxDecoration(
-          border: border ? const Border(bottom: BorderSide(color: LColors.soft)) : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                LIconButton(
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: 'Back',
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ts(17, weight: FontWeight.w700, height: 1.2),
+  Widget build(BuildContext context) => Gutter(
+        maxWidth: maxWidth,
+        builder: (context, side) => Container(
+          padding: EdgeInsets.fromLTRB(side, 10, side, 14),
+          decoration: BoxDecoration(
+            border: border ? Border(bottom: BorderSide(color: LColors.soft)) : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  LIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    tooltip: 'Back',
+                    onPressed: () => Navigator.of(context).maybePop(),
                   ),
-                ),
-                for (final a in actions) ...[const SizedBox(width: 8), a],
-              ],
-            ),
-            if (bottom != null) ...[const SizedBox(height: 10), bottom!],
-          ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: ts(19, weight: FontWeight.w700, height: 1.25),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ts(14, color: LColors.text2, height: 1.35),
+                          ),
+                      ],
+                    ),
+                  ),
+                  for (final a in actions) ...[const SizedBox(width: 8), a],
+                ],
+              ),
+              if (bottom != null) ...[const SizedBox(height: 12), bottom!],
+            ],
+          ),
         ),
       );
 }
 
-/// Sticky footer with a top border (detail actions, form CTA).
+/// Sticky footer with a top border (form buttons, detail actions).
 class LFooter extends StatelessWidget {
-  const LFooter({super.key, required this.children});
+  const LFooter({super.key, required this.children, this.maxWidth = LBreak.reading});
 
   final List<Widget> children;
+  final double maxWidth;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-        decoration: const BoxDecoration(
-          color: LColors.bg,
-          border: Border(top: BorderSide(color: LColors.soft)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 8,
-            children: children,
+  Widget build(BuildContext context) => Gutter(
+        maxWidth: maxWidth,
+        builder: (context, side) => Container(
+          padding: EdgeInsets.fromLTRB(side, 12, side, 16),
+          decoration: BoxDecoration(
+            color: LColors.bg,
+            border: Border(top: BorderSide(color: LColors.soft)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: children,
+            ),
           ),
         ),
       );
@@ -469,52 +529,54 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-        child: Column(
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: const BoxDecoration(color: LColors.soft, shape: BoxShape.circle),
-              child: Icon(icon, size: 44, color: LColors.primary),
-            ),
-            const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: ts(18, weight: FontWeight.w700)),
-            const SizedBox(height: 12),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 260),
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: ts(14, color: LColors.text2, height: 1.45),
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 220,
-                child: LButton(
-                  label: actionLabel!,
-                  onPressed: onAction,
-                  height: 44,
-                  radius: 12,
-                  fontSize: 14,
-                  kind: primaryAction ? LButtonKind.primary : LButtonKind.secondary,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 48),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: Column(
+              children: [
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(color: LColors.soft, shape: BoxShape.circle),
+                  child: Icon(icon, size: 40, color: LColors.primary),
                 ),
-              ),
-            ],
-          ],
+                const SizedBox(height: 16),
+                Text(title, textAlign: TextAlign.center, style: ts(19, weight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: ts(15, color: LColors.text2, height: 1.5),
+                ),
+                if (actionLabel != null) ...[
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: 240,
+                    child: LButton(
+                      label: actionLabel!,
+                      onPressed: onAction,
+                      height: 46,
+                      radius: 12,
+                      fontSize: 14,
+                      kind: primaryAction ? LButtonKind.primary : LButtonKind.secondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       );
 }
 
-/// Bottom sheet grab handle + rounded top, matching the prototype's sheets.
+/// Bottom sheet with a grab handle and rounded top.
 Future<T?> showLSheet<T>(BuildContext context, WidgetBuilder builder) => showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       backgroundColor: LColors.bg,
-      barrierColor: const Color(0x6B1F2D3D),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      barrierColor: const Color(0x8010161D),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(L.r(26)))),
       builder: (ctx) => ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.88),
         child: Column(
@@ -532,7 +594,7 @@ Future<T?> showLSheet<T>(BuildContext context, WidgetBuilder builder) => showMod
       ),
     );
 
-/// The prototype's dark toast with a check icon.
+/// The dark toast with a check icon.
 void showToast(BuildContext context, String message, {IconData icon = Icons.check_circle_rounded}) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger != null) showToastOn(messenger, message, icon: icon);

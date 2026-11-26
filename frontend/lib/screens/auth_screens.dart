@@ -1,46 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../data/backend.dart';
 import '../state/app_scope.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-
-class LuminaLogo extends StatelessWidget {
-  const LuminaLogo({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 84,
-        height: 84,
-        decoration: BoxDecoration(color: LColors.primary, borderRadius: BorderRadius.circular(24)),
-        child: const Icon(Icons.school_rounded, size: 44, color: LColors.bg),
-      );
-}
-
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 60),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const LuminaLogo(),
-                const SizedBox(height: 14),
-                Text('Lumina', style: ts(30, weight: FontWeight.w700, spacing: -0.6)),
-                const SizedBox(height: 14),
-                Text('Scholarships, matched to you', style: ts(15, color: LColors.text2)),
-              ],
-            ),
-          ),
-        ),
-      );
-}
+import '../widgets/layout.dart';
+import '../widgets/loading.dart';
 
 class DemoModeBanner extends StatelessWidget {
   const DemoModeBanner({super.key});
@@ -50,17 +18,19 @@ class DemoModeBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: LColors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(L.r(12)),
           border: Border.all(color: LColors.line),
         ),
         child: Row(
           children: [
-            const Icon(Icons.science_outlined, size: 18, color: LColors.text2),
+            Icon(Icons.science_outlined, size: 18, color: LColors.text2),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Demo mode: Firebase is not configured, so data stays on this phone.',
-                style: ts(12, color: LColors.text2, height: 1.35),
+                kIsWeb
+                    ? 'Demo mode: sample data only. Reloading the page starts over.'
+                    : 'Demo mode: Firebase is not configured, so data stays on this phone.',
+                style: ts(13, color: LColors.text2, height: 1.4),
               ),
             ),
           ],
@@ -106,61 +76,76 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final demo = AppScope.of(context).backend.isDemo;
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
+        child: Gutter(
+          maxWidth: 420,
+          min: 24,
+          builder: (context, side) => LayoutBuilder(
+            builder: (context, box) => SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(side, 24, side, 24),
+              child: ConstrainedBox(
+                // Logo in the middle and buttons at the bottom; scrolls when it cannot fit.
+                constraints: BoxConstraints(minHeight: box.maxHeight - 48),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const LuminaLogo(),
-                    const SizedBox(height: 14),
-                    Text('Lumina', style: ts(30, weight: FontWeight.w700, spacing: -0.6)),
-                    const SizedBox(height: 14),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 270),
-                      child: Text(
-                        'Find scholarships that fit your profile, and get ready to apply.',
-                        textAlign: TextAlign.center,
-                        style: ts(16, color: LColors.text2, height: 1.45),
-                      ),
+                    const SizedBox(),
+                    Column(
+                      children: [
+                        const LuminaLogo(),
+                        const SizedBox(height: 18),
+                        Text('Lumina', style: ts(32, weight: FontWeight.w700, spacing: -0.6)),
+                        const SizedBox(height: 12),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Text(
+                            'Find scholarships that fit your profile, and get ready to apply.',
+                            textAlign: TextAlign.center,
+                            style: ts(17, color: LColors.text2, height: 1.5),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (demo) ...[const DemoModeBanner(), const SizedBox(height: 14)],
+                        LButton(
+                          label: 'Continue with Google',
+                          height: 54,
+                          fontSize: 16,
+                          busy: _busy,
+                          leading: Container(
+                            width: 22,
+                            height: 22,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(color: LColors.bg, shape: BoxShape.circle),
+                            child: Text('G', style: ts(14, weight: FontWeight.w700, color: LColors.primary)),
+                          ),
+                          onPressed: _google,
+                        ),
+                        const SizedBox(height: 10),
+                        LButton(
+                          label: 'Continue with email',
+                          kind: LButtonKind.secondary,
+                          icon: Icons.mail_outline_rounded,
+                          height: 54,
+                          fontSize: 16,
+                          onPressed: _busy ? null : _email,
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'By continuing you agree to the Terms and Privacy Policy.',
+                          textAlign: TextAlign.center,
+                          style: ts(13, color: LColors.text2),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (demo) ...[const DemoModeBanner(), const SizedBox(height: 12)],
-              LButton(
-                label: 'Continue with Google',
-                height: 54,
-                fontSize: 16,
-                busy: _busy,
-                leading: Container(
-                  width: 22,
-                  height: 22,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: LColors.bg, shape: BoxShape.circle),
-                  child: Text('G', style: ts(13, weight: FontWeight.w700, color: LColors.primary)),
-                ),
-                onPressed: _google,
-              ),
-              const SizedBox(height: 10),
-              LButton(
-                label: 'Continue with email',
-                kind: LButtonKind.secondary,
-                icon: Icons.mail_outline_rounded,
-                height: 54,
-                fontSize: 16,
-                onPressed: _busy ? null : _email,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'By continuing you agree to the Terms and Privacy Policy.',
-                textAlign: TextAlign.center,
-                style: ts(12, color: LColors.text2),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -254,60 +239,62 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
               Expanded(
                 child: Form(
                   key: _form,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                    children: [
-                      LField(
-                        label: 'Email',
-                        child: TextFormField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          decoration: lInputDecoration(hint: 'you@example.com'),
-                          validator: (v) => (v ?? '').contains('@') ? null : 'Enter a valid email.',
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      LField(
-                        label: 'Password',
-                        child: TextFormField(
-                          controller: _password,
-                          obscureText: true,
-                          autofillHints: [_create ? AutofillHints.newPassword : AutofillHints.password],
-                          decoration: lInputDecoration(hint: 'At least 6 characters'),
-                          validator: (v) => (v ?? '').length >= 6 ? null : 'Use at least 6 characters.',
-                          onFieldSubmitted: (_) => _submit(),
-                        ),
-                      ),
-                      if (!_create)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _busy ? null : _sendReset,
-                            child: Text('Forgot password?', style: ts(14, weight: FontWeight.w600, color: LColors.primary)),
+                  child: Gutter(
+                    builder: (context, side) => ListView(
+                      padding: EdgeInsets.fromLTRB(side, 12, side, 20),
+                      children: [
+                        LField(
+                          label: 'Email',
+                          child: TextFormField(
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            decoration: lInputDecoration(hint: 'you@example.com'),
+                            validator: (v) => (v ?? '').contains('@') ? null : 'Enter a valid email.',
                           ),
                         ),
-                      if (_info != null) ...[
-                        const SizedBox(height: 6),
-                        Text(_info!, style: ts(14, color: LColors.text2, height: 1.4)),
+                        const SizedBox(height: 18),
+                        LField(
+                          label: 'Password',
+                          child: TextFormField(
+                            controller: _password,
+                            obscureText: true,
+                            autofillHints: [_create ? AutofillHints.newPassword : AutofillHints.password],
+                            decoration: lInputDecoration(hint: 'At least 6 characters'),
+                            validator: (v) => (v ?? '').length >= 6 ? null : 'Use at least 6 characters.',
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                        ),
+                        if (!_create)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _busy ? null : _sendReset,
+                              child: Text('Forgot password?', style: ts(14, weight: FontWeight.w600, color: LColors.primary)),
+                            ),
+                          ),
+                        if (_info != null) ...[
+                          const SizedBox(height: 6),
+                          Text(_info!, style: ts(14, color: LColors.text2, height: 1.4)),
+                        ],
+                        if (_error != null) ...[
+                          const SizedBox(height: 14),
+                          Text(_error!, style: ts(14, color: LColors.danger, height: 1.4)),
+                        ],
+                        const SizedBox(height: 24),
+                        LButton(label: _create ? 'Create account' : 'Sign in', busy: _busy, onPressed: _submit),
+                        const SizedBox(height: 8),
+                        LButton(
+                          label: _create ? 'I already have an account' : 'Create a new account',
+                          kind: LButtonKind.ghost,
+                          onPressed: () => setState(() {
+                            _create = !_create;
+                            _error = null;
+                            _info = null;
+                          }),
+                        ),
                       ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 14),
-                        Text(_error!, style: ts(14, color: const Color(0xFFB3261E), height: 1.4)),
-                      ],
-                      const SizedBox(height: 24),
-                      LButton(label: _create ? 'Create account' : 'Sign in', busy: _busy, onPressed: _submit),
-                      const SizedBox(height: 8),
-                      LButton(
-                        label: _create ? 'I already have an account' : 'Create a new account',
-                        kind: LButtonKind.ghost,
-                        onPressed: () => setState(() {
-                          _create = !_create;
-                          _error = null;
-                          _info = null;
-                        }),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

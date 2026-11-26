@@ -11,6 +11,7 @@ import '../state/app_scope.dart';
 import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
+import '../widgets/layout.dart';
 import '../widgets/scholarship_card.dart';
 
 /// Prepare checklist + notes, stored on `users/{uid}/saved_scholarships/{id}`.
@@ -95,15 +96,17 @@ class _PrepareScreenState extends State<PrepareScreen> {
         child: Column(
           children: [
             LHeader(
-              title: 'Prepare: ${s.title}',
+              title: 'Prepare checklist',
+              subtitle: s.title,
               bottom: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 12,
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(deadlineLine(s, c.now), style: ts(13, color: LColors.text2))),
-                      Text('$done/${items.length} done', style: ts(13, weight: FontWeight.w600)),
+                      Expanded(child: Text(deadlineLine(s, c.now), style: ts(14, color: LColors.text2))),
+                      const SizedBox(width: 12),
+                      Text('$done/${items.length} done', style: ts(14, weight: FontWeight.w700)),
                     ],
                   ),
                   LProgressBar(value: items.isEmpty ? 0 : done / items.length),
@@ -112,125 +115,127 @@ class _PrepareScreenState extends State<PrepareScreen> {
             ),
             Expanded(
               child: sv == null
-                  ? const Center(child: CircularProgressIndicator(color: LColors.primary))
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                      children: [
-                        if (items.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Text(
-                              'No official requirements are listed yet. Add your own items, or regenerate with AI.',
-                              style: ts(14, color: LColors.text2, height: 1.45),
-                            ),
-                          ),
-                        for (var i = 0; i < items.length; i++)
-                          InkWell(
-                            onTap: () => setItems([for (var j = 0; j < items.length; j++) j == i ? items[j].toggled() : items[j]]),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: LColors.soft))),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _CheckBox(done: items[i].done),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      spacing: 3,
-                                      children: [
-                                        Text(
-                                          items[i].label,
-                                          style: ts(
-                                            15,
-                                            weight: FontWeight.w500,
-                                            color: items[i].done ? LColors.text2 : LColors.ink,
-                                            decoration: items[i].done ? TextDecoration.lineThrough : null,
-                                          ),
-                                        ),
-                                        if (tips[items[i].id] != null)
-                                          Text(tips[items[i].id]!, style: ts(13, color: LColors.text2, height: 1.4)),
-                                      ],
-                                    ),
-                                  ),
-                                  if (items[i].id.startsWith('custom-'))
-                                    IconButton(
-                                      tooltip: 'Remove item',
-                                      visualDensity: VisualDensity.compact,
-                                      icon: const Icon(Icons.close_rounded, size: 18, color: LColors.muted),
-                                      onPressed: () => setItems([...items]..removeAt(i)),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _newItem,
-                                textCapitalization: TextCapitalization.sentences,
-                                decoration: lInputDecoration(hint: '+ Add item'),
-                                onSubmitted: (_) => addItem(),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              width: 72,
-                              child: LButton(
-                                label: 'Add',
-                                kind: LButtonKind.secondary,
-                                height: 48,
-                                radius: 12,
-                                fontSize: 14,
-                                onPressed: addItem,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            LBadge(source == null || source == AiSource.rules ? 'Official' : 'Sourced · AI'),
-                            const SizedBox(width: 8),
-                            Expanded(
+                  ? Center(child: CircularProgressIndicator(color: LColors.primary))
+                  : Gutter(
+                      builder: (context, side) => ListView(
+                        padding: EdgeInsets.fromLTRB(side, 8, side, 20),
+                        children: [
+                          if (items.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Text(
-                                '${source == null || source == AiSource.rules ? 'From the requirements on' : 'Generated from'} '
-                                '${hostOf(s.sourceUrl)}. Check official requirements before submitting.',
-                                style: ts(12, color: LColors.text2, height: 1.45),
+                                'No official requirements are listed yet. Add your own items, or regenerate with AI.',
+                                style: ts(14, color: LColors.text2, height: 1.45),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          children: [
-                            Expanded(child: Text('Notes', style: ts(16, weight: FontWeight.w700))),
-                            ValueListenableBuilder(
-                              valueListenable: _notes,
-                              builder: (_, v, _) => Text('${v.text.length} / $maxNotesLength', style: ts(12, color: LColors.text2)),
+                          for (var i = 0; i < items.length; i++)
+                            InkWell(
+                              onTap: () => setItems([for (var j = 0; j < items.length; j++) j == i ? items[j].toggled() : items[j]]),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: L.s(15)),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: LColors.soft))),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _CheckBox(done: items[i].done),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        spacing: 3,
+                                        children: [
+                                          Text(
+                                            items[i].label,
+                                            style: ts(
+                                              15,
+                                              weight: FontWeight.w500,
+                                              color: items[i].done ? LColors.text2 : LColors.ink,
+                                              decoration: items[i].done ? TextDecoration.lineThrough : null,
+                                            ),
+                                          ),
+                                          if (tips[items[i].id] != null)
+                                            Text(tips[items[i].id]!, style: ts(14, color: LColors.text2, height: 1.4)),
+                                        ],
+                                      ),
+                                    ),
+                                    if (items[i].id.startsWith('custom-'))
+                                      IconButton(
+                                        tooltip: 'Remove item',
+                                        visualDensity: VisualDensity.compact,
+                                        icon: Icon(Icons.close_rounded, size: 18, color: LColors.muted),
+                                        onPressed: () => setItems([...items]..removeAt(i)),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _notes,
-                          // Limit in UTF-16 units like the backend and the counter (maxLength counts
-                          // graphemes, so emoji-heavy notes would be cut silently on save).
-                          inputFormatters: [_Utf16Limit(maxNotesLength)],
-                          minLines: 5,
-                          maxLines: 8,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: lInputDecoration(hint: 'Add notes about this application…', counter: ''),
-                          onChanged: (_) {
-                            _notesDebounce?.cancel();
-                            _notesDebounce = Timer(const Duration(milliseconds: 800), _saveNotes);
-                          },
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _newItem,
+                                  textCapitalization: TextCapitalization.sentences,
+                                  decoration: lInputDecoration(hint: 'Add your own item'),
+                                  onSubmitted: (_) => addItem(),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 72,
+                                child: LButton(
+                                  label: 'Add',
+                                  kind: LButtonKind.secondary,
+                                  height: 48,
+                                  radius: 12,
+                                  fontSize: 14,
+                                  onPressed: addItem,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              LBadge(source == null || source == AiSource.rules ? 'Official' : 'Sourced · AI'),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${source == null || source == AiSource.rules ? 'From the requirements on' : 'Generated from'} '
+                                  '${hostOf(s.sourceUrl)}. Check official requirements before submitting.',
+                                  style: ts(13, color: LColors.text2, height: 1.45),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(child: Text('Notes', style: ts(16, weight: FontWeight.w700))),
+                              ValueListenableBuilder(
+                                valueListenable: _notes,
+                                builder: (_, v, _) => Text('${v.text.length} / $maxNotesLength', style: ts(13, color: LColors.text2)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _notes,
+                            // Limit in UTF-16 units like the backend and the counter (maxLength counts
+                            // graphemes, so emoji-heavy notes would be cut silently on save).
+                            inputFormatters: [_Utf16Limit(maxNotesLength)],
+                            minLines: 5,
+                            maxLines: 8,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: lInputDecoration(hint: 'Add notes about this application…', counter: ''),
+                            onChanged: (_) {
+                              _notesDebounce?.cancel();
+                              _notesDebounce = Timer(const Duration(milliseconds: 800), _saveNotes);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
             ),
             LFooter(children: [
@@ -326,6 +331,6 @@ class _CheckBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(7),
           border: Border.all(color: done ? LColors.primary : LColors.muted, width: 1.5),
         ),
-        child: done ? const Icon(Icons.check_rounded, size: 18, color: LColors.bg) : null,
+        child: done ? Icon(Icons.check_rounded, size: 18, color: LColors.bg) : null,
       );
 }

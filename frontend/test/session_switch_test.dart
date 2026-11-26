@@ -159,7 +159,9 @@ void main() {
     final notesField = find.byWidgetPredicate(
       (w) => w is TextField && w.decoration?.hintText == 'Add notes about this application…',
     );
-    await tester.scrollUntilVisible(notesField, 300, scrollable: find.byType(Scrollable).last);
+    // The page's own list (text fields have scrollables of their own).
+    final page = find.descendant(of: find.byType(PrepareScreen), matching: find.byType(Scrollable)).first;
+    await tester.scrollUntilVisible(notesField, 300, scrollable: page);
     await tester.enterText(notesField, 'Ask for two references');
     // Leave before the 800 ms autosave fires.
     Navigator.of(tester.element(find.byType(PrepareScreen))).pop();
