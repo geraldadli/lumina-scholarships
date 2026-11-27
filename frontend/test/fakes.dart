@@ -50,6 +50,9 @@ class FakeHost implements HybridAiHostApi {
 
   /// When set, `generateChecklist` waits for it, like a slow AI call.
   Completer<void>? checklistGate;
+
+  /// When set, `ask` waits for it, like the AI writing an answer.
+  Completer<void>? askGate;
   final asked = <AskRequest>[];
 
   @override
@@ -67,6 +70,7 @@ class FakeHost implements HybridAiHostApi {
   @override
   Future<AiAnswer> ask(AskRequest request) async {
     asked.add(request);
+    await askGate?.future;
     if (askError != null) throw askError!;
     if (!request.allowCloud && askErrorWithoutCloud != null) throw askErrorWithoutCloud!;
     return AiAnswer(

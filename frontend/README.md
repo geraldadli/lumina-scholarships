@@ -6,7 +6,8 @@ The student app: **sign in → browse → view details → save → ask AI**, pl
 lib/
 ├── main.dart              Firebase + App Check init, falls back to demo mode
 ├── app.dart               Root gate: splash → welcome → onboarding → tabs
-├── theme.dart             Prototype colour tokens and text styles
+├── theme.dart             Colours, corners and spacing for the active look
+├── design/                Customizable look (appearance.dart) and the Customize panel
 ├── data/
 │   ├── backend.dart       LuminaBackend interface (the only thing screens talk to)
 │   ├── firebase_backend.dart  Auth + Firestore, docs/firestore-contract.md field names
@@ -14,7 +15,7 @@ lib/
 ├── models/                Scholarship, UserProfile, SavedScholarship
 ├── state/                 AppController (session, catalog, saved, AI), browse filters
 ├── screens/               One file per screen
-└── widgets/               Buttons, chips, tags, toggles, scholarship card
+└── widgets/               Buttons, chips, tags, cards, responsive layout, loading screens
 ```
 
 AI comes from `packages/hybrid_ai` (path dependency): `HybridAi.ask` for Ask AI, `generateChecklist` for Prepare, and `MatchScorer` for every match score. Nothing is re-implemented here.
@@ -27,6 +28,21 @@ flutter pub get
 flutter run            # phone or emulator, Android 8.0 (API 26)+
 flutter analyze && flutter test
 ```
+
+## Changing the look
+
+**Customize look** (under Profile) changes colour theme, text size, font, spacing, corners, dark mode and high contrast, live. The choice is remembered on that device.
+
+| To change | Edit |
+|---|---|
+| The default look for everyone | Pick it in the panel, **Copy settings**, then update the defaults in `Appearance`'s constructor in `lib/design/appearance.dart` |
+| Add a colour theme or font | One entry in `AccentPreset` / `AppFont` (`lib/design/appearance.dart`) |
+| Background, text and border colours | `LPalette.of` in `lib/theme.dart` |
+| Sidebar and columns on tablets and landscape | `LBreak` in `lib/widgets/layout.dart` |
+| Page transitions (timing, slide distance) | `lib/widgets/motion.dart`; the transition for pushed screens is set in `lib/theme.dart` |
+| Loading screen | `lib/widgets/loading.dart` |
+
+In new widgets, use `LColors` for colours, `L.r()` for corner radius and `L.s()` for gaps, and use minimum heights instead of fixed ones so large text fits.
 
 ### Demo mode vs live Firebase
 

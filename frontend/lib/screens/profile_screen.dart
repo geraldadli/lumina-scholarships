@@ -1,10 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../data/backend.dart';
+import '../design/customize_panel.dart';
 import '../state/app_scope.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/layout.dart';
 import 'about_screen.dart';
+import 'language_screen.dart';
 import 'profile_form.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -20,103 +23,118 @@ class ProfileScreen extends StatelessWidget {
     final complete = p?.completeness ?? 0;
     void push(Widget w) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => w));
 
-    final rows = <(IconData, String, String, VoidCallback)>[
-      (Icons.tune_rounded, 'Edit preferences', '', () => push(const EditPreferencesScreen())),
-      (Icons.shield_outlined, 'Privacy & AI', c.inferModeLabel, () => push(const PrivacyScreen())),
-      (Icons.translate_rounded, 'Language', 'English', () => showToast(context, 'Bahasa Indonesia coming soon', icon: Icons.info_outline_rounded)),
-      (Icons.info_outline_rounded, 'About & data sources', '', () => push(const AboutScreen())),
+    final appearance = AppearanceScope.of(context);
+    final look = appearance.value;
+    void setDark(bool v) => appearance.update(look.copyWith(dark: v));
+
+    // (icon, title, value, onTap, trailing). A row with a trailing widget shows it instead of the chevron.
+    final rows = <(IconData, String, String, VoidCallback, Widget?)>[
+      (Icons.tune_rounded, 'Edit preferences', '', () => push(const EditPreferencesScreen()), null),
+      (
+        Icons.dark_mode_outlined,
+        'Dark mode',
+        '',
+        () => setDark(!look.dark),
+        LToggle(value: look.dark, onChanged: setDark, semanticLabel: 'Dark mode'),
+      ),
+      (Icons.palette_outlined, 'Customize look', '', () => openCustomize(context), null),
+      (Icons.shield_outlined, 'Privacy & AI', c.inferModeLabel, () => push(const PrivacyScreen()), null),
+      (Icons.translate_rounded, 'Language', look.language.nativeName, () => push(const LanguageScreen()), null),
+      (Icons.info_outline_rounded, 'About & data sources', '', () => push(const AboutScreen()), null),
     ];
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: LColors.soft,
-                shape: BoxShape.circle,
-                border: Border.all(color: LColors.line),
-              ),
-              child: Text(p?.initials ?? '?', style: ts(20, weight: FontWeight.w700, color: LColors.primary)),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 2,
-                children: [
-                  Text(
-                    (p?.displayName.isNotEmpty ?? false) ? p!.displayName : 'Your name',
-                    style: ts(20, weight: FontWeight.w700),
-                  ),
-                  if (c.user?.email != null) Text(c.user!.email!, style: ts(14, color: LColors.text2)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        LPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+    return Gutter(
+      builder: (context, side) => ListView(
+        padding: EdgeInsets.fromLTRB(side, 12, side, 28),
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(child: Text('Profile completeness', style: ts(15, weight: FontWeight.w600))),
-                  Text('${(complete * 100).round()}%', style: ts(15, weight: FontWeight.w600)),
-                ],
-              ),
-              LProgressBar(value: complete, track: LColors.bg),
-              if (complete < 1)
-                LButton(
-                  label: 'Complete profile',
-                  height: 44,
-                  radius: 12,
-                  fontSize: 14,
-                  onPressed: () => push(const EditPreferencesScreen()),
+              Container(
+                width: 60,
+                height: 60,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: LColors.soft,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: LColors.line),
                 ),
+                child: Text(p?.initials ?? '?', style: ts(20, weight: FontWeight.w700, color: LColors.primary)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 2,
+                  children: [
+                    Text(
+                      (p?.displayName.isNotEmpty ?? false) ? p!.displayName : 'Your name',
+                      style: ts(20, weight: FontWeight.w700),
+                    ),
+                    if (c.user?.email != null) Text(c.user!.email!, style: ts(14, color: LColors.text2)),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        const SizedBox(height: 20),
-        LCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              for (var i = 0; i < rows.length; i++)
-                InkWell(
-                  onTap: rows[i].$4,
-                  child: Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: i == rows.length - 1 ? null : const Border(bottom: BorderSide(color: LColors.soft)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(rows[i].$1, size: 22, color: LColors.text2),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(rows[i].$2, style: ts(15, weight: FontWeight.w500))),
-                        if (rows[i].$3.isNotEmpty) Text(rows[i].$3, style: ts(13, color: LColors.text2)),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.chevron_right_rounded, size: 20, color: LColors.muted),
-                      ],
+          const SizedBox(height: 20),
+          LPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 12,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text('Profile completeness', style: ts(15, weight: FontWeight.w600))),
+                    Text('${(complete * 100).round()}%', style: ts(15, weight: FontWeight.w600)),
+                  ],
+                ),
+                LProgressBar(value: complete, track: LColors.bg),
+                if (complete < 1)
+                  LButton(
+                    label: 'Complete profile',
+                    height: 44,
+                    radius: 12,
+                    fontSize: 14,
+                    onPressed: () => push(const EditPreferencesScreen()),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          LCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < rows.length; i++)
+                  InkWell(
+                    onTap: rows[i].$4,
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: L.s(12)),
+                      decoration: BoxDecoration(
+                        border: i == rows.length - 1 ? null : Border(bottom: BorderSide(color: LColors.soft)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(rows[i].$1, size: 22, color: LColors.text2),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(rows[i].$2, style: ts(15, weight: FontWeight.w500))),
+                          if (rows[i].$3.isNotEmpty) Text(rows[i].$3, style: ts(14, color: LColors.text2)),
+                          const SizedBox(width: 4),
+                          rows[i].$5 ?? Icon(Icons.chevron_right_rounded, size: 20, color: LColors.muted),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        LButton(label: 'Sign out', kind: LButtonKind.secondary, height: 50, onPressed: c.signOut),
-        const SizedBox(height: 10),
-        LButton(label: 'Delete account', kind: LButtonKind.ghost, height: 50, onPressed: () => _confirmDelete(context)),
-      ],
+          const SizedBox(height: 20),
+          LButton(label: 'Sign out', kind: LButtonKind.secondary, height: 50, onPressed: c.signOut),
+          const SizedBox(height: 10),
+          LButton(label: 'Delete account', kind: LButtonKind.ghost, height: 50, onPressed: () => _confirmDelete(context)),
+        ],
+      ),
     );
   }
 }
@@ -190,7 +208,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             )
           else if (!c.backend.isDemo)
             Text('To confirm, sign in with Google again.', style: ts(14, color: LColors.text2, height: 1.45)),
-          if (_error != null) Text(_error!, style: ts(13, color: const Color(0xFFB3261E), height: 1.4)),
+          if (_error != null) Text(_error!, style: ts(13, color: LColors.danger, height: 1.4)),
         ],
       ),
       actions: [
@@ -202,7 +220,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           onPressed: _busy || (needsPassword && _password.text.isEmpty) ? null : _delete,
           child: _busy
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text('Delete', style: ts(14, weight: FontWeight.w700, color: const Color(0xFFB3261E))),
+              : Text('Delete', style: ts(14, weight: FontWeight.w700, color: LColors.danger)),
         ),
       ],
     );

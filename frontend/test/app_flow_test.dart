@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
+import 'package:lumina/screens/ask_screen.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -103,6 +106,29 @@ void main() {
     expect(host.asked.single.allowCloud, isFalse); // private mode by default
     expect(find.text('The deadline is 2027-02-15.'), findsOneWidget);
     expect(find.text('aminef.or.id'), findsOneWidget); // official source chip
+  });
+
+  testWidgets('a typing indicator shows while the AI writes, and says so on a long wait', (tester) async {
+    await pumpApp(tester);
+    await signInAndOnboard(tester);
+    await openFulbrightMasters(tester);
+    await tester.tap(find.text('Ask AI'));
+    await tester.pumpAndSettle();
+
+    host.askGate = Completer<void>();
+    await tester.tap(find.text('Am I eligible?'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(TypingBubble), findsOneWidget);
+    expect(find.text('Reading the official page…'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 7));
+    expect(find.text('Still working on it…'), findsOneWidget);
+
+    host.askGate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(TypingBubble), findsNothing);
+    expect(find.text('The deadline is 2027-02-15.'), findsOneWidget);
   });
 
   testWidgets('backend demo listings: new one in Browse, saved one closes and shows Closed + Updated', (tester) async {

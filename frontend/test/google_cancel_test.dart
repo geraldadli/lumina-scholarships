@@ -44,6 +44,17 @@ void main() {
     expect(backend.calls, 2);
   });
 
+  testWidgets('the welcome screen draws without errors when there is hardly any height', (tester) async {
+    addTearDown(tester.view.reset);
+    for (final size in const [Size.zero, Size(800, 40), Size(800, 600)]) {
+      tester.view
+        ..physicalSize = size
+        ..devicePixelRatio = 1;
+      await pumpWelcome(tester, const AuthFailure('Sign-in was cancelled.', cancelled: true));
+      expect(tester.takeException(), isNull, reason: '$size');
+    }
+  });
+
   testWidgets('a real Google sign-in problem is shown', (tester) async {
     await pumpWelcome(tester, const AuthFailure('Google sign-in is not set up for this app yet. Use email for now.'));
 

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -7,6 +10,7 @@ import '../state/app_scope.dart';
 import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
+import '../widgets/layout.dart';
 import 'detail_screen.dart';
 import 'profile_form.dart';
 
@@ -94,105 +98,107 @@ class _AskScreenState extends State<AskScreen> {
         child: Column(
           children: [
             LHeader(
-              title: 'Ask about: ${s.title}',
+              title: 'Ask AI',
+              subtitle: s.title,
               bottom: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   LBadge(c.inferModeLabel),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text('Answers use only the official scholarship page.', style: ts(12, color: LColors.text2)),
+                    child: Text(
+                      'Answers use only the official scholarship page.',
+                      style: ts(14, color: LColors.text2, height: 1.4),
+                    ),
                   ),
                 ],
               ),
             ),
             Expanded(
-              child: ListView(
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                children: [
-                  Text('Suggested questions', style: ts(13, weight: FontWeight.w600, color: LColors.text2)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final q in _suggestions)
-                        ActionChip(
-                          label: Text(q, style: ts(13, weight: FontWeight.w500)),
-                          backgroundColor: LColors.white,
-                          side: const BorderSide(color: LColors.line),
-                          shape: const StadiumBorder(),
-                          onPressed: t.thinking ? null : () => _send(q),
-                        ),
-                    ],
-                  ),
-                  for (final m in t.messages) ...[
-                    const SizedBox(height: 14),
-                    m.role == ChatRole.user ? _UserBubble(m.text) : _AiBubble(message: m, scholarship: s),
-                  ],
-                  if (t.thinking) ...[
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: LColors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: LColors.line),
-                        ),
-                        child: Text('Reading the official page…', style: ts(14, color: LColors.text2)),
+              child: Gutter(
+                builder: (context, side) => ListView(
+                  controller: _scroll,
+                  padding: EdgeInsets.fromLTRB(side, 20, side, 16),
+                  children: [
+                    if (t.messages.isEmpty) ...[
+                      Text('What would you like to know?', style: ts(20, weight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Pick a question below, or type your own.',
+                        style: ts(15, color: LColors.text2, height: 1.45),
                       ),
+                      const SizedBox(height: 18),
+                    ],
+                    Text('Suggested questions', style: ts(14, weight: FontWeight.w600, color: LColors.text2)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final q in _suggestions)
+                          LChip(label: q, selected: false, onTap: t.thinking ? () {} : () => _send(q)),
+                      ],
                     ),
-                  ],
-                  if (t.error != null) ...[
+                    for (final m in t.messages) ...[
+                      const SizedBox(height: 14),
+                      m.role == ChatRole.user ? _UserBubble(m.text) : _AiBubble(message: m, scholarship: s),
+                    ],
+                    if (t.thinking) ...[
+                      const SizedBox(height: 14),
+                      const TypingBubble(),
+                    ],
+                    if (t.error != null) ...[
+                      const SizedBox(height: 14),
+                      _UnavailableCard(scholarship: s, error: t.error!, askedWithCloud: t.askedWithCloud, onEditQuestion: () {
+                        _draft.text = t.failedQuestion ?? '';
+                        _focus.requestFocus();
+                      }),
+                    ],
                     const SizedBox(height: 14),
-                    _UnavailableCard(scholarship: s, error: t.error!, askedWithCloud: t.askedWithCloud, onEditQuestion: () {
-                      _draft.text = t.failedQuestion ?? '';
-                      _focus.requestFocus();
-                    }),
+                    Text('Always confirm on the official website.',
+                        textAlign: TextAlign.center, style: ts(13, color: LColors.text2)),
                   ],
-                  const SizedBox(height: 14),
-                  Text('Always confirm on the official website.',
-                      textAlign: TextAlign.center, style: ts(12, color: LColors.text2)),
-                ],
+                ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              decoration: const BoxDecoration(
-                color: LColors.bg,
-                border: Border(top: BorderSide(color: LColors.soft)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _draft,
-                      focusNode: _focus,
-                      maxLength: AppController.maxQuestionLength,
-                      minLines: 1,
-                      maxLines: 4,
-                      textInputAction: TextInputAction.send,
-                      decoration: lInputDecoration(hint: 'Type your question (max 1000)', counter: ''),
-                      onSubmitted: _send,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Material(
-                    color: LColors.primary,
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: t.thinking ? null : () => _send(_draft.text),
-                      child: const SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Icon(Icons.arrow_upward_rounded, size: 22, color: LColors.bg, semanticLabel: 'Send'),
+            Gutter(
+              min: 16,
+              builder: (context, side) => Container(
+                padding: EdgeInsets.fromLTRB(side, 12, side, 14),
+                decoration: BoxDecoration(
+                  color: LColors.bg,
+                  border: Border(top: BorderSide(color: LColors.soft)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _draft,
+                        focusNode: _focus,
+                        maxLength: AppController.maxQuestionLength,
+                        minLines: 1,
+                        maxLines: 4,
+                        textInputAction: TextInputAction.send,
+                        decoration: lInputDecoration(hint: 'Type your question (max 1000)', counter: ''),
+                        onSubmitted: _send,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Material(
+                      color: LColors.primary,
+                      borderRadius: BorderRadius.circular(L.r(14)),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(L.r(14)),
+                        onTap: t.thinking ? null : () => _send(_draft.text),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Icon(Icons.arrow_upward_rounded, size: 22, color: LColors.bg, semanticLabel: 'Send'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -211,10 +217,10 @@ class _UserBubble extends StatelessWidget {
   Widget build(BuildContext context) => Align(
         alignment: Alignment.centerRight,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.8),
+          constraints: BoxConstraints(maxWidth: math.min(MediaQuery.sizeOf(context).width * 0.8, 520)),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: LColors.primary,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
@@ -227,6 +233,112 @@ class _UserBubble extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Shown while the AI writes its answer: three dots that bounce in turn, in the same bubble as
+/// the AI's answers. After [slowAfter] the text says it is still working, so a long wait does
+/// not look stuck. With reduced motion the dots stay still.
+class TypingBubble extends StatefulWidget {
+  const TypingBubble({super.key, this.slowAfter = const Duration(seconds: 6)});
+
+  final Duration slowAfter;
+
+  @override
+  State<TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<TypingBubble> with SingleTickerProviderStateMixin {
+  late final AnimationController _dots = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+  Timer? _slowTimer;
+  bool _slow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _slowTimer = Timer(widget.slowAfter, () => setState(() => _slow = true));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.of(context).disableAnimations) {
+      _dots.stop();
+    } else if (!_dots.isAnimating) {
+      _dots.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _slowTimer?.cancel();
+    _dots.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _slow ? 'Still working on it…' : 'Reading the official page…';
+    return Semantics(
+      liveRegion: true,
+      label: 'Lumina is answering. $label',
+      child: ExcludeSemantics(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: LColors.white,
+              border: Border.all(color: LColors.line),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _dots,
+                  builder: (context, _) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 4,
+                    children: [for (var i = 0; i < 3; i++) _dot(i)],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Text(label, key: ValueKey(_slow), style: ts(14, color: LColors.text2)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dot [i] rises and brightens a third of a cycle after the one before it.
+  Widget _dot(int i) {
+    final phase = (_dots.value - i * 0.18) % 1.0;
+    // Up and down in the first half of its cycle, resting in the second.
+    final lift = phase < 0.5 ? math.sin(phase / 0.5 * math.pi) : 0.0;
+    return Transform.translate(
+      offset: Offset(0, -4 * lift),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: Color.lerp(LColors.muted, LColors.primary, lift),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
 }
 
 class _AiBubble extends StatelessWidget {
@@ -248,7 +360,7 @@ class _AiBubble extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.86),
+        constraints: BoxConstraints(maxWidth: math.min(MediaQuery.sizeOf(context).width * 0.86, 580)),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -278,7 +390,7 @@ class _AiBubble extends StatelessWidget {
                     ),
                 ],
               ),
-              if (sourceLabel != null) Text(sourceLabel, style: ts(11, color: LColors.text2)),
+              if (sourceLabel != null) Text(sourceLabel, style: ts(12, color: LColors.text2)),
             ],
           ),
         ),
@@ -426,7 +538,7 @@ class _UnavailableCard extends StatelessWidget {
               Container(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: LColors.soft, borderRadius: BorderRadius.circular(L.r(10))),
                 child: Icon(
                   cloudOff
                       ? Icons.cloud_off_rounded
@@ -441,11 +553,11 @@ class _UnavailableCard extends StatelessWidget {
               Expanded(child: Text(title, style: ts(15, weight: FontWeight.w700))),
             ],
           ),
-          Text(message, style: ts(13, color: LColors.text3, height: 1.45)),
+          Text(message, style: ts(14, color: LColors.text3, height: 1.45)),
           ...buttons,
           TextButton(
             onPressed: () => openOfficialPage(context, scholarship.sourceUrl),
-            child: Text('Read the official page instead', style: ts(13, weight: FontWeight.w600, color: LColors.text2)),
+            child: Text('Read the official page instead', style: ts(14, weight: FontWeight.w600, color: LColors.text2)),
           ),
         ],
       ),
