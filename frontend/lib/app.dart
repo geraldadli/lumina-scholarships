@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'design/appearance.dart';
 import 'design/customize_panel.dart';
 import 'design/device_frame.dart';
+import 'design/theme_sweep.dart';
 import 'screens/auth_screens.dart';
 import 'screens/home_shell.dart';
 import 'screens/profile_form.dart';
@@ -50,6 +51,7 @@ class _LuminaAppState extends State<LuminaApp> {
   String? _lastUid;
   late final AppearanceController _appearance = widget.appearance ?? AppearanceController();
   late Appearance _look = _appearance.value;
+  final _sweep = GlobalKey<ThemeSweepState>();
 
   @override
   void initState() {
@@ -83,6 +85,9 @@ class _LuminaAppState extends State<LuminaApp> {
   /// Colours are read directly (not through the theme), so nothing would rebuild by itself.
   void _onAppearance() {
     if (_appearance.value == _look) return;
+    final next = _appearance.value;
+    // Dark mode on/off flickers like a light losing or getting power; other changes apply at once.
+    if (next.dark != _look.dark) _sweep.currentState?.capture(toDark: next.dark);
     setState(() {
       _look = _appearance.value;
       applyAppearance(_look);
@@ -121,7 +126,7 @@ class _LuminaAppState extends State<LuminaApp> {
               final scale = media.textScaler.scale(100) / 100 * _look.textSize.scale;
               Widget app(BuildContext context) => MediaQuery(
                     data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
-                    child: child!,
+                    child: ThemeSweep(key: _sweep, child: child!),
                   );
               if (!widget.deviceFrame || media.size.width < DeviceFrame.minWindowWidth) {
                 return Builder(builder: app);
