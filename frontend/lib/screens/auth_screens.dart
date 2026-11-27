@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
@@ -82,7 +83,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               padding: EdgeInsets.fromLTRB(side, 24, side, 24),
               child: ConstrainedBox(
                 // Logo in the middle and buttons at the bottom; scrolls when it cannot fit.
-                constraints: BoxConstraints(minHeight: box.maxHeight - 48),
+                // Never negative: Android can report no height for the first frame.
+                constraints: BoxConstraints(minHeight: math.max(0, box.maxHeight - 48)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
