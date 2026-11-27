@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -28,9 +27,7 @@ class DemoModeBanner extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                kIsWeb
-                    ? 'Demo mode: sample data only. Reloading the page starts over.'
-                    : 'Demo mode: Firebase is not configured, so data stays on this phone.',
+                'Demo mode: Firebase is not configured, so data stays on this phone.',
                 style: ts(13, color: LColors.text2, height: 1.4),
               ),
             ),

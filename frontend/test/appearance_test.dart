@@ -4,9 +4,7 @@ import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
 import 'package:lumina/design/appearance.dart';
 import 'package:lumina/design/customize_panel.dart';
-import 'package:lumina/design/device_frame.dart';
 import 'package:lumina/screens/browse_screen.dart';
-import 'package:lumina/screens/home_shell.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:lumina/theme.dart';
 import 'package:lumina/widgets/common.dart';
@@ -23,9 +21,8 @@ void main() {
   Future<AppController> pumpSignedIn(
     WidgetTester tester,
     Size size,
-    AppearanceController look, {
-    bool deviceFrame = false,
-  }) async {
+    AppearanceController look,
+  ) async {
     tester.view
       ..physicalSize = size
       ..devicePixelRatio = 1;
@@ -33,13 +30,7 @@ void main() {
     final backend = DemoBackend(loadCatalog());
     final c = AppController(backend: backend, ai: HybridAi(hostApi: FakeHost()), clock: () => testNow);
     await tester.pumpWidget(
-      LuminaApp(
-        controller: c,
-        appearance: look,
-        splashDuration: Duration.zero,
-        googleFonts: false,
-        deviceFrame: deviceFrame,
-      ),
+      LuminaApp(controller: c, appearance: look, splashDuration: Duration.zero, googleFonts: false),
     );
     await tester.pumpAndSettle();
     // On a short phone with large text the welcome screen scrolls.
@@ -136,32 +127,10 @@ void main() {
     expect(tester.getTopLeft(cards.at(0)).dy, tester.getTopLeft(cards.at(1)).dy);
   });
 
-  testWidgets('the web demo shows the phone app in a frame, even in a wide window', (tester) async {
-    final c = await pumpSignedIn(tester, const Size(1366, 800), AppearanceController(), deviceFrame: true);
-    c.setTab(1);
-    await tester.pumpAndSettle();
-
-    // Phone layout: filters behind a button, no sidebar, an Android-sized screen.
-    expect(find.byTooltip('Filters'), findsOneWidget);
-    expect(find.text('Customize look'), findsNothing);
-    final screen = MediaQuery.of(tester.element(find.byType(HomeShell))); // above the SafeArea
-    expect(screen.size, DeviceFrame.screen);
-    expect(screen.padding.top, DeviceFrame.statusBar);
-    expect(Theme.of(tester.element(find.byType(BrowseScreen))).platform, TargetPlatform.android);
-
-    // The panel opens beside the phone and leaves the app where it was.
-    await tester.tap(find.bySemanticsLabel('Customize look'));
-    await tester.pumpAndSettle();
-    expect(find.byType(CustomizePanel), findsOneWidget);
-    expect(c.tab, 1);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('on Android the panel is a sheet that the back button closes', (tester) async {
     final c = await pumpSignedIn(tester, const Size(390, 844), AppearanceController());
     c.setTab(3);
     await tester.pumpAndSettle();
-    expect(find.byType(DeviceFrame), findsNothing);
 
     await tester.tap(find.text('Customize look'));
     await tester.pumpAndSettle();

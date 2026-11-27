@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'design/appearance.dart';
 import 'design/customize_panel.dart';
-import 'design/device_frame.dart';
 import 'design/theme_sweep.dart';
 import 'screens/auth_screens.dart';
 import 'screens/home_shell.dart';
@@ -24,7 +22,6 @@ class LuminaApp extends StatefulWidget {
     this.appearance,
     this.splashDuration = const Duration(milliseconds: 1200),
     this.googleFonts = true,
-    this.deviceFrame = kIsWeb,
   });
 
   final AppController controller;
@@ -33,10 +30,6 @@ class LuminaApp extends StatefulWidget {
   final AppearanceController? appearance;
   final Duration splashDuration;
   final bool googleFonts;
-
-  /// Show the app inside a drawn Android phone when the window is wide enough. On for the
-  /// web demo; the Android app itself fills the screen.
-  final bool deviceFrame;
 
   @override
   State<LuminaApp> createState() => _LuminaAppState();
@@ -115,7 +108,7 @@ class _LuminaAppState extends State<LuminaApp> {
         child: AppScope(
           controller: widget.controller,
           child: MaterialApp(
-            title: widget.deviceFrame ? 'Lumina · Android app demo' : 'Lumina',
+            title: 'Lumina',
             debugShowCheckedModeBanner: false,
             navigatorKey: _navigator,
             scaffoldMessengerKey: _messenger,
@@ -124,15 +117,10 @@ class _LuminaAppState extends State<LuminaApp> {
               // The "Text size" setting multiplies the device's own text size.
               final media = MediaQuery.of(context);
               final scale = media.textScaler.scale(100) / 100 * _look.textSize.scale;
-              Widget app(BuildContext context) => MediaQuery(
-                    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
-                    child: ThemeSweep(key: _sweep, child: child!),
-                  );
-              if (!widget.deviceFrame || media.size.width < DeviceFrame.minWindowWidth) {
-                return Builder(builder: app);
-              }
-              // Web demo: the phone in the middle, the Customize panel beside it.
-              return CustomizeHost(child: DemoStage(child: DeviceFrame(child: Builder(builder: app))));
+              return MediaQuery(
+                data: media.copyWith(textScaler: TextScaler.linear(scale)),
+                child: ThemeSweep(key: _sweep, child: child!),
+              );
             },
             home: _RootGate(splashDone: _splashDone),
           ),

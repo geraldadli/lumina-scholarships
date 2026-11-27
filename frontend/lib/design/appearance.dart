@@ -176,7 +176,7 @@ class Appearance {
   int get hashCode => Object.hashAll(toJson().values);
 }
 
-/// Holds the current [Appearance], remembers it on this device, and opens the Customize panel.
+/// Holds the current [Appearance] and remembers it on this device.
 class AppearanceController extends ChangeNotifier {
   AppearanceController({Appearance initial = const Appearance(), this.persist = false}) : _value = initial;
 
@@ -199,18 +199,6 @@ class AppearanceController extends ChangeNotifier {
 
   Appearance _value;
   Appearance get value => _value;
-
-  bool _panelOpen = false;
-  bool get panelOpen => _panelOpen;
-
-  void openPanel() => _setPanel(true);
-  void closePanel() => _setPanel(false);
-
-  void _setPanel(bool open) {
-    if (_panelOpen == open) return;
-    _panelOpen = open;
-    notifyListeners();
-  }
 
   void update(Appearance next) {
     if (next == _value) return;

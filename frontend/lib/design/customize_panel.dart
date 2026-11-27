@@ -7,9 +7,8 @@ import 'package:material_ui/material_ui.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import 'appearance.dart';
-import 'device_frame.dart';
 
-/// Gives every screen access to the look settings (and the button that opens the panel).
+/// Gives every screen access to the look settings.
 class AppearanceScope extends InheritedNotifier<AppearanceController> {
   const AppearanceScope({super.key, required AppearanceController controller, required super.child})
       : super(notifier: controller);
@@ -21,13 +20,8 @@ class AppearanceScope extends InheritedNotifier<AppearanceController> {
       context.getInheritedWidgetOfExactType<AppearanceScope>()!.notifier!;
 }
 
-/// Opens the Customize panel from a screen of the app: beside the phone in the web demo,
-/// otherwise as a bottom sheet, which the Android back button closes.
+/// Opens the Customize panel as a bottom sheet, which the Android back button closes.
 void openCustomize(BuildContext context) {
-  if (context.findAncestorWidgetOfExactType<DeviceFrame>() != null) {
-    AppearanceScope.read(context).openPanel();
-    return;
-  }
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -36,76 +30,14 @@ void openCustomize(BuildContext context) {
     barrierColor: Colors.transparent,
     builder: (sheet) => SizedBox(
       height: math.min(MediaQuery.sizeOf(sheet).height * 0.62, 560),
-      child: CustomizePanel(docked: false, onClose: () => Navigator.of(sheet).pop()),
+      child: CustomizePanel(onClose: () => Navigator.of(sheet).pop()),
     ),
   );
 }
 
-/// Docks the Customize panel to the right of the web demo, so changes preview live.
-class CustomizeHost extends StatelessWidget {
-  const CustomizeHost({super.key, required this.child});
-
-  final Widget child;
-
-  static const _dockWidth = 340.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final a = AppearanceScope.of(context);
-    final open = a.panelOpen;
-    return LayoutBuilder(
-      builder: (context, box) => Stack(
-        children: [
-          // The app stays in the same place in the tree, so opening the panel keeps its state.
-          Positioned(left: 0, top: 0, bottom: 0, right: open ? _dockWidth : 0, child: child),
-          if (open)
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: _dockWidth,
-              child: CustomizePanel(docked: true, onClose: a.closePanel),
-            )
-          else
-            Positioned(right: 0, top: box.maxHeight * 0.42, child: _EdgeTab(onTap: a.openPanel)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EdgeTab extends StatelessWidget {
-  const _EdgeTab({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-        // Its own node, so screen readers announce just this button.
-        container: true,
-        button: true,
-        label: 'Customize look',
-        child: Material(
-          color: LColors.primary,
-          elevation: 3,
-          borderRadius: BorderRadius.horizontal(left: Radius.circular(L.r(12))),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: SizedBox(
-              width: 34,
-              height: 52,
-              child: Icon(Icons.palette_outlined, size: 20, color: LColors.bg),
-            ),
-          ),
-        ),
-      );
-}
-
 class CustomizePanel extends StatelessWidget {
-  const CustomizePanel({super.key, required this.docked, required this.onClose});
+  const CustomizePanel({super.key, required this.onClose});
 
-  final bool docked;
   final VoidCallback onClose;
 
   @override
@@ -145,9 +77,7 @@ class CustomizePanel extends StatelessWidget {
     return Material(
       color: LColors.white,
       elevation: 12,
-      shape: docked
-          ? Border(left: BorderSide(color: LColors.line))
-          : RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(L.r(22)))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(L.r(22)))),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
         child: Column(
@@ -157,7 +87,6 @@ class CustomizePanel extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(child: Text('Customize look', style: ts(19, weight: FontWeight.w700))),
-                  // No tooltip: the panel sits outside the navigator, which hosts tooltips.
                   Semantics(
                     button: true,
                     label: 'Close customize panel',

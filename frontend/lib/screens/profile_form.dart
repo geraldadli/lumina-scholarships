@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -391,10 +390,7 @@ class PrivacySection extends StatelessWidget {
                     Text('On-device AI by default', style: ts(15, weight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
-                      kIsWeb
-                          ? 'On a supported Android phone, questions are answered on the phone. '
-                              'AI answers are not available in this web version.'
-                          : 'Questions are answered on your phone. Nothing leaves your device unless you allow cloud AI.',
+                      'Questions are answered on your phone. Nothing leaves your device unless you allow cloud AI.',
                       style: ts(14, color: LColors.text3, height: 1.5),
                     ),
                   ],

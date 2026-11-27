@@ -16,7 +16,6 @@ lib/
 ├── state/                 AppController (session, catalog, saved, AI), browse filters
 ├── screens/               One file per screen
 └── widgets/               Buttons, chips, tags, cards, responsive layout, loading screens
-web/                       Web page, loading screen (index.html) and start-up script
 ```
 
 AI comes from `packages/hybrid_ai` (path dependency): `HybridAi.ask` for Ask AI, `generateChecklist` for Prepare, and `MatchScorer` for every match score. Nothing is re-implemented here.
@@ -30,29 +29,18 @@ flutter run            # phone or emulator, Android 8.0 (API 26)+
 flutter analyze && flutter test
 ```
 
-### Web demo of the Android app
-
-Lumina ships as an **Android app**. The web build exists to demo it: in a desktop browser the app runs inside a drawn Android phone (`lib/design/device_frame.dart`), in the same phone layout as on a device. In a window narrower than 600 px it fills the screen.
-
-```bash
-flutter run -d chrome          # develop with hot reload
-flutter build web --release    # output in build/web, serve it with any static host
-```
-
-The demo runs in **demo mode** (no web Firebase config): sample data, nothing about the student is saved, and a reload starts over. AI answers need Android, so Ask AI shows as unavailable. Screens have no URLs of their own, so use the in-app back button.
-
 ## Changing the look
 
-**Customize look** (under Profile in the app; the palette button at the right edge of the web demo) changes colour theme, text size, font, spacing, corners, dark mode and high contrast, live. The choice is remembered on that device.
+**Customize look** (under Profile) changes colour theme, text size, font, spacing, corners, dark mode and high contrast, live. The choice is remembered on that device.
 
 | To change | Edit |
 |---|---|
 | The default look for everyone | Pick it in the panel, **Copy settings**, then update the defaults in `Appearance`'s constructor in `lib/design/appearance.dart` |
-| Add a colour theme or font | One entry in `AccentPreset` / `AppFont` (`lib/design/appearance.dart`); for a theme, also add its colours to the script in `web/index.html` |
+| Add a colour theme or font | One entry in `AccentPreset` / `AppFont` (`lib/design/appearance.dart`) |
 | Background, text and border colours | `LPalette.of` in `lib/theme.dart` |
 | Sidebar and columns on tablets and landscape | `LBreak` in `lib/widgets/layout.dart` |
 | Page transitions (timing, slide distance) | `lib/widgets/motion.dart`; the transition for pushed screens is set in `lib/theme.dart` |
-| Loading screen | `lib/widgets/loading.dart` (in the app), `web/index.html` (while the web demo downloads) |
+| Loading screen | `lib/widgets/loading.dart` |
 
 In new widgets, use `LColors` for colours, `L.r()` for corner radius and `L.s()` for gaps, and use minimum heights instead of fixed ones so large text fits.
 
