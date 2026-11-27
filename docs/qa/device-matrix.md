@@ -5,7 +5,7 @@ Phones the release APK has been checked on. Add a row for every phone after a QA
 
 | Phone | Android | Gemini Nano | Sign-in | UI / UX | Ask AI, cloud off | Ask AI, cloud on | Date | Report |
 |---|---|---|---|---|---|---|---|---|
-| POCO F8 Pro | 16 | Supported | Pass | Pass | Pass | Not tested | 2026-11-27 | [PR #18](2026-11-27-pr18-release-apk.md) |
+| POCO F8 Pro | 16 | Supported | Pass | Pass | Pass | Pass | 2026-11-27 | [PR #18](2026-11-27-pr18-release-apk.md) |
 | Team lead's phone | | | | | | Pending | | |
 
 ## What the AI columns mean
