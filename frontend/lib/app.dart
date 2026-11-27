@@ -86,7 +86,7 @@ class _LuminaAppState extends State<LuminaApp> {
   void _onAppearance() {
     if (_appearance.value == _look) return;
     final next = _appearance.value;
-    // Dark mode on/off flickers like a light losing or getting power; other changes apply at once.
+    // Dark mode on/off fades smoothly into the new theme; other changes apply at once.
     if (next.dark != _look.dark) _sweep.currentState?.capture(toDark: next.dark);
     setState(() {
       _look = _appearance.value;
