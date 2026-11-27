@@ -78,6 +78,23 @@ enum Corners {
   final double scale;
 }
 
+/// Languages the student can pick. Add one entry per language: [translated] marks the ones
+/// whose app text is ready; the others are listed but the app text stays in English for now.
+enum AppLanguage {
+  english('en', 'English', 'English', translated: true),
+  indonesian('id', 'Bahasa Indonesia', 'Indonesian');
+
+  const AppLanguage(this.code, this.nativeName, this.englishName, {this.translated = false});
+
+  /// Language code for [Locale], e.g. `id`.
+  final String code;
+
+  /// The name in its own language, shown first in the list.
+  final String nativeName;
+  final String englishName;
+  final bool translated;
+}
+
 @immutable
 class Appearance {
   const Appearance({
@@ -88,6 +105,7 @@ class Appearance {
     this.corners = Corners.soft,
     this.dark = false,
     this.highContrast = false,
+    this.language = AppLanguage.english,
   });
 
   factory Appearance.fromJson(Map<String, dynamic> json) {
@@ -104,6 +122,7 @@ class Appearance {
       corners: pick(Corners.values, json['corners'], d.corners),
       dark: flag(json['dark'], d.dark),
       highContrast: flag(json['highContrast'], d.highContrast),
+      language: pick(AppLanguage.values, json['language'], d.language),
     );
   }
 
@@ -115,6 +134,9 @@ class Appearance {
   final bool dark;
   final bool highContrast;
 
+  /// The language chosen under Profile > Language.
+  final AppLanguage language;
+
   Map<String, dynamic> toJson() => {
         'accent': accent.name,
         'font': font.name,
@@ -123,6 +145,7 @@ class Appearance {
         'corners': corners.name,
         'dark': dark,
         'highContrast': highContrast,
+        'language': language.name,
       };
 
   Appearance copyWith({
@@ -133,6 +156,7 @@ class Appearance {
     Corners? corners,
     bool? dark,
     bool? highContrast,
+    AppLanguage? language,
   }) =>
       Appearance(
         accent: accent ?? this.accent,
@@ -142,6 +166,7 @@ class Appearance {
         corners: corners ?? this.corners,
         dark: dark ?? this.dark,
         highContrast: highContrast ?? this.highContrast,
+        language: language ?? this.language,
       );
 
   @override
@@ -194,7 +219,8 @@ class AppearanceController extends ChangeNotifier {
     if (persist) _save();
   }
 
-  void reset() => update(const Appearance());
+  /// Back to the default look. The language is a setting of its own, so it is kept.
+  void reset() => update(Appearance(language: _value.language));
 
   Future<void> _save() async {
     try {

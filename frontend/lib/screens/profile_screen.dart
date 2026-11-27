@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/layout.dart';
 import 'about_screen.dart';
+import 'language_screen.dart';
 import 'profile_form.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -22,12 +23,24 @@ class ProfileScreen extends StatelessWidget {
     final complete = p?.completeness ?? 0;
     void push(Widget w) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => w));
 
-    final rows = <(IconData, String, String, VoidCallback)>[
-      (Icons.tune_rounded, 'Edit preferences', '', () => push(const EditPreferencesScreen())),
-      (Icons.palette_outlined, 'Customize look', '', () => openCustomize(context)),
-      (Icons.shield_outlined, 'Privacy & AI', c.inferModeLabel, () => push(const PrivacyScreen())),
-      (Icons.translate_rounded, 'Language', 'English', () => showToast(context, 'Bahasa Indonesia coming soon', icon: Icons.info_outline_rounded)),
-      (Icons.info_outline_rounded, 'About & data sources', '', () => push(const AboutScreen())),
+    final appearance = AppearanceScope.of(context);
+    final look = appearance.value;
+    void setDark(bool v) => appearance.update(look.copyWith(dark: v));
+
+    // (icon, title, value, onTap, trailing). A row with a trailing widget shows it instead of the chevron.
+    final rows = <(IconData, String, String, VoidCallback, Widget?)>[
+      (Icons.tune_rounded, 'Edit preferences', '', () => push(const EditPreferencesScreen()), null),
+      (
+        Icons.dark_mode_outlined,
+        'Dark mode',
+        '',
+        () => setDark(!look.dark),
+        LToggle(value: look.dark, onChanged: setDark, semanticLabel: 'Dark mode'),
+      ),
+      (Icons.palette_outlined, 'Customize look', '', () => openCustomize(context), null),
+      (Icons.shield_outlined, 'Privacy & AI', c.inferModeLabel, () => push(const PrivacyScreen()), null),
+      (Icons.translate_rounded, 'Language', look.language.nativeName, () => push(const LanguageScreen()), null),
+      (Icons.info_outline_rounded, 'About & data sources', '', () => push(const AboutScreen()), null),
     ];
 
     return Gutter(
@@ -108,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
                           Expanded(child: Text(rows[i].$2, style: ts(15, weight: FontWeight.w500))),
                           if (rows[i].$3.isNotEmpty) Text(rows[i].$3, style: ts(14, color: LColors.text2)),
                           const SizedBox(width: 4),
-                          Icon(Icons.chevron_right_rounded, size: 20, color: LColors.muted),
+                          rows[i].$5 ?? Icon(Icons.chevron_right_rounded, size: 20, color: LColors.muted),
                         ],
                       ),
                     ),

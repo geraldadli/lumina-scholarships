@@ -66,6 +66,36 @@ void main() {
     );
   });
 
+  test('the language is saved, and resetting the look keeps it', () {
+    const look = Appearance(language: AppLanguage.indonesian, dark: true);
+    expect(Appearance.fromJson(look.toJson()), look);
+    expect(Appearance.fromJson({'language': 'klingon'}).language, AppLanguage.english);
+    final c = AppearanceController(initial: look)..reset();
+    expect(c.value, const Appearance(language: AppLanguage.indonesian));
+  });
+
+  testWidgets('Profile has a dark mode toggle and a language list', (tester) async {
+    final look = AppearanceController();
+    final c = await pumpSignedIn(tester, const Size(412, 915), look);
+    c.setTab(3);
+    await tester.pumpAndSettle();
+
+    final darkMode = find.byWidgetPredicate((w) => w is LToggle && w.semanticLabel == 'Dark mode');
+    expect(darkMode, findsOneWidget);
+    await tester.tap(darkMode);
+    await tester.pumpAndSettle();
+    expect(look.value.dark, isTrue);
+
+    expect(find.text('English'), findsOneWidget); // current language on the row
+    await tester.tap(find.text('Language'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bahasa Indonesia'));
+    await tester.pumpAndSettle();
+    expect(look.value.language, AppLanguage.indonesian);
+    expect(look.value.dark, isTrue); // picking a language leaves the rest of the look alone
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a change on the panel restyles the open screen without losing its place', (tester) async {
     final look = AppearanceController();
     final c = await pumpSignedIn(tester, const Size(1366, 800), look);
