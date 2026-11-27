@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:hybrid_ai/hybrid_ai.dart';
@@ -144,18 +145,7 @@ class _AskScreenState extends State<AskScreen> {
                     ],
                     if (t.thinking) ...[
                       const SizedBox(height: 14),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: LColors.white,
-                            borderRadius: BorderRadius.circular(L.r(16)),
-                            border: Border.all(color: LColors.line),
-                          ),
-                          child: Text('Reading the official page…', style: ts(14, color: LColors.text2)),
-                        ),
-                      ),
+                      const TypingBubble(),
                     ],
                     if (t.error != null) ...[
                       const SizedBox(height: 14),
@@ -243,6 +233,112 @@ class _UserBubble extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Shown while the AI writes its answer: three dots that bounce in turn, in the same bubble as
+/// the AI's answers. After [slowAfter] the text says it is still working, so a long wait does
+/// not look stuck. With reduced motion the dots stay still.
+class TypingBubble extends StatefulWidget {
+  const TypingBubble({super.key, this.slowAfter = const Duration(seconds: 6)});
+
+  final Duration slowAfter;
+
+  @override
+  State<TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<TypingBubble> with SingleTickerProviderStateMixin {
+  late final AnimationController _dots = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+  Timer? _slowTimer;
+  bool _slow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _slowTimer = Timer(widget.slowAfter, () => setState(() => _slow = true));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.of(context).disableAnimations) {
+      _dots.stop();
+    } else if (!_dots.isAnimating) {
+      _dots.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _slowTimer?.cancel();
+    _dots.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _slow ? 'Still working on it…' : 'Reading the official page…';
+    return Semantics(
+      liveRegion: true,
+      label: 'Lumina is answering. $label',
+      child: ExcludeSemantics(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: LColors.white,
+              border: Border.all(color: LColors.line),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _dots,
+                  builder: (context, _) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 4,
+                    children: [for (var i = 0; i < 3; i++) _dot(i)],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Text(label, key: ValueKey(_slow), style: ts(14, color: LColors.text2)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dot [i] rises and brightens a third of a cycle after the one before it.
+  Widget _dot(int i) {
+    final phase = (_dots.value - i * 0.18) % 1.0;
+    // Up and down in the first half of its cycle, resting in the second.
+    final lift = phase < 0.5 ? math.sin(phase / 0.5 * math.pi) : 0.0;
+    return Transform.translate(
+      offset: Offset(0, -4 * lift),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: Color.lerp(LColors.muted, LColors.primary, lift),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
 }
 
 class _AiBubble extends StatelessWidget {
