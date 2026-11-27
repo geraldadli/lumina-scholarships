@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
 import '../widgets/layout.dart';
+import '../widgets/motion.dart';
 import '../widgets/scholarship_card.dart';
 import 'detail_screen.dart';
 
@@ -93,36 +94,39 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
           ),
           Expanded(
-            child: total == 0
-                ? SingleChildScrollView(
-                    child: EmptyState(
-                      icon: Icons.bookmarks_outlined,
-                      title: seg == 'saved' ? 'Nothing saved yet' : 'Nothing in ${savedStatusLabels[seg]} yet',
-                      message: switch (seg) {
-                        'preparing' => 'Tap Prepare on a scholarship to build its checklist.',
-                        'applied' => 'Mark a checklist as applied once you have sent your application.',
-                        _ => 'Bookmark scholarships to track deadlines and prepare your application.',
-                      },
-                      actionLabel: 'Browse scholarships',
-                      primaryAction: true,
-                      onAction: () => c.setTab(1),
+            child: PageSwitch(
+              page: savedStatuses.indexOf(seg),
+              child: total == 0
+                  ? SingleChildScrollView(
+                      child: EmptyState(
+                        icon: Icons.bookmarks_outlined,
+                        title: seg == 'saved' ? 'Nothing saved yet' : 'Nothing in ${savedStatusLabels[seg]} yet',
+                        message: switch (seg) {
+                          'preparing' => 'Tap Prepare on a scholarship to build its checklist.',
+                          'applied' => 'Mark a checklist as applied once you have sent your application.',
+                          _ => 'Bookmark scholarships to track deadlines and prepare your application.',
+                        },
+                        actionLabel: 'Browse scholarships',
+                        primaryAction: true,
+                        onAction: () => c.setTab(1),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.fromLTRB(side, 0, side, 24),
+                      itemCount: total,
+                      separatorBuilder: (_, _) => SizedBox(height: L.s(14)),
+                      itemBuilder: (context, i) => i >= entries.length
+                          ? _GoneCard(saved: gone[i - entries.length])
+                          : _SavedCard(
+                            scholarship: entries[i].s,
+                            saved: entries[i].sv,
+                            menuOpen: _menuOpenFor == entries[i].s.id,
+                            onToggleMenu: () =>
+                                setState(() => _menuOpenFor = _menuOpenFor == entries[i].s.id ? null : entries[i].s.id),
+                            onCloseMenu: () => setState(() => _menuOpenFor = null),
+                          ),
                     ),
-                  )
-                : ListView.separated(
-                    padding: EdgeInsets.fromLTRB(side, 0, side, 24),
-                    itemCount: total,
-                    separatorBuilder: (_, _) => SizedBox(height: L.s(14)),
-                    itemBuilder: (context, i) => i >= entries.length
-                        ? _GoneCard(saved: gone[i - entries.length])
-                        : _SavedCard(
-                          scholarship: entries[i].s,
-                          saved: entries[i].sv,
-                          menuOpen: _menuOpenFor == entries[i].s.id,
-                          onToggleMenu: () =>
-                              setState(() => _menuOpenFor = _menuOpenFor == entries[i].s.id ? null : entries[i].s.id),
-                          onCloseMenu: () => setState(() => _menuOpenFor = null),
-                        ),
-                  ),
+            ),
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import 'state/app_scope.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 import 'widgets/loading.dart';
+import 'widgets/motion.dart';
 
 class LuminaApp extends StatefulWidget {
   const LuminaApp({
@@ -155,6 +156,16 @@ class _RootGate extends StatelessWidget {
     } else {
       screen = const HomeShell(key: ValueKey('home'));
     }
-    return AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: screen);
+    // The background stays put underneath while two screens cross-fade.
+    return ColoredBox(
+      color: LColors.bg,
+      child: AnimatedSwitcher(
+        duration: LMotion.duration,
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: screenFade,
+        child: screen,
+      ),
+    );
   }
 }

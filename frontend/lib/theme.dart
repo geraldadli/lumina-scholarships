@@ -159,6 +159,16 @@ ThemeData buildLuminaTheme({Appearance appearance = const Appearance(), bool goo
     colorScheme: scheme,
     scaffoldBackgroundColor: LColors.bg,
     splashFactory: InkRipple.splashFactory,
+    // Pushed screens fade and slide the same way everywhere; Android also previews
+    // the previous screen during its back gesture.
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {
+        for (final platform in TargetPlatform.values)
+          platform: platform == TargetPlatform.android
+              ? const PredictiveBackPageTransitionsBuilder()
+              : const FadeForwardsPageTransitionsBuilder(),
+      },
+    ),
   );
   final text = base.textTheme.apply(bodyColor: LColors.ink, displayColor: LColors.ink);
   return base.copyWith(

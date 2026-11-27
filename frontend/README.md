@@ -51,6 +51,7 @@ The demo runs in **demo mode** (no web Firebase config): sample data, nothing ab
 | Add a colour theme or font | One entry in `AccentPreset` / `AppFont` (`lib/design/appearance.dart`); for a theme, also add its colours to the script in `web/index.html` |
 | Background, text and border colours | `LPalette.of` in `lib/theme.dart` |
 | Sidebar and columns on tablets and landscape | `LBreak` in `lib/widgets/layout.dart` |
+| Page transitions (timing, slide distance) | `lib/widgets/motion.dart`; the transition for pushed screens is set in `lib/theme.dart` |
 | Loading screen | `lib/widgets/loading.dart` (in the app), `web/index.html` (while the web demo downloads) |
 
 In new widgets, use `LColors` for colours, `L.r()` for corner radius and `L.s()` for gaps, and use minimum heights instead of fixed ones so large text fits.

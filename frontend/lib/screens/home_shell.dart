@@ -5,6 +5,7 @@ import '../state/app_scope.dart';
 import '../theme.dart';
 import '../widgets/layout.dart';
 import '../widgets/loading.dart';
+import '../widgets/motion.dart';
 import 'browse_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -34,10 +35,13 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final c = AppScope.of(context);
-    final body = IndexedStack(
+    final body = PageSwitch(
       key: _body,
-      index: c.tab,
-      children: const [HomeScreen(), BrowseScreen(), SavedScreen(), ProfileScreen()],
+      page: c.tab,
+      child: IndexedStack(
+        index: c.tab,
+        children: const [HomeScreen(), BrowseScreen(), SavedScreen(), ProfileScreen()],
+      ),
     );
     return PopScope(
       canPop: c.tab == 0,

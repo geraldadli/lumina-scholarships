@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
 import '../widgets/layout.dart';
+import '../widgets/motion.dart';
 
 /// Editable copy of [UserProfile] backing the onboarding / preferences / privacy forms.
 class ProfileDraft {
@@ -585,12 +586,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               Expanded(
-                child: Gutter(
-                  builder: (context, side) => SingleChildScrollView(
-                    // A new step starts at its top, not where the last one was scrolled to.
-                    key: ValueKey(_step),
-                    padding: EdgeInsets.fromLTRB(side, 24, side, 28),
-                    child: section,
+                child: PageSwitch(
+                  page: _step,
+                  child: Gutter(
+                    builder: (context, side) => SingleChildScrollView(
+                      // A new step starts at its top, not where the last one was scrolled to.
+                      key: ValueKey(_step),
+                      padding: EdgeInsets.fromLTRB(side, 24, side, 28),
+                      child: section,
+                    ),
                   ),
                 ),
               ),
