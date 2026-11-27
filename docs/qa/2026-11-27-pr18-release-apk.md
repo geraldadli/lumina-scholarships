@@ -38,10 +38,11 @@ and adds a test with an empty and a 40 px tall window.
 | Google sign-in, finished | Pass |
 | UI and UX: all tabs, Customize look, dark mode, Extra large text | Pass |
 | Ask AI, cloud AI off (Gemini Nano) | Pass |
-| Ask AI, cloud AI on | Not tested on this phone; the team lead tests it on a second phone |
+| Ask AI, cloud AI on | Pass |
+
+Every feature worked on the phone, with cloud AI both on and off. Cloud AI on also worked with
+the release APK installed outside Google Play, so App Check (Play Integrity) did not block it.
 
 ## Open
 
-- Cloud AI on with the release APK: does App Check (Play Integrity) accept an APK installed
-  outside Google Play? The answer decides how the judge APK is built.
 - Merge PR #18 with **Squash and merge**: an early commit on the branch still has `frontend/web/`.
