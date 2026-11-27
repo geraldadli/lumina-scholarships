@@ -9,6 +9,7 @@ import '../models/scholarship.dart';
 import '../state/app_scope.dart';
 import '../theme.dart';
 import '../util/format.dart';
+import '../util/language_requirement.dart';
 import '../widgets/common.dart';
 import '../widgets/layout.dart';
 import '../widgets/scholarship_card.dart';
@@ -83,8 +84,8 @@ class _DetailScreenState extends State<DetailScreen> {
       if (s.levelsLabel.isNotEmpty) (Icons.school_outlined, 'Level', s.levelsLabel),
       (Icons.place_outlined, 'Host country', s.hostLabel),
       (Icons.grade_outlined, 'Minimum GPA', s.minGpa == null ? 'None' : '${s.minGpa!.toStringAsFixed(2)} / 4.0'),
-      (Icons.translate_rounded, 'Language', s.languageRequirement ?? 'Not stated'),
     ];
+    final language = parseLanguageRequirement(s.languageRequirement ?? '');
     final cits = s.eligibleCitizenships;
     const maxCit = 6;
     final gap = L.s(28);
@@ -126,8 +127,8 @@ class _DetailScreenState extends State<DetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
-            for (var i = 0; i < facts.length; i++)
-              _Fact(icon: facts[i].$1, label: facts[i].$2, value: facts[i].$3, last: i == facts.length - 1),
+            for (final (icon, label, value) in facts) _Fact(icon: icon, label: label, value: value, last: false),
+            _LanguageFact(language),
           ],
         ),
       ),
@@ -382,6 +383,74 @@ class _Fact extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// The last key fact. A single sentence sits beside its label like the others; several
+/// requirements go underneath, one per line, using the card's full width.
+class _LanguageFact extends StatelessWidget {
+  const _LanguageFact(this.blocks);
+
+  final List<LanguageBlock> blocks;
+
+  static const _icon = Icons.translate_rounded;
+
+  /// Lines up with the labels above: the icon plus its gap.
+  static const _indent = 29.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = blocks.firstOrNull;
+    final single = blocks.length == 1 && first!.title == null && first.lines.length == 1 && first.notes.isEmpty;
+    if (first == null || single) {
+      return _Fact(icon: _icon, label: 'Language', value: first?.lines.single ?? 'Not stated', last: true);
+    }
+    final note = ts(14, color: LColors.text2, height: 1.4);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: L.s(13)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(_icon, size: 19, color: LColors.muted),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Language', style: ts(14, color: LColors.text2, height: 1.4))),
+            ],
+          ),
+          for (final b in blocks)
+            Padding(
+              padding: EdgeInsets.only(left: b.nested ? _indent + 16 : _indent, top: L.s(10)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: L.s(6),
+                children: [
+                  if (b.title != null) Text(b.title!, style: ts(15, weight: FontWeight.w700, height: 1.35)),
+                  if (b.anyOne) Text('Any one of these:', style: note),
+                  for (final line in b.lines)
+                    if (b.lines.length == 1)
+                      Text(line, style: ts(15, weight: FontWeight.w600, height: 1.35))
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            margin: EdgeInsets.only(top: MediaQuery.textScalerOf(context).scale(15) * 0.68 - 3),
+                            decoration: BoxDecoration(color: LColors.primary, shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(line, style: ts(15, weight: FontWeight.w600, height: 1.35))),
+                        ],
+                      ),
+                  for (final n in b.notes) Text(n, style: note),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Block extends StatelessWidget {
