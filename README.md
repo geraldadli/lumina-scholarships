@@ -42,4 +42,6 @@ Android package name: `com.lumina.app`.
 - [Flutter app](frontend/README.md): how to run it, demo mode, and which Firestore paths each screen uses
 - [Hybrid AI package](packages/hybrid_ai/README.md): Dart API for Ask AI, checklist, and match score
 - [Backend guide](backend/README.md): how scholarship data is imported, monitored, and synced
+- [Installing the APK](docs/judge-apk.md): install the app on a phone and what to try
+- [Release APK QA](docs/qa/release-apk-checklist.md): phone checks before an APK is shared, with the [device matrix](docs/qa/device-matrix.md)
 - [Contributing](CONTRIBUTING.md): branches, commit messages, and pull requests
