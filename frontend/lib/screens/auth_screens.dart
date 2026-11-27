@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../data/backend.dart';
@@ -116,12 +117,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           height: 54,
                           fontSize: 16,
                           busy: _busy,
+                          // Google's "G" sits on white, as Google's sign-in branding asks.
                           leading: Container(
-                            width: 22,
-                            height: 22,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(color: LColors.bg, shape: BoxShape.circle),
-                            child: Text('G', style: ts(14, weight: FontWeight.w700, color: LColors.primary)),
+                            width: 26,
+                            height: 26,
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(color: Color(0xFFFFFFFF), shape: BoxShape.circle),
+                            child: SvgPicture.asset('assets/brand/google_g.svg', semanticsLabel: 'Google'),
                           ),
                           onPressed: _google,
                         ),
