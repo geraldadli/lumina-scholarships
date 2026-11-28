@@ -176,8 +176,7 @@ Then turn AICore back on:
 adb shell pm enable com.google.android.aicore
 ```
 
-The badge at the top of Ask AI shows **On-device** whenever the phone has Gemini Nano, also
-during this test. The label under the answer is what counts.
+The label under the answer shows where it ran.
 
 If the answer is the card **App not verified** ("This app has not been verified to use cloud
 AI"), App Check rejected the APK: it was built without the debug token (see "Building the judge

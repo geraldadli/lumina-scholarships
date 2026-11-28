@@ -75,7 +75,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Am I eligible?'));
     await tester.pumpAndSettle();
-    expect(find.text('AI off'), findsOneWidget);
     expect(host.asked.single.allowCloud, isFalse);
   }
 
@@ -112,6 +111,18 @@ void main() {
     expect(find.text('Cloud AI is on now'), findsNothing);
   }
 
+  testWidgets('header has no mode badge; the label under a cloud answer says where it ran', (tester) async {
+    // The phone has the on-device model, yet this answer comes from the cloud.
+    await openAsk(tester, error: 'ON_DEVICE_UNAVAILABLE', device: ModelAvailability.available);
+    await tester.tap(find.text('Allow cloud AI'));
+    await tester.pumpAndSettle();
+    expectCloudAnswer();
+    for (final badge in ['On-device', 'Cloud AI', 'AI off']) {
+      expect(find.text(badge), findsNothing);
+    }
+    expect(find.text('Answers use only the official scholarship page.'), findsOneWidget);
+  });
+
   testWidgets('phone without on-device AI: says why, and Allow cloud AI answers at once', (tester) async {
     await openAsk(tester, error: 'PRIVATE_MODE_UNAVAILABLE');
     expect(find.text('Cloud AI is turned off'), findsOneWidget);
@@ -136,7 +147,6 @@ void main() {
     backend.gate!.complete();
     await tester.pumpAndSettle();
     expect(controller.cloudAllowed, isTrue);
-    expect(find.text('Cloud AI'), findsOneWidget);
   });
 
   testWidgets('on-device status unknown: explains cloud AI is off, offers it and Try again', (tester) async {
@@ -191,7 +201,6 @@ void main() {
       findsOneWidget,
     );
     expect(controller.cloudAllowed, isFalse);
-    expect(find.text('AI off'), findsOneWidget);
 
     // The next question stays on the phone.
     await askAnother(tester);
@@ -229,7 +238,6 @@ void main() {
       );
       expect(controller.profile!.cloudAiAllowed, isTrue); // the account still says on...
       expect(controller.cloudAllowed, isFalse); // ...but this phone keeps it off
-      expect(find.text('AI off'), findsOneWidget);
 
       await askAnother(tester);
       expect(host.asked.last.allowCloud, isFalse);

@@ -100,18 +100,9 @@ class _AskScreenState extends State<AskScreen> {
             LHeader(
               title: 'Ask AI',
               subtitle: s.title,
-              bottom: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  LBadge(c.inferModeLabel),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Answers use only the official scholarship page.',
-                      style: ts(14, color: LColors.text2, height: 1.4),
-                    ),
-                  ),
-                ],
+              bottom: Text(
+                'Answers use only the official scholarship page.',
+                style: ts(14, color: LColors.text2, height: 1.4),
               ),
             ),
             Expanded(
