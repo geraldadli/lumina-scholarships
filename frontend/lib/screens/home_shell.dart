@@ -102,7 +102,7 @@ class _Sidebar extends StatelessWidget {
                           children: [
                             const LuminaLogo(size: 38),
                             const SizedBox(width: 12),
-                            Expanded(child: Text('Lumina', style: ts(22, weight: FontWeight.w700))),
+                            const Expanded(child: LuminaWordmark(size: 22)),
                           ],
                         ),
                       ),

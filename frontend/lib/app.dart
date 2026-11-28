@@ -13,6 +13,8 @@ import 'state/app_scope.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 import 'widgets/loading.dart';
+import 'widgets/logo_motion.dart';
+import 'widgets/night_mode.dart';
 import 'widgets/motion.dart';
 
 class LuminaApp extends StatefulWidget {
@@ -20,7 +22,7 @@ class LuminaApp extends StatefulWidget {
     super.key,
     required this.controller,
     this.appearance,
-    this.splashDuration = const Duration(milliseconds: 1200),
+    this.splashDuration,
     this.googleFonts = true,
   });
 
@@ -28,7 +30,10 @@ class LuminaApp extends StatefulWidget {
 
   /// The customizable look. Without one the default look is used and nothing is remembered.
   final AppearanceController? appearance;
-  final Duration splashDuration;
+  /// How long the loading screen shows at least. By default, until its animation has built the
+  /// whole logo once ([FacetFillLoader.logoBuilt], about 2.4 s), so everyone sees it complete;
+  /// with reduced motion the still logo needs no wait beyond a short moment.
+  final Duration? splashDuration;
   final bool googleFonts;
 
   @override
@@ -50,6 +55,7 @@ class _LuminaAppState extends State<LuminaApp> {
   void initState() {
     super.initState();
     applyAppearance(_look);
+    syncNightMode(_look.dark);
     _appearance.addListener(_onAppearance);
     widget.controller
       ..start()
@@ -58,10 +64,13 @@ class _LuminaAppState extends State<LuminaApp> {
       final m = _messenger.currentState;
       if (m != null) showToastOn(m, msg, icon: Icons.error_outline_rounded);
     });
-    if (widget.splashDuration == Duration.zero) {
+    final reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+    final minimum = widget.splashDuration ??
+        (reduceMotion ? const Duration(milliseconds: 600) : FacetFillLoader.logoBuilt);
+    if (minimum == Duration.zero) {
       _splashDone = true;
     } else {
-      _splash = Timer(widget.splashDuration, () => setState(() => _splashDone = true));
+      _splash = Timer(minimum, () => setState(() => _splashDone = true));
     }
   }
 
@@ -80,7 +89,10 @@ class _LuminaAppState extends State<LuminaApp> {
     if (_appearance.value == _look) return;
     final next = _appearance.value;
     // Dark mode on/off fades smoothly into the new theme; other changes apply at once.
-    if (next.dark != _look.dark) _sweep.currentState?.capture(toDark: next.dark);
+    if (next.dark != _look.dark) {
+      _sweep.currentState?.capture(toDark: next.dark);
+      syncNightMode(next.dark);
+    }
     setState(() {
       _look = _appearance.value;
       applyAppearance(_look);
@@ -143,7 +155,7 @@ class _RootGate extends StatelessWidget {
     } else if (c.user == null) {
       screen = const WelcomeScreen(key: ValueKey('welcome'));
     } else if (!c.profileLoaded) {
-      screen = const SplashScreen(key: ValueKey('loading'), message: 'Loading your profile…');
+      screen = const SplashScreen(key: ValueKey('splash'), message: 'Loading your profile…');
     } else if (c.profile == null || !c.profile!.onboardingCompleted) {
       screen = OnboardingScreen(key: ValueKey('onboarding-${c.user!.uid}'));
     } else {

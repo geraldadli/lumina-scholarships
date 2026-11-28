@@ -94,7 +94,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       children: [
                         const LuminaLogo(),
                         const SizedBox(height: 18),
-                        Text('Lumina', style: ts(32, weight: FontWeight.w700, spacing: -0.6)),
+                        const LuminaWordmark(size: 32),
                         const SizedBox(height: 12),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 300),

@@ -1,21 +1,76 @@
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../design/customize_panel.dart';
 import '../theme.dart';
 import 'common.dart';
 import 'layout.dart';
+import 'logo_motion.dart';
 
+/// The Lumina logo (Lumina_Logo_2a, "Cap & spark") on its tile: the light version normally,
+/// the dark version when Lumina's dark mode is on.
 class LuminaLogo extends StatelessWidget {
   const LuminaLogo({super.key, this.size = 84});
 
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final dark = appDarkMode(context);
+    return Semantics(
+      label: 'Lumina',
+      image: true,
+      child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(color: LColors.primary, borderRadius: BorderRadius.circular(L.r(size * 0.29))),
-        child: Icon(Icons.school_rounded, size: size * 0.52, color: LColors.bg),
+        padding: EdgeInsets.all(size * 0.16),
+        decoration: BoxDecoration(
+          color: dark ? LBrand.tileDark : LBrand.tile,
+          borderRadius: BorderRadius.circular(size * 0.25),
+          border: Border.all(color: dark ? LBrand.tileEdgeDark : LBrand.tileEdge),
+        ),
+        child: SvgPicture.asset(dark ? LBrand.markDarkAsset : LBrand.markAsset),
+      ),
+    );
+  }
+}
+
+/// Lumina's own dark mode setting (Profile > Dark mode); the phone's setting if there is none.
+bool appDarkMode(BuildContext context) =>
+    context.dependOnInheritedWidgetOfExactType<AppearanceScope>()?.notifier?.value.dark ??
+    MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+
+/// "Lumina" in Manrope, as next to the logo in the design.
+class LuminaWordmark extends StatelessWidget {
+  const LuminaWordmark({super.key, this.size = 28});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        'Lumina',
+        style: TextStyle(
+          fontFamily: 'Manrope',
+          fontSize: size,
+          fontWeight: FontWeight.w700,
+          fontVariations: const [FontVariation('wght', 700)],
+          letterSpacing: -0.01 * size,
+          color: LColors.ink,
+        ),
       );
+}
+
+/// Brand colours and files from Lumina_Logo_2a. They match the Android start-up screen
+/// (android/app/src/main/res/values*/colors.xml), so the hand-off to Flutter is invisible.
+abstract final class LBrand {
+  static const markAsset = 'assets/brand/lumina_mark.svg';
+  static const markDarkAsset = 'assets/brand/lumina_mark_dark.svg';
+  static const tile = Color(0xFFF7F9FB);
+  static const tileEdge = Color(0xFFCBD7E3);
+  static const tileDark = Color(0xFF111820);
+  static const tileEdgeDark = Color(0xFF3A4756);
+  static const splashLight = Color(0xFFF7F9FB);
+  static const splashDark = Color(0xFF111820);
 }
 
 /// Repeats a 0→1→0 animation, or holds still when the device asks for less motion.
@@ -54,45 +109,47 @@ class _PulseState extends State<_Pulse> with SingleTickerProviderStateMixin {
       );
 }
 
-/// The full-screen loading screen: shown at start-up and while the profile loads.
+/// The full-screen loading screen ("Lumina Loaders" 1b): the logo's shapes fill in one after
+/// another and fade out again, in a loop, over a faint outline of the logo. Dark version when
+/// Lumina's dark mode is on. The Android start-up screen before it is told the same setting
+/// (see syncNightMode), so the two look like one screen. A [message] (e.g. while the profile
+/// loads) sits under the logo without moving it.
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key, this.message = 'Getting things ready…'});
+  const SplashScreen({super.key, this.message});
 
-  final String message;
+  final String? message;
+
+  /// The logo's size, and the gap from the screen centre to the message, from the design.
+  static const markSize = 120.0;
+  static const messageOffset = 92.0;
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.disableAnimationsOf(context);
+    final dark = appDarkMode(context);
+    final message = this.message;
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _Pulse(builder: (_, t) => Transform.scale(scale: 1 + 0.06 * t, child: const LuminaLogo())),
-              const SizedBox(height: 22),
-              Text('Lumina', style: ts(32, weight: FontWeight.w700, spacing: -0.6)),
-              const SizedBox(height: 6),
-              Text('Scholarships, matched to you', textAlign: TextAlign.center, style: ts(16, color: LColors.text2)),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: 180,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: still ? 0.5 : null,
-                    minHeight: 5,
-                    color: LColors.primary,
-                    backgroundColor: LColors.soft,
-                    semanticsLabel: 'Loading',
-                  ),
+      backgroundColor: dark ? LBrand.splashDark : LBrand.splashLight,
+      body: LayoutBuilder(
+        builder: (context, box) => Stack(
+          children: [
+            Center(
+              child: Semantics(
+                label: 'Lumina is loading',
+                child: FacetFillLoader(size: markSize, dark: dark),
+              ),
+            ),
+            if (message != null)
+              Positioned(
+                left: 24,
+                right: 24,
+                top: box.maxHeight / 2 + messageOffset,
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: dark ? const Color(0xFFA9CBF2) : const Color(0xFF2F4660)),
                 ),
               ),
-              const SizedBox(height: 14),
-              Text(message, textAlign: TextAlign.center, style: ts(14, color: LColors.text2)),
-            ],
-          ),
+          ],
         ),
       ),
     );

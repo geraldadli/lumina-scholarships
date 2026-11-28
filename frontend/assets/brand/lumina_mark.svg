@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Lumina logo: graduation cap with a guiding star (design 2a). Light colours = the logo. -->
+  <polygon points="50,4 53,11 60,14 53,17 50,24 47,17 40,14 47,11" fill="#5E8FC6"/>
+  <polygon points="10,46 50,30 90,46" fill="#5E8FC6"/>
+  <polygon points="10,46 50,62 90,46" fill="#2F4660"/>
+  <polygon points="26,54 50,64 50,82 26,72" fill="#233447"/>
+  <polygon points="50,64 74,54 74,72 50,82" fill="#17222E"/>
+</svg>

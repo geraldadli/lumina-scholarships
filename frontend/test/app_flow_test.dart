@@ -6,6 +6,7 @@ import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
 import 'package:lumina/screens/ask_screen.dart';
+import 'package:lumina/widgets/logo_motion.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -108,7 +109,7 @@ void main() {
     expect(find.text('aminef.or.id'), findsOneWidget); // official source chip
   });
 
-  testWidgets('a typing indicator shows while the AI writes, and says so on a long wait', (tester) async {
+  testWidgets('a twinkling star with steps shows while the AI writes, ending on the last step', (tester) async {
     await pumpApp(tester);
     await signInAndOnboard(tester);
     await openFulbrightMasters(tester);
@@ -120,10 +121,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(TypingBubble), findsOneWidget);
-    expect(find.text('Reading the official page…'), findsOneWidget);
+    expect(find.byType(TwinkleMark), findsOneWidget);
+    expect(find.text('Reading your question…'), findsOneWidget);
 
+    // The steps move on every 1.7 s and stop at the last one.
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Checking your eligibility…'), findsOneWidget);
     await tester.pump(const Duration(seconds: 7));
-    expect(find.text('Still working on it…'), findsOneWidget);
+    expect(find.text('Writing your answer…'), findsOneWidget);
 
     host.askGate!.complete();
     await tester.pumpAndSettle();
