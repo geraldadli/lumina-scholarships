@@ -5,7 +5,7 @@ Phones the release APK has been checked on. Add a row for every phone after a QA
 
 | Phone | Android | Gemini Nano | Sign-in | UI / UX | Ask AI, cloud off | Ask AI, cloud on | Date | Report |
 |---|---|---|---|---|---|---|---|---|
-| POCO F8 Pro | 16 | Gemini Nano 4 Fast (Developer Preview) | Pass | Pass | Pass | Fail without the debug token, retest pending | 2026-11-28 | [Gemini Nano 4](2026-11-28-nano4-release-apk.md) |
+| POCO F8 Pro | 16 | Gemini Nano 4 Fast (Developer Preview) | Pass | Pass | Pass | Pass with the debug token (fails without it) | 2026-11-28 | [Gemini Nano 4](2026-11-28-nano4-release-apk.md) |
 | POCO F8 Pro | 16 | Gemini Nano 2 | Pass | Pass | Pass | Not shown | 2026-11-27 | [PR #18](2026-11-27-pr18-release-apk.md) |
 | Team lead's phone | | | | | | Pending | | |
 

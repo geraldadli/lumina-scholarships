@@ -14,6 +14,15 @@ The app now asks AICore for Gemini Nano 4 and falls back to the phone's stable G
 | Install | `app-release.apk` opened from the phone's Files app, as the judges will |
 | Phone | POCO F8 Pro, Android 16 (HyperOS 3), AICore Developer Preview on, Gemini Nano 4 Fast downloaded |
 
+Retest build (judge APK, after the App Check fix):
+
+| | |
+|---|---|
+| Commit | `0b7bb45` (PR #19, on top of `main` at `cba15c4`) |
+| Build | `flutter build apk --release --dart-define-from-file=../_local/app_check.json` (App Check debug token) |
+| APK SHA-256 | `a89791e46eb525f3ddff1b7d89efa3a4d27fcc44e31b3085e3369f628a6bd95b` |
+| Install | `adb install -r` over USB (the same file; like the Files app, not from Google Play) |
+
 ## Automated checks
 
 | Check | Result |
@@ -30,7 +39,7 @@ The app now asks AICore for Gemini Nano 4 and falls back to the phone's stable G
 | Ask AI, cloud AI off, Gemini Nano 4 | Pass |
 | Ask AI, cloud AI on (Nano available) | Answered on the phone, as designed |
 | Ask AI, cloud only (Remote Config `ONLY_IN_CLOUD`) | **Fail:** "App not verified" |
-| Same, APK built with the App Check debug token | Pending |
+| Same, judge APK built with the App Check debug token | **Pass:** "Answered with cloud AI" |
 
 ### Cloud AI
 
@@ -47,6 +56,10 @@ The app now asks AICore for Gemini Nano 4 and falls back to the phone's stable G
 - Fix: release builds use an App Check debug token when one is given at build time
   (`frontend/lib/main.dart`, "Building the judge APK" in the checklist). The hackathon accepts
   debug tokens in submissions.
+- Retest with the judge APK built that way, still `ONLY_IN_CLOUD`: the answer said **"Answered
+  with cloud AI"** (screenshot in PR #19), and the log showed
+  `ask selesai: mode=ONLY_IN_CLOUD nano=STABLE source=CLOUD latencyMs=2249`.
+- Afterwards `ai_inference_mode` went back to `PREFER_ON_DEVICE`.
 
 Gemini Nano 4, from `adb logcat -s LuminaHybridAi`:
 
