@@ -71,7 +71,7 @@ Privacy: prompts, questions, and profile data are never written to the log. The 
 
 ### Gemini Nano 4
 
-`on_device_model` accepts `PREVIEW_FAST` (Gemini Nano 4 Fast, default), `PREVIEW` (Gemini Nano 4 Full, falls back to Fast) and `STABLE` (the phone's stable Nano). Gemini Nano 4 is a preview model: a phone gets it only after **Settings → Developer options → AICore → Enable AICore Developer Preview**, and AICore downloads it. Other phones use their stable Nano, or the cloud when no Nano is available and cloud AI is allowed.
+`on_device_model` accepts `PREVIEW_FAST` (Gemini Nano 4 Fast, default), `PREVIEW` (Gemini Nano 4 Full, falls back to Fast) and `STABLE` (the phone's stable Nano). Gemini Nano 4 is a preview model: a phone gets it only after **Settings > Developer options > AICore > Enable AICore Developer Preview** (or search Settings for `AICore`), and AICore downloads it. Other phones use their stable Nano, or the cloud when no Nano is available and cloud AI is allowed.
 
 `ModelAvailability.unavailable` means AICore itself reported that Nano is not supported. `ModelAvailability.unknown` means the cause is not known (extension missing, or the status check failed): show "On-device AI is unavailable". Filter the log with `adb logcat -s LuminaHybridAi` to see which one happened (`EXTENSION_MISSING`, `CHECK_FAILED`, or `REPORTED`).
 

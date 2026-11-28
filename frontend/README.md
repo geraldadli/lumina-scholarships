@@ -52,10 +52,14 @@ To go live:
 
 1. Get `google-services.json` for `com.lumina.app` from the backend engineer and put it at `frontend/android/app/google-services.json`. It is gitignored, so **never commit it**.
 2. Ask backend to enable the **Google** and **Email/Password** sign-in providers in Firebase Auth.
-3. Run a debug build once and look in logcat for `Enter this debug secret into the allow list`. Register that token in Firebase Console → App Check → Manage debug tokens. Without it, cloud AI answers fail with `appCheckFailed`.
+3. Run a debug build once and look in logcat for `Enter this debug secret into the allow list`. Register that token in Firebase Console > App Check > Apps > `com.lumina.app` > menu > **Manage debug tokens**. Without it, cloud AI answers fail with `appCheckFailed`.
    To use a token that is already registered instead, put `{"APP_CHECK_DEBUG_TOKEN": "<token>"}` in `_local/app_check.json` (gitignored) and build with `--dart-define-from-file=../_local/app_check.json`. Never commit the token.
 
 To refresh the demo data: `cp ../backend/data/scholarships.json assets/demo/scholarships.json`.
+
+### Release APK
+
+A plain `flutter build apk --release` uses the **Play Integrity** App Check provider, which rejects an APK installed outside Google Play: cloud AI then shows "App not verified". The judge APK is built with a registered App Check debug token instead (`--dart-define-from-file=../_local/app_check.json`, see `lib/main.dart`); the steps are in [docs/qa/release-apk-checklist.md](../docs/qa/release-apk-checklist.md), "Building the judge APK". Before sharing an APK, run the phone checks in that checklist: they install the APK file the way the judges will, and check which model answered each Ask AI question.
 
 ## Data access (what backend needs to know)
 

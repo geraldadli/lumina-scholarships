@@ -11,11 +11,17 @@ Lumina is a free Android app in development that helps students find scholarship
 
 ## How the AI works
 
-The assistant is designed to use Gemini Nano on supported Android devices. When Nano is unavailable, it can use cloud Gemini through Firebase AI Logic if the user allows cloud processing and has an internet connection.
+The assistant runs on the phone first, through Firebase AI Logic hybrid inference and Android AICore:
+
+1. **Gemini Nano 4** when the phone has it (AICore Developer Preview).
+2. Otherwise the phone's **stable Gemini Nano**.
+3. **Cloud Gemini** only when on-device AI is unavailable, the user allows cloud AI, and there is an internet connection.
+
+Each answer is labelled "Answered on this phone" or "Answered with cloud AI". Details: [Hybrid AI package](packages/hybrid_ai/README.md).
 
 ## Tech stack
 
-Flutter and Dart for the app, Kotlin for the Android AI integration, and Firebase for authentication, scholarship data, and hybrid AI.
+Flutter and Dart for the app, Kotlin for the Android AI integration, and Firebase: Authentication, Firestore (scholarship data and user data), Firebase AI Logic (Gemini Nano + cloud Gemini), App Check (a debug token for the judge APK and development builds, Play Integrity for Google Play builds) and Remote Config (AI mode and model choice).
 
 Android package name: `com.lumina.app`.
 
@@ -43,5 +49,5 @@ Android package name: `com.lumina.app`.
 - [Hybrid AI package](packages/hybrid_ai/README.md): Dart API for Ask AI, checklist, and match score
 - [Backend guide](backend/README.md): how scholarship data is imported, monitored, and synced
 - [Installing the APK](docs/judge-apk.md): install the app on a phone and what to try
-- [Release APK QA](docs/qa/release-apk-checklist.md): phone checks before an APK is shared, with the [device matrix](docs/qa/device-matrix.md)
+- [Release APK QA](docs/qa/release-apk-checklist.md): phone checks before an APK is shared, with the [device matrix](docs/qa/device-matrix.md) and one report per QA round in [docs/qa/](docs/qa/)
 - [Contributing](CONTRIBUTING.md): branches, commit messages, and pull requests
