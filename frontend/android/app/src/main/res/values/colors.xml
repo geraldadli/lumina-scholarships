@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lumina brand colours (Lumina_Logo_2a). -->
+    <color name="ic_launcher_background">#F7F9FB</color>
+    <color name="splash_background">#F7F9FB</color>
+</resources>
