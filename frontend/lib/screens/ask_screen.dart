@@ -101,7 +101,7 @@ class _AskScreenState extends State<AskScreen> {
               title: 'Ask AI',
               subtitle: s.title,
               bottom: Text(
-                'Answers use only the official scholarship page.',
+                'Answers use scholarship details and your profile when available.',
                 style: ts(14, color: LColors.text2, height: 1.4),
               ),
             ),

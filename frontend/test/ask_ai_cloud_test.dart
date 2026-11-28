@@ -123,7 +123,7 @@ void main() {
     for (final badge in ['On-device', 'Cloud AI', 'AI off']) {
       expect(find.text(badge), findsNothing);
     }
-    expect(find.text('Answers use only the official scholarship page.'), findsOneWidget);
+    expect(find.text('Answers use scholarship details and your profile when available.'), findsOneWidget);
   });
 
   testWidgets('each answer keeps the label of where it ran: phone or cloud', (tester) async {
