@@ -75,3 +75,7 @@ ask selesai: mode=ONLY_ON_DEVICE nano=PREVIEW_FAST source=ON_DEVICE latencyMs=83
 - A judge's phone uses Gemini Nano 4 only with the AICore Developer Preview turned on and Gemini
   Nano 4 downloaded. Otherwise it uses its stable Gemini Nano, or cloud AI when it has no Nano and
   cloud AI is on. [judge-apk.md](../judge-apk.md) explains this.
+- The APK shared with the judges must be built with the App Check debug token, like the retest
+  build above. A plain `flutter build apk --release` gives "App not verified" on every phone that
+  needs cloud AI.
+- Delete the `judge-apk` debug token in the Firebase Console when judging is over.

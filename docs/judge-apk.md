@@ -34,7 +34,7 @@ Lumina uses Firebase AI Logic in hybrid mode: Gemini Nano on the phone first, cl
 when you allow it. Each answer says where it was made: **Answered on this phone** or **Answered
 with cloud AI**.
 
-- On phones with Gemini Nano, answers are made on the phone.
+- On phones with Gemini Nano, answers are made on the phone, also when cloud AI is on.
 - When Nano is unavailable and cloud AI is on (Profile > Privacy & AI), answers come from cloud
   Gemini. Cloud AI is used only while it is turned on.
 - With cloud AI off and no Nano, Ask AI explains that on-device AI is unavailable and offers to

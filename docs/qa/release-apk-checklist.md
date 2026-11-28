@@ -103,6 +103,7 @@ its name.
 | Cloud AI off, phone without Gemini Nano | Explains that on-device AI is unavailable and offers cloud AI |
 | Cloud AI on, phone with Gemini Nano | Answer shows "Answered on this phone": Nano goes first |
 | Cloud AI on, Gemini Nano not available | Answer shows "Answered with cloud AI" |
+| Cloud AI on, cloud forced (see "Testing cloud AI on a phone that has Gemini Nano") | Answer shows "Answered with cloud AI", not "App not verified" |
 
 ### Where each answer came from (log)
 
@@ -123,6 +124,8 @@ adb logcat -d -s LuminaHybridAi
 | `Gemini Nano model: requested=PREVIEW_FAST using=STABLE ...` | No Gemini Nano 4 on the phone, the stable Nano is used |
 | `ask selesai: ... nano=PREVIEW_FAST source=ON_DEVICE` | Answered by Gemini Nano 4 on the phone |
 | `ask selesai: ... source=CLOUD` | Answered by cloud Gemini |
+| `ask selesai: mode=ONLY_IN_CLOUD ...` | Remote Config sends every question to the cloud (test only) |
+| No `ask selesai` line after a question | The question failed (for example "App not verified"); see the card on the phone |
 
 ### Gemini Nano 4
 
@@ -141,7 +144,22 @@ Without these steps the app uses the phone's stable Gemini Nano. That is expecte
 ### Testing cloud AI on a phone that has Gemini Nano
 
 With cloud AI on, a phone with Gemini Nano still answers on the phone, so it does not test cloud
-AI. Turn off AICore (the app that runs Gemini Nano) while testing:
+AI. Use one of these two ways.
+
+**A. Remote Config (works on every phone; used on the POCO F8 Pro).** Sends every question to
+the cloud:
+
+1. Firebase Console > Remote Config: set `ai_inference_mode` to `ONLY_IN_CLOUD` and publish.
+2. Clear the app's data, so it fetches Remote Config again (you have to sign in again):
+   `adb shell pm clear com.lumina.app`. HyperOS (Xiaomi, POCO, Redmi) blocks that; there, use
+   **Settings > Apps > Manage apps > Lumina > Storage > Clear data** on the phone.
+3. Sign in, turn on cloud AI, ask a question and take a screenshot of the answer and its label.
+   The log shows `mode=ONLY_IN_CLOUD ... source=CLOUD`.
+4. Set `ai_inference_mode` back to `PREFER_ON_DEVICE`, publish, and clear the app's data again.
+   Every phone with Lumina uses this value, so do not leave it on `ONLY_IN_CLOUD`.
+
+**B. Turn off AICore** (the app that runs Gemini Nano). Only this phone is affected, but some
+phones refuse: HyperOS answers `Cannot disable system packages`.
 
 ```powershell
 adb shell pm disable-user --user 0 com.google.android.aicore
@@ -158,17 +176,8 @@ Then turn AICore back on:
 adb shell pm enable com.google.android.aicore
 ```
 
-Some phones refuse to turn off AICore (Xiaomi, POCO and Redmi with HyperOS answer `Cannot disable
-system packages`). On those, send every question to the cloud with Remote Config for the test:
-
-1. Firebase Console > Remote Config: set `ai_inference_mode` to `ONLY_IN_CLOUD` and publish.
-2. Clear the app's data, so it fetches Remote Config again (you have to sign in again):
-   `adb shell pm clear com.lumina.app`. HyperOS blocks that too; there, use **Settings > Apps >
-   Manage apps > Lumina > Storage > Clear data** on the phone.
-3. Sign in, turn on cloud AI, ask a question and take the screenshot. The log shows
-   `mode=ONLY_IN_CLOUD ... source=CLOUD`.
-4. Set `ai_inference_mode` back to `PREFER_ON_DEVICE`, publish, and clear the app's data again.
-   Every phone with Lumina uses this value, so do not leave it on `ONLY_IN_CLOUD`.
+The badge at the top of Ask AI shows **On-device** whenever the phone has Gemini Nano, also
+during this test. The label under the answer is what counts.
 
 If the answer is the card **App not verified** ("This app has not been verified to use cloud
 AI"), App Check rejected the APK: it was built without the debug token (see "Building the judge

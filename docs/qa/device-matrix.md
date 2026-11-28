@@ -16,6 +16,7 @@ Phones the release APK has been checked on. Add a row for every phone after a QA
 - **Ask AI, cloud off:** only Gemini Nano may answer. A phone without Nano should explain that
   on-device AI is unavailable and offer cloud AI.
 - **Ask AI, cloud on:** an answer labelled "Answered with cloud AI" (cloud Gemini through Firebase
-  AI Logic, which needs App Check to accept the APK). A phone with Nano answers on the phone even
-  with cloud AI on, so turn AICore off or send every question to the cloud with Remote Config
-  first: see the checklist, "Testing cloud AI on a phone that has Gemini Nano".
+  AI Logic, which needs App Check to accept the APK, so test the judge APK built with the debug
+  token). A phone with Nano answers on the phone even with cloud AI on, so send every question to
+  the cloud with Remote Config or turn AICore off first: see the checklist, "Testing cloud AI on a
+  phone that has Gemini Nano".

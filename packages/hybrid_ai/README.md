@@ -61,6 +61,7 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Gemini Nano 4 on the phone (AICore Developer Preview) | Uses Gemini Nano 4, chosen by Remote Config `on_device_model` (default `PREVIEW_FAST`) |
 | No Gemini Nano 4 on the phone | Uses the phone's stable Gemini Nano; the app never downloads a preview model itself |
 | Nano not available or not downloaded, cloud allowed | Automatic fallback to the cloud (`AiSource.cloud`) |
+| Remote Config `ONLY_IN_CLOUD`, cloud allowed | Always the cloud, Nano is skipped (used for QA cloud tests) |
 | `allowCloud: false` (private mode) | Forced `ONLY_ON_DEVICE`; if Nano is not ready → `HybridAiException` |
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
 | Scholarship has no title, or its `sourceUrl` is not an `https://` link with a real hostname (plain `http://`, a bare `https://`, or an empty host are rejected) | `ask()` throws `noContext` before any model is called |
@@ -102,7 +103,7 @@ Instead of switching over every code, show one state from `e.unavailability`:
 ## Requirements for the host app
 
 - Android `minSdk 26`, and `google-services.json` for `com.lumina.app` (never commit it).
-- **App Check**: AI Logic is enforced. Debug builds must install `DebugAppCheckProviderFactory` and register the debug token in the Firebase Console (see `example/android/.../MainActivity.kt`).
+- **App Check**: AI Logic is enforced. Debug builds must install `DebugAppCheckProviderFactory` and register the debug token in the Firebase Console (see `example/android/.../MainActivity.kt`). Play Integrity rejects an APK installed outside Google Play, so the Lumina judge APK is built with a registered debug token (`frontend/lib/main.dart`, `docs/qa/release-apk-checklist.md`). A rejected request is `HybridAiErrorCode.appCheckFailed` ("App not verified").
 - Gemini Nano only works on [supported devices](https://developers.google.com/ml-kit/genai) with a locked bootloader, and only while the app is in the foreground. Emulators can only test the cloud path.
 - Gemini Nano is validated for English and Korean only, so check answer quality in Indonesian on a real device.
 
