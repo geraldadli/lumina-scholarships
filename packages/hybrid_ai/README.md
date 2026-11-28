@@ -58,12 +58,20 @@ final checklist = await ai.generateChecklist(ChecklistRequest(
 | Condition | Result |
 |---|---|
 | Remote Config `PREFER_ON_DEVICE` and Nano available | Answers on the device (`AiSource.onDevice`) |
+| Gemini Nano 4 on the phone (AICore Developer Preview) | Uses Gemini Nano 4, chosen by Remote Config `on_device_model` (default `PREVIEW_FAST`) |
+| No Gemini Nano 4 on the phone | Uses the phone's stable Gemini Nano; the app never downloads a preview model itself |
 | Nano not available or not downloaded, cloud allowed | Automatic fallback to the cloud (`AiSource.cloud`) |
 | `allowCloud: false` (private mode) | Forced `ONLY_ON_DEVICE`; if Nano is not ready → `HybridAiException` |
 | Checklist fails or AI is unavailable | Checklist from official requirements (`AiSource.rules`) |
 | Scholarship has no title, or its `sourceUrl` is not an `https://` link with a real hostname (plain `http://`, a bare `https://`, or an empty host are rejected) | `ask()` throws `noContext` before any model is called |
 
-Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency, plus the Gemini Nano status outcome.
+Privacy: prompts, questions, and profile data are never written to the log. The log records only the mode, source, and latency, plus the Gemini Nano status outcome and which Nano model is used (`Gemini Nano model: requested=PREVIEW_FAST using=PREVIEW_FAST status=AVAILABLE`).
+
+`AiStatus.onDeviceModelName` is the name AICore reports for the Nano in use, so it shows whether Gemini Nano 4 or the stable Nano is running.
+
+### Gemini Nano 4
+
+`on_device_model` accepts `PREVIEW_FAST` (Gemini Nano 4 Fast, default), `PREVIEW` (Gemini Nano 4 Full, falls back to Fast) and `STABLE` (the phone's stable Nano). Gemini Nano 4 is a preview model: a phone gets it only after **Settings → Developer options → AICore → Enable AICore Developer Preview**, and AICore downloads it. Other phones use their stable Nano, or the cloud when no Nano is available and cloud AI is allowed.
 
 `ModelAvailability.unavailable` means AICore itself reported that Nano is not supported. `ModelAvailability.unknown` means the cause is not known (extension missing, or the status check failed): show "On-device AI is unavailable". Filter the log with `adb logcat -s LuminaHybridAi` to see which one happened (`EXTENSION_MISSING`, `CHECK_FAILED`, or `REPORTED`).
 

@@ -152,6 +152,7 @@ A single array of objects. It is validated automatically in CI (`npm run validat
 | Key | Type | Default (match it in the app's `setDefaults`) | Purpose |
 |---|---|---|---|
 | `ai_inference_mode` | String | `PREFER_ON_DEVICE` | Hybrid inference mode for Firebase AI Logic |
+| `on_device_model` | String | `PREVIEW_FAST` | Gemini Nano to request: `PREVIEW_FAST` (Gemini Nano 4 Fast), `PREVIEW` (Gemini Nano 4 Full) or `STABLE`. Falls back to the stable Nano on phones without the AICore Developer Preview |
 | `cloud_fallback_model` | String | `gemini-3.5-flash-lite` | Cloud model used when the on-device model is not ready |
 | `min_match_score_threshold` | Number | `0.65` | Minimum `matchScore` to be shown as a "match" |
 

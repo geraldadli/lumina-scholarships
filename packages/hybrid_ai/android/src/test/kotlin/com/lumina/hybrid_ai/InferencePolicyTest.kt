@@ -104,6 +104,75 @@ internal class InferencePolicyTest {
     }
 
     @Test
+    fun nanoModel_parseDefaultsToGeminiNano4Fast() {
+        assertEquals(NanoModel.PREVIEW_FAST, NanoModelPolicy.parse(null))
+        assertEquals(NanoModel.PREVIEW_FAST, NanoModelPolicy.parse("nano-4"))
+        assertEquals(NanoModel.PREVIEW, NanoModelPolicy.parse(" preview "))
+        assertEquals(NanoModel.STABLE, NanoModelPolicy.parse("STABLE"))
+    }
+
+    @Test
+    fun nanoModel_candidatesAlwaysEndWithStable() {
+        for (preferred in NanoModel.entries) {
+            val candidates = NanoModelPolicy.candidates(preferred)
+            assertEquals(preferred, candidates.first())
+            assertEquals(NanoModel.STABLE, candidates.last())
+        }
+        assertEquals(
+            listOf(NanoModel.PREVIEW, NanoModel.PREVIEW_FAST, NanoModel.STABLE),
+            NanoModelPolicy.candidates(NanoModel.PREVIEW),
+        )
+    }
+
+    @Test
+    fun nanoModel_usesNano4WhenItIsOnThePhone() {
+        assertEquals(
+            NanoModel.PREVIEW_FAST to ModelAvailability.AVAILABLE,
+            NanoModelPolicy.choose(listOf(NanoModel.PREVIEW_FAST to ModelAvailability.AVAILABLE)),
+        )
+    }
+
+    @Test
+    fun nanoModel_fallsBackToStableWithoutTheDeveloperPreview() {
+        for (previewStatus in ModelAvailability.entries.filter { it != ModelAvailability.AVAILABLE }) {
+            assertEquals(
+                NanoModel.STABLE to ModelAvailability.AVAILABLE,
+                NanoModelPolicy.choose(
+                    listOf(
+                        NanoModel.PREVIEW_FAST to previewStatus,
+                        NanoModel.STABLE to ModelAvailability.AVAILABLE,
+                    ),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun nanoModel_neverDownloadsAPreviewModelItself() {
+        // Preview downloadable, stable downloadable: the stable Nano is the one offered for download.
+        assertEquals(
+            NanoModel.STABLE to ModelAvailability.DOWNLOADABLE,
+            NanoModelPolicy.choose(
+                listOf(
+                    NanoModel.PREVIEW_FAST to ModelAvailability.DOWNLOADABLE,
+                    NanoModel.STABLE to ModelAvailability.DOWNLOADABLE,
+                ),
+            ),
+        )
+        // No Nano at all: the stable status (UNAVAILABLE) decides.
+        assertEquals(
+            NanoModel.STABLE to ModelAvailability.UNAVAILABLE,
+            NanoModelPolicy.choose(
+                listOf(
+                    NanoModel.PREVIEW_FAST to ModelAvailability.UNAVAILABLE,
+                    NanoModel.STABLE to ModelAvailability.UNAVAILABLE,
+                ),
+            ),
+        )
+        assertEquals(NanoModel.STABLE to ModelAvailability.UNKNOWN, NanoModelPolicy.choose(emptyList()))
+    }
+
+    @Test
     fun errorClassifier_mapsKnownMessages() {
         assertEquals(ErrorCodes.BUSY, ErrorClassifier.fromMessage("ErrorCode.BUSY: AICore is busy"))
         assertEquals(ErrorCodes.QUOTA_EXCEEDED, ErrorClassifier.fromMessage("PER_APP_BATTERY_USE_QUOTA_EXCEEDED"))
