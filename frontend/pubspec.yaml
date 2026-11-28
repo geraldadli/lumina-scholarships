@@ -70,6 +70,14 @@ flutter:
   assets:
     - assets/demo/scholarships.json
     - assets/brand/
+    - assets/fonts/Manrope-OFL.txt
+
+  # Manrope is only for the "Lumina" wordmark next to the logo (Lumina_Logo_2a). Bundled so it
+  # works offline and in tests. Licence: assets/fonts/Manrope-OFL.txt (SIL OFL 1.1).
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

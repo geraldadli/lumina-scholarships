@@ -1,6 +1,7 @@
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:hybrid_ai/hybrid_ai.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -26,6 +27,10 @@ const _appCheckDebugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Manrope (the wordmark font) is bundled, so its licence goes on the Licences page.
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Manrope'], await rootBundle.loadString('assets/fonts/Manrope-OFL.txt'));
+  });
   final backend = await _createBackend();
   final appearance = await AppearanceController.load();
   // The cloud AI "off" chosen on this phone survives a restart even before the account has it.

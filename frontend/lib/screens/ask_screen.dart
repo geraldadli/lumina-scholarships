@@ -11,6 +11,8 @@ import '../theme.dart';
 import '../util/format.dart';
 import '../widgets/common.dart';
 import '../widgets/layout.dart';
+import '../widgets/loading.dart';
+import '../widgets/logo_motion.dart';
 import 'detail_screen.dart';
 import 'profile_form.dart';
 
@@ -226,106 +228,104 @@ class _UserBubble extends StatelessWidget {
       );
 }
 
-/// Shown while the AI writes its answer: three dots that bounce in turn, in the same bubble as
-/// the AI's answers. After [slowAfter] the text says it is still working, so a long wait does
-/// not look stuck. With reduced motion the dots stay still.
+/// Shown while the AI writes its answer ("Lumina Loaders" 1d): the logo's star twinkles above
+/// the cap and a status line names the current step. Each step rises in after [stepEvery]; the
+/// last one stays until the answer arrives. With reduced motion the logo holds still.
 class TypingBubble extends StatefulWidget {
-  const TypingBubble({super.key, this.slowAfter = const Duration(seconds: 6)});
+  const TypingBubble({super.key, this.stepEvery = const Duration(milliseconds: 1700)});
 
-  final Duration slowAfter;
+  final Duration stepEvery;
+
+  static const steps = [
+    'Reading your question…',
+    // Generic on purpose: the steps run on a timer, not on what the AI is really doing, so
+    // they must fit any question (e.g. one about required documents).
+    'Working on your answer…',
+    'Writing your answer…',
+  ];
 
   @override
   State<TypingBubble> createState() => _TypingBubbleState();
 }
 
-class _TypingBubbleState extends State<TypingBubble> with SingleTickerProviderStateMixin {
-  late final AnimationController _dots = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-  Timer? _slowTimer;
-  bool _slow = false;
+class _TypingBubbleState extends State<TypingBubble> {
+  Timer? _timer;
+  int _step = 0;
 
   @override
   void initState() {
     super.initState();
-    _slowTimer = Timer(widget.slowAfter, () => setState(() => _slow = true));
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).disableAnimations) {
-      _dots.stop();
-    } else if (!_dots.isAnimating) {
-      _dots.repeat();
-    }
+    _timer = Timer.periodic(widget.stepEvery, (t) {
+      if (_step >= TypingBubble.steps.length - 1) {
+        t.cancel();
+        return;
+      }
+      setState(() => _step++);
+    });
   }
 
   @override
   void dispose() {
-    _slowTimer?.cancel();
-    _dots.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final label = _slow ? 'Still working on it…' : 'Reading the official page…';
+    final dark = appDarkMode(context);
+    final label = TypingBubble.steps[_step];
     return Semantics(
       liveRegion: true,
       label: 'Lumina is answering. $label',
       child: ExcludeSemantics(
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: LColors.white,
-              border: Border.all(color: LColors.line),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(16),
-              ),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              spacing: 12,
               children: [
-                AnimatedBuilder(
-                  animation: _dots,
-                  builder: (context, _) => Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 4,
-                    children: [for (var i = 0; i < 3; i++) _dot(i)],
-                  ),
-                ),
-                const SizedBox(width: 10),
+                TwinkleMark(size: 36, dark: dark),
                 Flexible(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: Text(label, key: ValueKey(_slow), style: ts(14, color: LColors.text2)),
+                  child: SizedBox(
+                    height: 20,
+                    child: ClipRect(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        switchInCurve: const Cubic(.2, .8, .2, 1),
+                        // The new step rises in; the old one simply leaves.
+                        transitionBuilder: (child, animation) => child.key == ValueKey(_step)
+                            ? FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween(begin: const Offset(0, .3), end: Offset.zero).animate(animation),
+                                  child: child,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                        layoutBuilder: (current, previous) => Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [?current],
+                        ),
+                        child: Text(
+                          label,
+                          key: ValueKey(_step),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 20 / 14,
+                            color: dark ? const Color(0xFFA9CBF2) : const Color(0xFF2F4660),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  /// Dot [i] rises and brightens a third of a cycle after the one before it.
-  Widget _dot(int i) {
-    final phase = (_dots.value - i * 0.18) % 1.0;
-    // Up and down in the first half of its cycle, resting in the second.
-    final lift = phase < 0.5 ? math.sin(phase / 0.5 * math.pi) : 0.0;
-    return Transform.translate(
-      offset: Offset(0, -4 * lift),
-      child: Container(
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(
-          color: Color.lerp(LColors.muted, LColors.primary, lift),
-          shape: BoxShape.circle,
         ),
       ),
     );

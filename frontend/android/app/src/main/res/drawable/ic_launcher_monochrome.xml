@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lumina logo (assets/brand/lumina_mark.svg) as an adaptive icon layer: 108dp canvas, mark inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="16.5" android:translateY="21.75" android:scaleX="0.75" android:scaleY="0.75">
+        <path android:fillColor="#FF000000" android:pathData="M50,4 L53,11 L60,14 L53,17 L50,24 L47,17 L40,14 L47,11 Z"/>
+        <path android:fillColor="#FF000000" android:pathData="M10,46 L50,30 L90,46 Z"/>
+        <path android:fillColor="#FF000000" android:pathData="M10,46 L50,62 L90,46 Z"/>
+        <path android:fillColor="#FF000000" android:pathData="M26,54 L50,64 L50,82 L26,72 Z"/>
+        <path android:fillColor="#FF000000" android:pathData="M50,64 L74,54 L74,72 L50,82 Z"/>
+    </group>
+</vector>
