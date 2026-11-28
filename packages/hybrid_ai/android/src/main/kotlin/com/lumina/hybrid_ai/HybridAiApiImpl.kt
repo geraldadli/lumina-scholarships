@@ -11,6 +11,7 @@ import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.InferenceMode
 import com.google.firebase.ai.InferenceSource
 import com.google.firebase.ai.OnDeviceConfig
+import com.google.firebase.ai.OnDeviceModelOption
 import com.google.firebase.ai.OnDeviceModelStatus
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.ContentBlockedException
@@ -51,15 +52,20 @@ class HybridAiApiImpl(
 
     private data class Settings(
         val mode: AiMode,
+        val nanoModel: NanoModel,
         val cloudModel: String,
         val minMatchScore: Double,
         val fetched: Boolean,
     )
 
+    /** The Gemini Nano picked by [chooseNano] and its status. */
+    private data class NanoChoice(val nano: NanoModel, val availability: ModelAvailability)
+
     private val configMutex = Mutex()
     private var configFetchAttempted = false
     private var configFetched = false
-    private val models = HashMap<Pair<AiMode, String>, GenerativeModel>()
+    private val models = HashMap<Triple<AiMode, NanoModel, String>, GenerativeModel>()
+    private var nanoChoice: NanoChoice? = null
     private var downloadJob: Job? = null
     private var warmedUp = false
 
@@ -67,8 +73,9 @@ class HybridAiApiImpl(
 
     override suspend fun getStatus(): AiStatus = guard {
         val settings = loadSettings()
-        val model = model(AiMode.PREFER_ON_DEVICE, settings.cloudModel)
-        val availability = availability(model)
+        val choice = chooseNano(settings)
+        val model = model(AiMode.PREFER_ON_DEVICE, choice.nano, settings.cloudModel)
+        val availability = choice.availability
         val name = if (availability == ModelAvailability.AVAILABLE) {
             warmUpOnce(model)
             runCatching { model.onDeviceExtension?.getModelName() }.getOrNull()
@@ -86,8 +93,9 @@ class HybridAiApiImpl(
     override suspend fun startModelDownload(): Unit = guard {
         if (downloadJob?.isActive == true) return@guard
         val settings = loadSettings()
-        val model = model(AiMode.PREFER_ON_DEVICE, settings.cloudModel)
-        when (availability(model)) {
+        val choice = chooseNano(settings)
+        val model = model(AiMode.PREFER_ON_DEVICE, choice.nano, settings.cloudModel)
+        when (choice.availability) {
             ModelAvailability.AVAILABLE -> {
                 send(DownloadProgress(state = DownloadState.COMPLETED))
                 return@guard
@@ -133,8 +141,9 @@ class HybridAiApiImpl(
         ContextGuard.check(request.scholarship)?.let { throw it }
         val settings = loadSettings()
         val mode = InferencePolicy.resolve(settings.mode, request.allowCloud)
-        val model = model(mode, settings.cloudModel)
-        InferencePolicy.precheck(mode, availabilityIfNeeded(mode, model), request.allowCloud)?.let { throw it }
+        val nano = nanoFor(mode, settings)
+        val model = model(mode, nano.nano, settings.cloudModel)
+        InferencePolicy.precheck(mode, nano.availability, request.allowCloud)?.let { throw it }
 
         val started = SystemClock.elapsedRealtime()
         val response = generateWithRetry(model, PromptBuilder.ask(request))
@@ -144,7 +153,7 @@ class HybridAiApiImpl(
         if (text.isEmpty()) throw HybridAiError(ErrorCodes.EMPTY_RESPONSE, "The model returned no answer.")
 
         val source = response.aiSource()
-        Log.d(TAG, "ask selesai: mode=${mode.name} source=${source.name} latencyMs=$latency")
+        Log.d(TAG, "ask selesai: mode=${mode.name} nano=${nano.nano.name} source=${source.name} latencyMs=$latency")
         AiAnswer(
             text = text,
             source = source,
@@ -163,13 +172,14 @@ class HybridAiApiImpl(
         try {
             val settings = loadSettings()
             val mode = InferencePolicy.resolve(settings.mode, request.allowCloud)
-            val model = model(mode, settings.cloudModel)
-            InferencePolicy.precheck(mode, availabilityIfNeeded(mode, model), request.allowCloud)?.let { throw it }
+            val nano = nanoFor(mode, settings)
+            val model = model(mode, nano.nano, settings.cloudModel)
+            InferencePolicy.precheck(mode, nano.availability, request.allowCloud)?.let { throw it }
 
             val response = generateWithRetry(model, PromptBuilder.checklist(request))
             val tips = ChecklistBuilder.parseTips(response.text.orEmpty(), knownIds)
             val source = response.aiSource()
-            Log.d(TAG, "checklist selesai: mode=${mode.name} source=${source.name} tips=${tips.size}")
+            Log.d(TAG, "checklist selesai: mode=${mode.name} nano=${nano.nano.name} source=${source.name} tips=${tips.size}")
             if (tips.isEmpty()) {
                 ChecklistResult(base, AiSource.RULES, note = "The AI returned no valid tips; checklist built from the official requirements.")
             } else {
@@ -209,6 +219,7 @@ class HybridAiApiImpl(
         val threshold = rc.getDouble(KEY_MIN_MATCH)
         return Settings(
             mode = InferencePolicy.parse(rc.getString(KEY_MODE)),
+            nanoModel = NanoModelPolicy.parse(rc.getString(KEY_NANO_MODEL)),
             cloudModel = rc.getString(KEY_CLOUD_MODEL).trim().ifEmpty { DEFAULT_CLOUD_MODEL },
             minMatchScore = if (threshold in 0.0..1.0 && threshold > 0.0) threshold else DEFAULT_MIN_MATCH,
             fetched = configFetched,
@@ -223,6 +234,7 @@ class HybridAiApiImpl(
         rc.setDefaultsAsync(
             mapOf(
                 KEY_MODE to InferencePolicy.DEFAULT_MODE.name,
+                KEY_NANO_MODEL to NanoModelPolicy.DEFAULT.name,
                 KEY_CLOUD_MODEL to DEFAULT_CLOUD_MODEL,
                 KEY_MIN_MATCH to DEFAULT_MIN_MATCH,
             ),
@@ -231,8 +243,8 @@ class HybridAiApiImpl(
         return rc
     }
 
-    private fun model(mode: AiMode, cloudModel: String): GenerativeModel =
-        models.getOrPut(mode to cloudModel) {
+    private fun model(mode: AiMode, nano: NanoModel, cloudModel: String): GenerativeModel =
+        models.getOrPut(Triple(mode, nano, cloudModel)) {
             Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
                 modelName = cloudModel,
                 generationConfig = generationConfig {
@@ -243,19 +255,54 @@ class HybridAiApiImpl(
                     mode = mode.toFirebase(),
                     maxOutputTokens = ON_DEVICE_MAX_OUTPUT_TOKENS,
                     temperature = 0.2f,
+                    modelOption = nano.toFirebase(),
                 ),
             )
         }
 
     /**
-     * Asks AICore for the Nano status and logs WHICH outcome happened. Only a real UNAVAILABLE answer
-     * becomes [ModelAvailability.UNAVAILABLE]; a missing extension or a failed check is
+     * Picks the Gemini Nano to use: Remote Config `on_device_model` first (Gemini Nano 4 by default),
+     * falling back to the stable Nano when the preview model is not on this phone. See
+     * [NanoModelPolicy.choose]. A final answer (AVAILABLE or UNAVAILABLE) is kept for the rest of the
+     * session, so questions do not re-check AICore every time.
+     */
+    private suspend fun chooseNano(settings: Settings): NanoChoice {
+        nanoChoice?.let { return it }
+        val statuses = ArrayList<Pair<NanoModel, ModelAvailability>>()
+        for (candidate in NanoModelPolicy.candidates(settings.nanoModel)) {
+            val availability = availability(candidate, settings.cloudModel)
+            statuses += candidate to availability
+            if (availability == ModelAvailability.AVAILABLE) break
+        }
+        val (nano, availability) = NanoModelPolicy.choose(statuses)
+        Log.i(TAG, "Gemini Nano model: requested=${settings.nanoModel.name} using=${nano.name} status=${availability.name}")
+        val choice = NanoChoice(nano, availability)
+        if (availability == ModelAvailability.AVAILABLE || availability == ModelAvailability.UNAVAILABLE) {
+            nanoChoice = choice
+        }
+        return choice
+    }
+
+    /** Cloud-only questions never touch Nano, so they skip the AICore check. */
+    private suspend fun nanoFor(mode: AiMode, settings: Settings): NanoChoice =
+        if (mode == AiMode.ONLY_IN_CLOUD) NanoChoice(NanoModel.STABLE, ModelAvailability.UNKNOWN) else chooseNano(settings)
+
+    /**
+     * Asks AICore for one Nano model's status and logs WHICH outcome happened. Only a real UNAVAILABLE
+     * answer becomes [ModelAvailability.UNAVAILABLE]; a missing extension or a failed check is
      * [ModelAvailability.UNKNOWN], so the UI never claims "not supported" without knowing.
      */
-    private suspend fun availability(model: GenerativeModel): ModelAvailability {
-        val probe = probeStatus(model)
+    private suspend fun availability(nano: NanoModel, cloudModel: String): ModelAvailability {
+        val probe = try {
+            probeStatus(model(AiMode.PREFER_ON_DEVICE, nano, cloudModel))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            NanoStatusProbe.CheckFailed(e)
+        }
         val availability = probe.toAvailability()
-        if (availability == ModelAvailability.UNKNOWN) Log.w(TAG, probe.describe()) else Log.i(TAG, probe.describe())
+        val line = "${probe.describe()} model=${nano.name}"
+        if (availability == ModelAvailability.UNKNOWN) Log.w(TAG, line) else Log.i(TAG, line)
         return availability
     }
 
@@ -277,10 +324,6 @@ class HybridAiApiImpl(
             NanoStatusProbe.CheckFailed(e)
         }
     }
-
-    /** Cek status hanya jika diperlukan (ONLY_ON_DEVICE), agar mode lain tidak menambah latensi. */
-    private suspend fun availabilityIfNeeded(mode: AiMode, model: GenerativeModel): ModelAvailability =
-        if (mode == AiMode.ONLY_ON_DEVICE) availability(model) else ModelAvailability.AVAILABLE
 
     private fun warmUpOnce(model: GenerativeModel) {
         if (warmedUp) return
@@ -321,6 +364,7 @@ class HybridAiApiImpl(
     companion object {
         private const val TAG = "LuminaHybridAi"
         const val KEY_MODE = "ai_inference_mode"
+        const val KEY_NANO_MODEL = "on_device_model"
         const val KEY_CLOUD_MODEL = "cloud_fallback_model"
         const val KEY_MIN_MATCH = "min_match_score_threshold"
         const val DEFAULT_CLOUD_MODEL = "gemini-3.5-flash-lite"
@@ -338,6 +382,12 @@ private fun AiMode.toFirebase(): InferenceMode = when (this) {
     AiMode.ONLY_ON_DEVICE -> InferenceMode.ONLY_ON_DEVICE
     AiMode.PREFER_IN_CLOUD -> InferenceMode.PREFER_IN_CLOUD
     AiMode.ONLY_IN_CLOUD -> InferenceMode.ONLY_IN_CLOUD
+}
+
+private fun NanoModel.toFirebase(): OnDeviceModelOption = when (this) {
+    NanoModel.STABLE -> OnDeviceModelOption.STABLE
+    NanoModel.PREVIEW -> OnDeviceModelOption.PREVIEW
+    NanoModel.PREVIEW_FAST -> OnDeviceModelOption.PREVIEW_FAST
 }
 
 private fun GenerateContentResponse.aiSource(): AiSource =

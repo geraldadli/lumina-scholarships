@@ -6,6 +6,42 @@ package com.lumina.hybrid_ai
  */
 enum class AiMode { PREFER_ON_DEVICE, ONLY_ON_DEVICE, PREFER_IN_CLOUD, ONLY_IN_CLOUD }
 
+/**
+ * Which Gemini Nano AICore should run. Mirrors `com.google.firebase.ai.OnDeviceModelOption` without
+ * the Firebase SDK, so the choice can be unit tested.
+ * - [STABLE]: the Nano the phone ships with (e.g. Nano v2/v3).
+ * - [PREVIEW]: Gemini Nano 4 Full (Gemma 4 E4B), AICore Developer Preview only.
+ * - [PREVIEW_FAST]: Gemini Nano 4 Fast (Gemma 4 E2B), AICore Developer Preview only.
+ */
+enum class NanoModel { STABLE, PREVIEW, PREVIEW_FAST }
+
+object NanoModelPolicy {
+    /** Gemini Nano 4 Fast: the Nano 4 model AICore downloads when the Developer Preview is turned on. */
+    val DEFAULT = NanoModel.PREVIEW_FAST
+
+    /** Reads Remote Config `on_device_model`. Unknown values → [DEFAULT]. */
+    fun parse(raw: String?): NanoModel =
+        NanoModel.entries.firstOrNull { it.name.equals(raw?.trim(), ignoreCase = true) } ?: DEFAULT
+
+    /** Models to try, best first. Always ends with [NanoModel.STABLE], the Nano every supported phone can get. */
+    fun candidates(preferred: NanoModel): List<NanoModel> = when (preferred) {
+        NanoModel.PREVIEW -> listOf(NanoModel.PREVIEW, NanoModel.PREVIEW_FAST, NanoModel.STABLE)
+        NanoModel.PREVIEW_FAST -> listOf(NanoModel.PREVIEW_FAST, NanoModel.STABLE)
+        NanoModel.STABLE -> listOf(NanoModel.STABLE)
+    }
+
+    /**
+     * Picks the Nano to use from each candidate's status, given in [candidates] order.
+     * A preview model is used only when it is already AVAILABLE: preview models come from the AICore
+     * Developer Preview, so on other phones (such as the judges') the app uses the stable Nano and
+     * never starts a preview download itself. With nothing available, the stable Nano's status decides.
+     */
+    fun choose(statuses: List<Pair<NanoModel, ModelAvailability>>): Pair<NanoModel, ModelAvailability> =
+        statuses.firstOrNull { it.second == ModelAvailability.AVAILABLE }
+            ?: statuses.firstOrNull { it.first == NanoModel.STABLE }
+            ?: (NanoModel.STABLE to ModelAvailability.UNKNOWN)
+}
+
 /** Kode error yang dikirim ke Flutter (`PlatformException.code`). Didokumentasikan di README paket. */
 object ErrorCodes {
     const val INVALID_REQUEST = "INVALID_REQUEST"
