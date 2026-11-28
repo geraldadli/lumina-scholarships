@@ -7,6 +7,7 @@ import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
 import 'package:lumina/data/privacy_store.dart';
 import 'package:lumina/models/user_profile.dart';
+import 'package:lumina/screens/ask_screen.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:lumina/widgets/common.dart';
 import 'package:material_ui/material_ui.dart';
@@ -107,6 +108,8 @@ void main() {
   void expectCloudAnswer() {
     expect(host.asked.last.allowCloud, isTrue);
     expect(find.text('Answered with cloud AI'), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.smartphone_rounded), findsNothing);
     expect(find.text('Cloud AI is turned off'), findsNothing);
     expect(find.text('Cloud AI is on now'), findsNothing);
   }
@@ -121,6 +124,22 @@ void main() {
       expect(find.text(badge), findsNothing);
     }
     expect(find.text('Answers use only the official scholarship page.'), findsOneWidget);
+  });
+
+  testWidgets('each answer keeps the label of where it ran: phone or cloud', (tester) async {
+    await openAsk(tester, error: 'ON_DEVICE_UNAVAILABLE', device: ModelAvailability.available);
+    await tester.tap(find.text('Allow cloud AI'));
+    await tester.pumpAndSettle();
+
+    host.answerSource = AiSource.onDevice;
+    await askAnother(tester);
+
+    expect(find.text('Answered with cloud AI'), findsOneWidget);
+    expect(find.text('Answered on this phone'), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.smartphone_rounded), findsOneWidget);
+    final labels = tester.widgetList<AiSourceLabel>(find.byType(AiSourceLabel));
+    expect(labels.map((l) => l.onPhone), [false, true]);
   });
 
   testWidgets('phone without on-device AI: says why, and Allow cloud AI answers at once', (tester) async {

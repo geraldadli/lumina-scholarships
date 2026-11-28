@@ -18,6 +18,8 @@ class LPalette {
     required this.text3,
     required this.white,
     required this.danger,
+    required this.onPhone,
+    required this.cloud,
   });
 
   factory LPalette.of(Appearance a) {
@@ -37,6 +39,16 @@ class LPalette {
         text3: strong ? const Color(0xFFF1F5F9) : const Color(0xFFD3DCE5),
         white: const Color(0xFF1A2430),
         danger: const Color(0xFFFFB4AB),
+        onPhone: LTone(
+          text: const Color(0xFF9BE5BC),
+          fill: const Color(0xFF16372A),
+          border: Color(strong ? 0xFF9BE5BC : 0xFF2F6B4F),
+        ),
+        cloud: LTone(
+          text: const Color(0xFFCFC4FF),
+          fill: const Color(0xFF2B2752),
+          border: Color(strong ? 0xFFCFC4FF : 0xFF584B9E),
+        ),
       );
     }
     return LPalette(
@@ -51,6 +63,16 @@ class LPalette {
       text3: strong ? const Color(0xFF0F1A26) : const Color(0xFF2B3D50),
       white: const Color(0xFFFFFFFF),
       danger: const Color(0xFFB3261E),
+      onPhone: LTone(
+        text: Color(strong ? 0xFF083A22 : 0xFF14613A),
+        fill: const Color(0xFFE3F4EA),
+        border: Color(strong ? 0xFF083A22 : 0xFFA6D8BD),
+      ),
+      cloud: LTone(
+        text: Color(strong ? 0xFF28156B : 0xFF4B2FA6),
+        fill: const Color(0xFFEFEBFC),
+        border: Color(strong ? 0xFF28156B : 0xFFC5B9F0),
+      ),
     );
   }
 
@@ -84,6 +106,22 @@ class LPalette {
 
   /// Errors and destructive actions.
   final Color danger;
+
+  /// "The AI ran on this phone" (green) and "the AI ran in the cloud" (violet). Both stay the
+  /// same in every colour theme, so students can learn what each one means.
+  final LTone onPhone;
+  final LTone cloud;
+}
+
+/// The colours of one tinted label.
+@immutable
+class LTone {
+  const LTone({required this.text, required this.fill, required this.border});
+
+  /// Text and icon.
+  final Color text;
+  final Color fill;
+  final Color border;
 }
 
 /// The active colours. [applyAppearance] swaps them; the app then rebuilds every widget.
@@ -101,6 +139,8 @@ abstract final class LColors {
   static Color get text3 => _p.text3;
   static Color get white => _p.white;
   static Color get danger => _p.danger;
+  static LTone get onPhone => _p.onPhone;
+  static LTone get cloud => _p.cloud;
 }
 
 /// The active corner rounding and spacing.

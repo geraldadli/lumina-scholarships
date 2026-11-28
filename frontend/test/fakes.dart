@@ -48,6 +48,9 @@ class FakeHost implements HybridAiHostApi {
   PlatformException? askErrorWithoutCloud;
   final ModelAvailability availability;
 
+  /// Where `ask` says its answer was made.
+  AiSource answerSource = AiSource.cloud;
+
   /// When set, `generateChecklist` waits for it, like a slow AI call.
   Completer<void>? checklistGate;
 
@@ -75,7 +78,7 @@ class FakeHost implements HybridAiHostApi {
     if (!request.allowCloud && askErrorWithoutCloud != null) throw askErrorWithoutCloud!;
     return AiAnswer(
       text: 'The deadline is ${request.scholarship.deadline}.',
-      source: AiSource.cloud,
+      source: answerSource,
       latencyMs: 40,
       citations: const [],
     );
