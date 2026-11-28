@@ -14,9 +14,14 @@ import 'state/app_controller.dart';
 
 /// Optional App Check debug token that is already registered in the Firebase Console, given at
 /// build time so it never lands in the (public) repo:
-///   flutter build apk --debug --dart-define-from-file=../_local/app_check.json
-/// with `{"APP_CHECK_DEBUG_TOKEN": "<token>"}`. Empty: the device makes its own token and prints
-/// it to logcat ("Enter this debug secret into the allow list").
+///   flutter build apk --release --dart-define-from-file=../_local/app_check.json
+/// with `{"APP_CHECK_DEBUG_TOKEN": "<token>"}`.
+/// - Debug build without it: the device makes its own token and prints it to logcat
+///   ("Enter this debug secret into the allow list").
+/// - Release build with it: uses this token instead of Play Integrity. The judge APK needs this,
+///   because Play Integrity rejects an APK installed outside Google Play (cloud AI then shows
+///   "App not verified"). The hackathon accepts App Check debug tokens in submissions.
+/// - Release build without it: Play Integrity.
 const _appCheckDebugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN');
 
 Future<void> main() async {
@@ -39,10 +44,9 @@ Future<LuminaBackend> _createBackend() async {
     return DemoBackend.fromAsset();
   }
   try {
-    // AI Logic enforces App Check. Debug builds print a debug token to logcat
-    // ("Enter this debug secret into the allow list") to register in the Firebase Console.
+    // AI Logic enforces App Check. See _appCheckDebugToken for which provider each build uses.
     await FirebaseAppCheck.instance.activate(
-      providerAndroid: kDebugMode
+      providerAndroid: kDebugMode || _appCheckDebugToken != ''
           ? const AndroidDebugProvider(debugToken: _appCheckDebugToken == '' ? null : _appCheckDebugToken)
           : const AndroidPlayIntegrityProvider(),
     );
