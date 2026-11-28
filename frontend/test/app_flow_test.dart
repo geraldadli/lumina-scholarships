@@ -127,7 +127,7 @@ void main() {
     // The steps move on every 1.7 s and stop at the last one.
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Checking your eligibility…'), findsOneWidget);
+    expect(find.text('Working on your answer…'), findsOneWidget);
     await tester.pump(const Duration(seconds: 7));
     expect(find.text('Writing your answer…'), findsOneWidget);
 

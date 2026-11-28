@@ -247,8 +247,9 @@ class TypingBubble extends StatefulWidget {
 
   static const steps = [
     'Reading your question…',
-    'Checking your eligibility…',
-    'Comparing deadlines…',
+    // Generic on purpose: the steps run on a timer, not on what the AI is really doing, so
+    // they must fit any question (e.g. one about required documents).
+    'Working on your answer…',
     'Writing your answer…',
   ];
 
