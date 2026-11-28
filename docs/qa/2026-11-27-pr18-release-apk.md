@@ -38,10 +38,13 @@ and adds a test with an empty and a 40 px tall window.
 | Google sign-in, finished | Pass |
 | UI and UX: all tabs, Customize look, dark mode, Extra large text | Pass |
 | Ask AI, cloud AI off (Gemini Nano) | Pass |
-| Ask AI, cloud AI on | Pass |
+| Ask AI, cloud AI on | Not shown, see below |
 
-Every feature worked on the phone, with cloud AI both on and off. Cloud AI on also worked with
-the release APK installed outside Google Play, so App Check (Play Integrity) did not block it.
+Correction (2026-11-28): Ask AI answered with cloud AI on, but this phone has Gemini Nano, so
+those answers were most likely made on the phone. The answer label was not recorded, so this
+round does not show that cloud AI works, or that App Check (Play Integrity) accepts the APK.
+The cloud AI check is in [2026-11-28-nano4-release-apk.md](2026-11-28-nano4-release-apk.md),
+with every question sent to the cloud.
 
 ## Open
 
