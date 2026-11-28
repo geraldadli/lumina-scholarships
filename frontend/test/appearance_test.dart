@@ -4,6 +4,7 @@ import 'package:lumina/app.dart';
 import 'package:lumina/data/demo_backend.dart';
 import 'package:lumina/design/appearance.dart';
 import 'package:lumina/design/customize_panel.dart';
+import 'package:lumina/screens/ask_screen.dart';
 import 'package:lumina/screens/browse_screen.dart';
 import 'package:lumina/state/app_controller.dart';
 import 'package:lumina/theme.dart';
@@ -63,6 +64,23 @@ void main() {
     expect(Appearance.fromJson({'language': 'klingon'}).language, AppLanguage.english);
     final c = AppearanceController(initial: look)..reset();
     expect(c.value, const Appearance(language: AppLanguage.indonesian));
+  });
+
+  test('the phone and cloud answer labels are readable in every look', () {
+    // WCAG AA for small text: at least 4.5 to 1.
+    double contrast(Color a, Color b) {
+      final x = a.computeLuminance() + 0.05, y = b.computeLuminance() + 0.05;
+      return x > y ? x / y : y / x;
+    }
+
+    for (final dark in [false, true]) {
+      for (final highContrast in [false, true]) {
+        final palette = LPalette.of(Appearance(dark: dark, highContrast: highContrast));
+        for (final tone in [palette.onPhone, palette.cloud]) {
+          expect(contrast(tone.text, tone.fill), greaterThanOrEqualTo(4.5), reason: 'dark $dark, high $highContrast');
+        }
+      }
+    }
   });
 
   testWidgets('Profile has a dark mode toggle and a language list', (tester) async {
@@ -171,6 +189,14 @@ void main() {
           await tester.tap(find.text(action));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: action);
+          if (action == 'Ask AI') {
+            // Sent from the keyboard: on a small phone the suggestions start off screen.
+            await tester.enterText(find.byType(TextField).last, 'Am I eligible?');
+            await tester.testTextInput.receiveAction(TextInputAction.send);
+            await tester.pumpAndSettle();
+            expect(find.byType(AiSourceLabel, skipOffstage: false), findsOneWidget);
+            expect(tester.takeException(), isNull, reason: 'answer label');
+          }
           await tester.tap(find.byTooltip('Back'));
           await tester.pumpAndSettle();
         }

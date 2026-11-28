@@ -100,18 +100,9 @@ class _AskScreenState extends State<AskScreen> {
             LHeader(
               title: 'Ask AI',
               subtitle: s.title,
-              bottom: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  LBadge(c.inferModeLabel),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Answers use only the official scholarship page.',
-                      style: ts(14, color: LColors.text2, height: 1.4),
-                    ),
-                  ),
-                ],
+              bottom: Text(
+                'Answers use scholarship details and your profile when available.',
+                style: ts(14, color: LColors.text2, height: 1.4),
               ),
             ),
             Expanded(
@@ -352,11 +343,6 @@ class _AiBubble extends StatelessWidget {
     // The scholarship's own sourceUrl is always shown, so every answer carries an official link
     // even when the model returns no citations.
     final links = <String>{scholarship.sourceUrl, ...message.citations}.where((u) => u.startsWith('https://'));
-    final sourceLabel = switch (message.source) {
-      AiSource.onDevice => 'Answered on this phone',
-      AiSource.cloud => 'Answered with cloud AI',
-      _ => null,
-    };
     return Align(
       alignment: Alignment.centerLeft,
       child: ConstrainedBox(
@@ -390,10 +376,45 @@ class _AiBubble extends StatelessWidget {
                     ),
                 ],
               ),
-              if (sourceLabel != null) Text(sourceLabel, style: ts(12, color: LColors.text2)),
+              if (message.source == AiSource.onDevice || message.source == AiSource.cloud)
+                AiSourceLabel(onPhone: message.source == AiSource.onDevice),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Where an answer was made, shown under it. The icon, colour and words all differ, so it can be
+/// told apart at a glance and without relying on colour.
+class AiSourceLabel extends StatelessWidget {
+  const AiSourceLabel({super.key, required this.onPhone});
+
+  final bool onPhone;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = onPhone ? LColors.onPhone : LColors.cloud;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: tone.fill,
+        borderRadius: BorderRadius.circular(L.r(10)),
+        border: Border.all(color: tone.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(onPhone ? Icons.smartphone_rounded : Icons.cloud_rounded, size: 16, color: tone.text),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              onPhone ? 'Answered on this phone' : 'Answered with cloud AI',
+              style: ts(12, weight: FontWeight.w700, color: tone.text, height: 1.3),
+            ),
+          ),
+        ],
       ),
     );
   }
